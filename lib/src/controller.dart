@@ -122,6 +122,9 @@ class AgentController {
 
       logger.log(LogModule.http, "Response startSimple", detail: payload);
       return Response.ok(jsonEncode(agentMessageDto.toJson()));
+    } on LLMException catch (e) {
+      logger.log(LogModule.http, "Response startSimple FormatException: ${e.toJson()}", detail: jsonEncode(e.toJson()), level: Level.WARNING);
+      return Response.badRequest(body: e);
     } on FormatException catch (e) {
       logger.log(LogModule.http, "Response startSimple FormatException: ${e}", detail: payload, level: Level.WARNING);
       return Response.badRequest(body: e);
