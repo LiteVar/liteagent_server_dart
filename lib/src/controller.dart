@@ -145,7 +145,7 @@ class AgentController {
       return Response.badRequest(body: e);
     } on AgentNotFoundException catch (e) {
       logger.log(LogModule.http, "Response startSimple AgentNotFoundException: ${e.toJson()}", detail: jsonEncode(e.toJson()), level: Level.WARNING);
-      return Response.badRequest(body: e);
+      return Response.notFound(e);
     } on FormatException catch (e) {
       logger.log(LogModule.http, "Response startSimple FormatException: ${e}", detail: payload, level: Level.WARNING);
       return Response.badRequest(body: e);
@@ -190,6 +190,9 @@ class AgentController {
     } on FormatException catch (e) {
       logger.log(LogModule.http, "Response stopChat FormatException: ${e}", detail: jsonEncode(data), level: Level.WARNING);
       return Response.badRequest(body: e);
+    } on AgentNotFoundException catch (e) {
+      logger.log(LogModule.http, "Response stopChat AgentNotFoundException: ${e.toJson()}", detail: jsonEncode(e.toJson()), level: Level.WARNING);
+      return Response.notFound(e);
     } on Exception catch (e) {
       logger.log(LogModule.http, "Response stopChat Exception: ${e}", detail: jsonEncode(data), level: Level.WARNING);
       return Response.internalServerError(body: e);
@@ -207,7 +210,7 @@ class AgentController {
       return Response.ok(jsonEncode(sessionDto.toJson()));
     } on AgentNotFoundException catch (e) {
       logger.log(LogModule.http, "Response clearChat AgentNotFoundException: ${e.toJson()}", detail: jsonEncode(e.toJson()), level: Level.WARNING);
-      return Response.badRequest(body: e);
+      return Response.notFound(e);
     } on FormatException catch (e) {
       logger.log(LogModule.http, "Response clearChat FormatException: ${e}", detail: jsonEncode(data), level: Level.WARNING);
       return Response.badRequest(body: e);
