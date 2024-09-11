@@ -37,6 +37,8 @@ LLM `AI Agent` multi session HTTP/WebSocket service
 - session control command, include：
   - [/version](#get-version)：get version number, to confirm server running
   - [/init](#post-init): initial new session, server return session id
+  - [/init/simple](#post-initsimple): initial new session for simple agent, which without websocket just response text message by [/chat/simple](#post-chatsimpleidsessionid)
+  - [/chat/simple](#post-chatsimpleidsessionid): chat to simple agent by once request-response, don't need websocket
   - [/history](#get-historyidsessionid): get session messages not be cleared
   - [/stop](#get-stopidsessionid): stop session, when current message done, will not run next message
   - [/clear](#get-clearidsessionid): clear session context messages, and close websocket connection
@@ -109,10 +111,79 @@ LLM `AI Agent` multi session HTTP/WebSocket service
       }
       ```
 
+##### [POST] /init/simple
+- Feature:  initial new session for simple agent, which without websocket just response text message by [/chat/simple](#post-chatsimpleidsessionid)
+- Request body：
+    - LLM config: baseUrl, apiKey, model
+    - System Prompt: Agent character, ToDo/NotToDo description
+    - Sample:
+  ```json
+  {
+    "llmConfig": {
+        "baseUrl": "<LLM API baseUrl, e.g. https://api.openai.com/v1>",
+        "apiKey": "<LLM API apiKey, e.g. sk-xxxxxxxxxx>",
+        "model": "<LLM API model name, e.g. gpt-3.5-turbo. And temperature、maxTokens、topP can be changed below >",
+        "temperature": 0,
+        "maxTokens": 4096,
+        "topP": 1
+    },
+    "systemPrompt": "<System Prompt. LLM character, capabilities, need to help user fixed what problems>"
+  }
+  ```
+
+- Response body：
+    - sessionId, will be used as session websocket subscribe, stop and clear operations.
+    - Sample:
+      ```json
+      {
+          "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
+      }
+      ```
+
+##### [POST] /chat/simple?id=\<sessionId\>
+- Feature: chat to simple agent by once request-response, don't need websocket
+- Request body：
+    - Sample:
+    ```json
+    {
+      "taskId": "Optional. For identify which task AgentMessage from. If NULL, server will create one.",
+      "contentList": [
+        {
+          "type": "text",
+          "message": "Give me a random number"
+        }
+      ]
+    }
+    ```
+
+- Response body：
+    - Sample:
+    - Response from LLM
+    ```json
+    {
+      "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
+      "taskId": "0b127f1d-4667-4a52-bbcb-0b636f9a471a",
+      "from": "llm",
+      "to": "agent",
+      "type": "text",
+      "message": "message info",
+      "completions": {
+        "tokenUsage": {
+          "promptTokens": 100,
+          "completionTokens": 522,
+          "totalTokens": 622
+        },
+        "id": "chatcmpl-9bgYkOjpdtLV0o0JugSmnNzGrRFMG",
+        "model": "gpt-3.5-turbo"
+      },
+      "createTime": "2023-06-18T15:45:30.000+0800"
+    }
+    ```
+
 ##### [GET] /history?id=\<sessionId\>
 
 - Response body:
-  - agent messages context as list
+  - agent messages context as list, NOT support simple Agent
   - Sample:
   ```json
   [
@@ -139,7 +210,7 @@ LLM `AI Agent` multi session HTTP/WebSocket service
 ##### [GET] /stop?id=\<sessionId\>
 
 - Response body:
-  - sessionId, to confirm the operation of the session
+  - sessionId, to confirm the operation of the session, NOT support simple Agent
   - Sample: 
   ```json
   {
@@ -150,7 +221,7 @@ LLM `AI Agent` multi session HTTP/WebSocket service
 ##### [GET] /clear?id=\<sessionId\>
 
 - Response body:
-  - sessionId, to confirm the operation of the session
+  - sessionId, to confirm the operation of the session, NOT support simple Agent
   - Sample: 
   ```json
   {
@@ -170,15 +241,7 @@ LLM `AI Agent` multi session HTTP/WebSocket service
 
 ##### 3.2.2 client send UserMessageDto List to server
 - client(\[UserMessageDto\]) -> server ：Wrap and send server
-- Sample: 
-```json
-[
-  {
-    "type": "text",
-    "message": "Get some tool status"
-  }
-]
-```
+- Sample:
 ```json
 {
   "taskId": "Optional. For identify which task AgentMessage from. If NULL, server will create one.",

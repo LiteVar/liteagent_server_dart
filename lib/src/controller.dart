@@ -55,6 +55,32 @@ class AgentController {
     }
   }
 
+  Future<Response> initSimple(Request request) async {
+    final payload = await request.readAsString();
+    final data = jsonDecode(payload);
+
+    try {
+      final SimpleCapabilityDto simpleCapabilityDto = SimpleCapabilityDto.fromJson(data);
+      logger.log(LogModule.http, "Request initSimple", detail: payload, level: Level.FINEST);
+      logger.log(LogModule.http, "Request initSimple",
+          detail: "baseUrl: ${simpleCapabilityDto.llmConfig.baseUrl}, " +
+              "model: ${simpleCapabilityDto.llmConfig.model}, " +
+              "systemMessageLength: ${simpleCapabilityDto.systemPrompt.length}"
+      );
+
+      SessionDto sessionDto = await agentService.initSimple(simpleCapabilityDto);
+
+      logger.log(LogModule.http, "Response initSimple", detail: jsonEncode(sessionDto.toJson()));
+      return Response.ok(jsonEncode(sessionDto.toJson()));
+    } on FormatException catch (e) {
+      logger.log(LogModule.http, "Response initSimple FormatException: ${e}", detail: payload, level: Level.WARNING);
+      return Response.badRequest(body: e);
+    } catch (e) {
+      logger.log(LogModule.http, "Response initSimple Exception: ${e}", detail: payload, level: Level.WARNING);
+      return Response.internalServerError(body: e);
+    }
+  }
+
   FutureOr<Response> chat(Request request) {
     Map<String, String> data = request.url.queryParameters;
     logger.log(LogModule.http, "Request chat", detail: jsonEncode(data));
@@ -80,6 +106,29 @@ class AgentController {
         logger.log(LogModule.ws, "onDone", detail: jsonEncode(data));
       });
     })(request);
+  }
+
+  Future<Response> startSimple(Request request) async {
+    Map<String, String> queryParam = request.url.queryParameters;
+    logger.log(LogModule.http, "Request chat", detail: jsonEncode(queryParam));
+    final SessionDto sessionDto = SessionDto.fromJson(queryParam);
+
+    final payload = await request.readAsString();
+    final data = jsonDecode(payload);
+
+    try {
+      final UserTaskDto userTaskDto = UserTaskDto.fromJson(data);
+      AgentMessageDto agentMessageDto = await agentService.startSimple(sessionDto.id, userTaskDto);
+
+      logger.log(LogModule.http, "Response startSimple", detail: payload);
+      return Response.ok(jsonEncode(agentMessageDto.toJson()));
+    } on FormatException catch (e) {
+      logger.log(LogModule.http, "Response startSimple FormatException: ${e}", detail: payload, level: Level.WARNING);
+      return Response.badRequest(body: e);
+    } catch (e) {
+      logger.log(LogModule.http, "Response startSimple Exception: ${e}", detail: payload, level: Level.WARNING);
+      return Response.internalServerError(body: e);
+    }
   }
 
   Future<Response> history(Request request) async {

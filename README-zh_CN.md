@@ -36,6 +36,8 @@
 - 用于session会话的控制指令，包括：
   - [/version](#get-version)：版本号，用于确认server在运行
   - [/init](#post-init)：初始化一个会话，server会返回一个id
+  - [/init/simple](#post-initsimple): 初始化一个SimpleAgent的会话，SimpleAgent 无需websocket，通过请求[/chat/simple](#post-chatsimpleidsessionid)，直接响应LLM返回的文本消息
+  - [/chat/simple](#post-chatsimpleidsessionid): 通过发送一次过的 请求-响应 获得大模型返回，无需订阅websocket消息
   - [/history](#get-historyidsessionid)：返回当前会话的所有message历史
   - [/stop](#get-stopidsessionid)：中止会话，传入一个id，正在进行的message处理完后停止，后续的message不执行
   - [/clear](#get-clearidsessionid)：清空会话，传入一个id，会清空会话的上下文和关闭websocket连接
@@ -109,10 +111,77 @@
     }
     ```
 
+##### [POST] /init/simple
+- 功能：初始化一个SimpleAgent的会话，SimpleAgent 无需websocket，通过请求[/chat/simple](#post-chatsimpleidsessionid)，直接响应LLM返回的文本消息
+- 请求参数：
+  - 大模型设置：大模型的链接、key、模型名称
+  - 预置提示词：角色、能力、目标描述
+  - 请求样例
+  ```json
+  {
+    "llmConfig": {
+      "baseUrl": "<大模型厂商的api入口，例如：https://api.openai.com/v1>",
+      "apiKey": "<大模型厂商的api的Key，例如：sk-xxxxxxxxxx>",
+      "model": "<厂商支持的大模型名称，例如：gpt-3.5-turbo，下方的temperature、maxTokens、topP可选传入，下方为默认值>",
+      "temperature": 0,
+      "maxTokens": 4096,
+      "topP": 1
+    },
+    "systemPrompt": "<预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题>"
+  }
+  ```
+
+- 返回：
+  - sessionId，用以后续对于该session发送请求消息
+  - 返回样例
+    ```json
+    {
+        "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
+    }
+    ```
+
+##### [POST] /chat/simple?id=\<sessionId\>
+- 功能：通过发送一次过的 请求-响应 获得大模型返回，无需订阅websocket消息
+- 请求参数：
+  - 请求样例
+  ```json
+  {
+    "taskId": "可选，用于识别AgentMessage来自于哪个任务，若不设置，则系统自行生成",
+    "contentList": [
+      {
+        "type": "text",
+        "message": "给我一个随机数"
+      }
+    ]
+  }
+  ```
+
+- 返回样例
+  ```json
+  {
+    "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
+    "taskId": "0b127f1d-4667-4a52-bbcb-0b636f9a471a",
+    "from": "llm",
+    "to": "agent",
+    "type": "text",
+    "message": "message info",
+    "completions": {
+      "tokenUsage": {
+        "promptTokens": 100,
+        "completionTokens": 522,
+        "totalTokens": 622
+      },
+      "id": "chatcmpl-9bgYkOjpdtLV0o0JugSmnNzGrRFMG",
+      "model": "gpt-3.5-turbo"
+    },
+    "createTime": "2023-06-18T15:45:30.000+0800"
+  }
+  ```
+    
 ##### [GET] /history?id=\<sessionId\>
 
 - 返回：
-  - agent message的list上下文
+  - agent message的list上下文，不支持SimpleAgent
   - 返回样例
   ```json
   [
@@ -139,7 +208,7 @@
 ##### [GET] /stop?id=\<sessionId\>
 
 - 返回：
-  - sessionId，用以确认该操作对应的session
+  - sessionId，用以确认该操作对应的session，不支持SimpleAgent
   - 样例：
   ```json
   {
@@ -150,7 +219,7 @@
 ##### [GET] /clear?id=\<sessionId\>
 
 - 返回：
-  - sessionId，用以确认该操作对应的session
+  - sessionId，用以确认该操作对应的session，不支持SimpleAgent
   - 样例：
   ```json
   {
