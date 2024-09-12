@@ -86,44 +86,38 @@ class AgentController {
     Map<String, String> data = request.url.queryParameters;
     logger.log(LogModule.http, "Request chat", detail: jsonEncode(data));
 
-    try {
-      final SessionDto sessionDto = SessionDto.fromJson(data);
+    String? sessionId = data["id"];
+    if(sessionId == null) return Response.badRequest(body: "Session `id` missing in query parameters.");
+    final SessionDto sessionDto = SessionDto.fromJson(data);
 
-      return webSocketHandler((WebSocketChannel webSocket) {
-        webSocketSessions[sessionDto.id] = webSocket;
-        webSocket.stream.listen((message) {
-          final payload = message as String;
-          if (payload == "ping") {
-            logger.log(LogModule.ws, "Receive message", detail: payload, level: Level.FINER);
-            WebSocketChannel? webSocketChannel = webSocketSessions[sessionDto.id];
-            String pong = "pong";
-            logger.log(LogModule.ws, "Send message", detail: pong, level: Level.FINER);
-            webSocketChannel?.sink.add(pong);
-          } else {
-            final data = jsonDecode(payload);
-            UserTaskDto userTaskDto = UserTaskDto.fromJson(data);
-            logger.log(LogModule.ws, "Receive message", detail: payload);
-            agentService.startChat(sessionDto.id, userTaskDto);
-          }
-        }, onDone: () {
-          logger.log(LogModule.ws, "onDone", detail: jsonEncode(data));
-        }, onError: (e){
-          if(e is AgentNotFoundException) {
-            logger.log(LogModule.ws, "AgentNotFoundException: ${e}", detail: jsonEncode(e.toJson()), level: Level.WARNING);
-            webSocket.sink.close(WebSocketStatus.unsupportedData, jsonEncode(e.toJson()));
-          } else {
-            logger.log(LogModule.http, "Exception: ${e}", detail: e.toString(), level: Level.WARNING);
-            webSocket.sink.close(WebSocketStatus.internalServerError, "SessionId:${sessionDto.id}; ${e.toString()}");
-          }
-        });
-      })(request);
-    } on FormatException catch (e) {
-      logger.log(LogModule.http, "Response clearChat FormatException: ${e}", detail: jsonEncode(data), level: Level.WARNING);
-      return Response.badRequest(body: e);
-    } on Exception catch (e) {
-      logger.log(LogModule.http, "Response clearChat Exception: ${e}", detail: jsonEncode(data), level: Level.WARNING);
-      return Response.internalServerError(body: e);
-    }
+    return webSocketHandler((WebSocketChannel webSocket) {
+      webSocketSessions[sessionDto.id] = webSocket;
+      webSocket.stream.listen((message) {
+        final payload = message as String;
+        if (payload == "ping") {
+          logger.log(LogModule.ws, "Receive message", detail: payload, level: Level.FINER);
+          WebSocketChannel? webSocketChannel = webSocketSessions[sessionDto.id];
+          String pong = "pong";
+          logger.log(LogModule.ws, "Send message", detail: pong, level: Level.FINER);
+          webSocketChannel?.sink.add(pong);
+        } else {
+          final data = jsonDecode(payload);
+          UserTaskDto userTaskDto = UserTaskDto.fromJson(data);
+          logger.log(LogModule.ws, "Receive message", detail: payload);
+          agentService.startChat(sessionDto.id, userTaskDto);
+        }
+      }, onDone: () {
+        logger.log(LogModule.ws, "onDone", detail: jsonEncode(data));
+      }, onError: (e){
+        if(e is AgentNotFoundException) {
+          logger.log(LogModule.ws, "AgentNotFoundException: ${e}", detail: jsonEncode(e.toJson()), level: Level.WARNING);
+          webSocket.sink.close(WebSocketStatus.unsupportedData, jsonEncode(e.toJson()));
+        } else {
+          logger.log(LogModule.http, "Exception: ${e}", detail: e.toString(), level: Level.WARNING);
+          webSocket.sink.close(WebSocketStatus.internalServerError, "SessionId:${sessionDto.id}; ${e.toString()}");
+        }
+      });
+    })(request);
   }
 
   Future<Response> startSimple(Request request) async {
