@@ -4,20 +4,20 @@
 
 ## 目录
 - HTTP API
-    - [/version](#1-获取版本)：获取当前版本。
-    - [/init](#2-初始化sessionagent会话)：初始化SessionAgent会话，返回SessionId。
-    - [/init/simple](#3-初始化simpleagent会话)：初始化一个SimpleAgent会话。SimpleAgent无需websocket，后续通过请求 `/chat/simple`，直接响应LLM返回的文本消息。
-    - [/chat/simple](#4-获得SimpleAgent一次性响应)：通过发送一次性的请求-响应来获得大模型返回，无需订阅 WebSocket 消息。
-    - [/history](#5-获取历史消息)：取某个会话的历史消息列表。该接口不支持 SimpleAgent。
-    - [/stop](#6-停止会话)：通过指定 sessionId 停止对应的会话操作，此接口不支持 SimpleAgent。
-    - [/clear](#7-清除会话数据)：清除会话数据，返回对应的 sessionId，不支持 SimpleAgent。
+  - [/version](#1-获取版本)：获取当前版本。
+  - [/init](#2-初始化sessionagent会话)：初始化SessionAgent会话，返回SessionId。
+  - [/init/simple](#3-初始化simpleagent会话)：初始化一个SimpleAgent会话。SimpleAgent无需websocket，后续通过请求 `/chat/simple`，直接响应LLM返回的文本消息。
+  - [/chat/simple](#4-获得SimpleAgent一次性响应)：通过发送一次性的请求-响应来获得大模型返回，无需订阅 WebSocket 消息。
+  - [/history](#5-获取历史消息)：取某个会话的历史消息列表。该接口不支持 SimpleAgent。
+  - [/stop](#6-停止会话)：通过指定 sessionId 停止对应的会话操作，此接口不支持 SimpleAgent。
+  - [/clear](#7-清除会话数据)：清除会话数据，返回对应的 sessionId，不支持 SimpleAgent。
 - WebSocket API
-    - [客户端消息](#客户端消息)
-      - [保持连接](#1-保持连接)
-      - [用户消息](#2-用户消息)
-    - [服务端消息](#服务端消息)
-      - [保持连接的响应](#1-保持连接的响应)
-      - [Agent消息](#2-agent消息)
+  - [客户端消息](#客户端消息)
+    - [保持连接](#1-保持连接)
+    - [用户消息](#2-用户消息)
+  - [服务端消息](#服务端消息)
+    - [保持连接的响应](#1-保持连接的响应)
+    - [Agent消息](#2-agent消息)
 - AgentMessage说明
   - [`type`在不同类型下的`message`结构](#1-type在不同类型下的message结构-)
   - [`to`为`client`时`message`的几个状态字符串](#2-to为client时message的几个状态字符串)
@@ -39,10 +39,6 @@ https://api.example.com/v1
 **功能说明**: 获取当前版本。
 
 #### 请求参数
-
-无
-
-#### 请求示例
 
 无
 
@@ -74,25 +70,26 @@ https://api.example.com/v1
 
 #### 请求参数
 
-| 字段名                     | 类型       | 说明                                                         |
-|-------------------------|----------|------------------------------------------------------------|
-| `llmConfig`             | `object` | 大模型配置，包含以下字段：                                              |
-| `llmConfig.baseUrl`     | `string` | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                 |
-| `llmConfig.apiKey`      | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                            |
-| `llmConfig.model`       | `string` | 大模型名称，例如：gpt-3.5-turbo                                     |
-| `llmConfig.temperature` | `number` | （可选）温度值，默认为 0                                              |
-| `llmConfig.maxTokens`   | `number` | （可选）最大 token 数，默认为 4096                                    |
-| `llmConfig.topP`        | `number` | （可选）概率抽样的 p 值，默认为 1                                        |
-| `systemPrompt`          | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题                    |
-| `openSpecList`          | `array`  | （可选）Spec 列表，数组中每个元素为 `object`                              |
-| `openSpecList.openSpec` | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`openmodbus`、`openrpc` |
-| `openSpecList.apiKey`   | `object` | （可选）第三方服务的 API Key                                         |
-| `openSpecList.type`     | `string` | `basic` 或 `bearer` 二选一                                     |
-| `openSpecList.apiKey`   | `string` | 第三方服务的 API Key                                             |
-| `openSpecList.protocol` | `string` | 目前支持 `openapi`、`openmodbus`、`jsonrpcHttp`                  |
-| `sessionList`           | `array`  | （可选）Session 列表，数组中每个元素为 `object`                           |
-| `sessionList.id`        | `string` | Sub Agent 的 sessionId                                      |
-| `timeoutSeconds`        | `number` | （可选）超时时间，默认为3600，以秒为单位                                     |
+| 字段名                     | 类型       | 说明                                                           |
+|-------------------------|----------|--------------------------------------------------------------|
+| `llmConfig`             | `object` | 大模型配置，包含以下字段：                                                |
+| `llmConfig.baseUrl`     | `string` | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                   |
+| `llmConfig.apiKey`      | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                              |
+| `llmConfig.model`       | `string` | 大模型名称，例如：gpt-3.5-turbo                                       |
+| `llmConfig.temperature` | `number` | （可选）温度值，默认为 0                                                |
+| `llmConfig.maxTokens`   | `number` | （可选）最大 token 数，默认为 4096                                      |
+| `llmConfig.topP`        | `number` | （可选）概率抽样的 p 值，默认为 1                                          |
+| `systemPrompt`          | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题                      |
+| `openSpecList`          | `array`  | （可选）Spec 列表，数组中每个元素为 `object`                                |
+| `openSpecList.openSpec` | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`openmodbus`、`openrpc`   |
+| `openSpecList.apiKey`   | `object` | （可选）第三方服务的 API Key                                           |
+| `openSpecList.type`     | `string` | `basic` 或 `bearer` 二选一                                       |
+| `openSpecList.apiKey`   | `string` | 第三方服务的 API Key                                               |
+| `openSpecList.protocol` | `string` | 目前支持 `openapi`、`openmodbus`、`jsonrpcHttp`                    |
+| `sessionList`           | `array`  | （可选）Session 列表，数组中每个元素为 `object`                             |
+| `sessionList.id`        | `string` | Sub Agent 的 sessionId                                        |
+| `sessionList.name`      | `string` | （可选）Sub Agent 的自定义名称，必须由 a-z、A-Z、0-9 组成，或包含下划线和破折号，最大长度为 64。 |
+| `timeoutSeconds`        | `number` | （可选）超时时间，默认为3600，以秒为单位                                       |
 
 #### 请求示例
 
@@ -123,10 +120,12 @@ https://api.example.com/v1
     ],
     "sessionList": [
       {
-        "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
+        "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
+        "name": "someFunc1"
       },
       {
-        "id": "a20245f2-e9f0-416c-9191-8ed3afeac46b"
+        "id": "a20245f2-e9f0-416c-9191-8ed3afeac46b",
+        "name": "some-func_2"
       }
     ],
     "timeoutSeconds": 7200
@@ -151,7 +150,7 @@ https://api.example.com/v1
 }
 ```
 
-## 3. 初始化SimpleAgent会话
+### 3. 初始化SimpleAgent会话
 
 **请求方法**: `POST`
 

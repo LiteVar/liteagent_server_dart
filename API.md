@@ -74,24 +74,25 @@ None
 
 #### Request Parameters
 
-| Field                   | Type     | Description                                                                                |
-|-------------------------|----------|--------------------------------------------------------------------------------------------|
-| `llmConfig`             | `object` | Configuration for the language model, containing the following fields:                     |
-| `llmConfig.baseUrl`     | `string` | API endpoint of the language model provider, e.g., https://api.openai.com/v1               |
-| `llmConfig.apiKey`      | `string` | API Key of the language model provider, e.g., sk-xxxxxxxxxx                                |
-| `llmConfig.model`       | `string` | Name of the language model, e.g., gpt-3.5-turbo                                            |
-| `llmConfig.temperature` | `number` | (Optional) Temperature value, default is 0                                                 |
-| `llmConfig.maxTokens`   | `number` | (Optional) Maximum token count, default is 4096                                            |
-| `llmConfig.topP`        | `number` | (Optional) Top-p value for sampling, default is 1                                          |
-| `systemPrompt`          | `string` | System prompt preset, e.g., role-playing instructions, abilities, or problem-solving tasks |
-| `openSpecList`          | `array`  | (Optional) List of specifications, each element being an `object`                          |
-| `openSpecList.openSpec` | `string` | JSON description of the spec, currently supports `openapi`, `openmodbus`, and `openrpc`    |
-| `openSpecList.apiKey`   | `object` | (Optional) API Key for third-party services                                                |
-| `openSpecList.type`     | `string` | Either `basic` or `bearer`                                                                 |
-| `openSpecList.protocol` | `string` | Currently supports `openapi`, `openmodbus`, `jsonrpcHttp`                                  |
-| `sessionList`           | `array`  | (Optional) List of sessions, each element being an `object`                                |
-| `sessionList.id`        | `string` | sessionId of a sub-agent                                                                   |
-| `timeoutSeconds`        | `number` | (Optional) Timeout in seconds, default is 3600                                             |
+| Field                   | Type     | Description                                                                                                              |
+|-------------------------|----------|--------------------------------------------------------------------------------------------------------------------------|
+| `llmConfig`             | `object` | Configuration for the language model, containing the following fields:                                                   |
+| `llmConfig.baseUrl`     | `string` | API endpoint of the language model provider, e.g., https://api.openai.com/v1                                             |
+| `llmConfig.apiKey`      | `string` | API Key of the language model provider, e.g., sk-xxxxxxxxxx                                                              |
+| `llmConfig.model`       | `string` | Name of the language model, e.g., gpt-3.5-turbo                                                                          |
+| `llmConfig.temperature` | `number` | (Optional) Temperature value, default is 0                                                                               |
+| `llmConfig.maxTokens`   | `number` | (Optional) Maximum token count, default is 4096                                                                          |
+| `llmConfig.topP`        | `number` | (Optional) Top-p value for sampling, default is 1                                                                        |
+| `systemPrompt`          | `string` | System prompt preset, e.g., role-playing instructions, abilities, or problem-solving tasks                               |
+| `openSpecList`          | `array`  | (Optional) List of specifications, each element being an `object`                                                        |
+| `openSpecList.openSpec` | `string` | JSON description of the spec, currently supports `openapi`, `openmodbus`, and `openrpc`                                  |
+| `openSpecList.apiKey`   | `object` | (Optional) API Key for third-party services                                                                              |
+| `openSpecList.type`     | `string` | Either `basic` or `bearer`                                                                                               |
+| `openSpecList.protocol` | `string` | Currently supports `openapi`, `openmodbus`, `jsonrpcHttp`                                                                |
+| `sessionList`           | `array`  | (Optional) List of sessions, each element being an `object`                                                              |
+| `sessionList.id`        | `string` | sessionId of a sub-agent                                                                                                 |
+| `sessionList.name`      | `string` | (Optional) Sub Agent custom name. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64. |
+| `timeoutSeconds`        | `number` | (Optional) Timeout in seconds, default is 3600                                                                           |
 
 #### Request Example
 
@@ -122,10 +123,12 @@ None
   ],
   "sessionList": [
     {
-      "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
+      "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
+      "name": "someFunc1"
     },
     {
-      "id": "a20245f2-e9f0-416c-9191-8ed3afeac46b"
+      "id": "a20245f2-e9f0-416c-9191-8ed3afeac46b",
+      "name": "some-func_2"
     }
   ],
   "timeoutSeconds": 7200

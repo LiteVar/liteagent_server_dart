@@ -34,7 +34,7 @@ Future<void> main() async {
   }
 
   CapabilityDto capabilityDto = CapabilityDto(llmConfig: llmConfig, systemPrompt: systemPrompt,
-      sessionList: [sessionDto1, sessionDto2]
+      sessionList: [SessionNameDto(id: sessionDto1.id), SessionNameDto(id: sessionDto2.id)]
   );
 
   SessionDto? sessionDto = await initChat(capabilityDto);
@@ -129,15 +129,15 @@ Future<WebSocket> connectChat(
   );
 
   socket.listen((message) {
-      final payload = message as String;
-      if (payload != "pong") {
-        final data = jsonDecode(payload);
-        AgentMessageDto agentMessageDto = AgentMessageDto.fromJson(data);
-        onReceive(agentMessageDto);
-      } else {
-        print("[pong]");
-      }
-    },
+    final payload = message as String;
+    if (payload != "pong") {
+      final data = jsonDecode(payload);
+      AgentMessageDto agentMessageDto = AgentMessageDto.fromJson(data);
+      onReceive(agentMessageDto);
+    } else {
+      print("[pong]");
+    }
+  },
     onDone: () {
       print('WebSocket connection closed');
     },

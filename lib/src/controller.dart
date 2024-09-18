@@ -47,6 +47,9 @@ class AgentController {
 
       logger.log(LogModule.http, "Response initChat", detail: jsonEncode(sessionDto.toJson()));
       return Response.ok(jsonEncode(sessionDto.toJson()));
+    } on AgentNameException catch (e) {
+      logger.log(LogModule.http, "Response initChat AgentNameException: ${e}", detail: payload, level: Level.WARNING);
+      return Response.badRequest(body: e);
     } on FormatException catch (e) {
       logger.log(LogModule.http, "Response initChat FormatException: ${e}", detail: payload, level: Level.WARNING);
       return Response.badRequest(body: e);
