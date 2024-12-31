@@ -8,8 +8,7 @@ class VersionDto {
 
   VersionDto({required this.version});
 
-  factory VersionDto.fromJson(Map<String, dynamic> json) =>
-      _$VersionDtoFromJson(json);
+  factory VersionDto.fromJson(Map<String, dynamic> json) => _$VersionDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$VersionDtoToJson(this);
 }

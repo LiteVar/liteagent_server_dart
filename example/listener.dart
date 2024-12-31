@@ -2,13 +2,14 @@ import 'dart:convert';
 import 'package:lite_agent_core_dart/lite_agent_core.dart';
 import 'package:opentool_dart/opentool_dart.dart';
 
-void listen(AgentMessageDto agentMessageDto) {
+void listen(String sessionId, AgentMessageDto agentMessageDto) {
   String system = "🖥SYSTEM";
   String user = "👤USER";
   String agent = "🤖AGENT";
   String llm = "💡LLM";
   String tool = "🔧TOOL";
   String client = "🔗CLIENT";
+  String reflection = "🎯REFLECTION";
 
   String message = "";
   if (agentMessageDto.type == ToolMessageType.TEXT)
@@ -16,10 +17,8 @@ void listen(AgentMessageDto agentMessageDto) {
   if (agentMessageDto.type == ToolMessageType.IMAGE_URL)
     message = agentMessageDto.message as String;
   if (agentMessageDto.type == ToolMessageType.FUNCTION_CALL_LIST) {
-    List<dynamic> originalFunctionCallList =
-    agentMessageDto.message as List<dynamic>;
-    List<FunctionCall> functionCallList =
-    originalFunctionCallList.map((dynamic json) {
+    List<dynamic> originalFunctionCallList = agentMessageDto.message as List<dynamic>;
+    List<FunctionCall> functionCallList = originalFunctionCallList.map((dynamic json) {
       return FunctionCall.fromJson(json);
     }).toList();
     message = jsonEncode(functionCallList);
@@ -27,7 +26,19 @@ void listen(AgentMessageDto agentMessageDto) {
   if (agentMessageDto.type == ToolMessageType.TOOL_RETURN) {
     message = jsonEncode(ToolReturn.fromJson(agentMessageDto.message));
   }
-  ;
+  if (agentMessageDto.type == ToolMessageType.CONTENT_LIST) {
+    List<dynamic> originalContentList = agentMessageDto.message as List<dynamic>;
+    List<ContentDto> contentList = originalContentList.map((dynamic json) {
+      return ContentDto.fromJson(json);
+    }).toList();
+    message = jsonEncode(contentList);
+  }
+  if (agentMessageDto.type == AgentMessageType.TASK_STATUS) {
+    message = jsonEncode(TaskStatusDto.fromJson(agentMessageDto.message));
+  }
+  if (agentMessageDto.type == TextMessageType.REFLECTION) {
+    message = jsonEncode(ReflectionDto.fromJson(agentMessageDto.message));
+  }
 
   String from = "";
   if (agentMessageDto.from == ToolRoleType.SYSTEM) {
@@ -39,6 +50,7 @@ void listen(AgentMessageDto agentMessageDto) {
   if (agentMessageDto.from == ToolRoleType.LLM) from = llm;
   if (agentMessageDto.from == ToolRoleType.TOOL) from = tool;
   if (agentMessageDto.from == ToolRoleType.CLIENT) from = client;
+  if (agentMessageDto.from == ToolRoleType.REFLECTION) from = reflection;
 
   String to = "";
   if (agentMessageDto.to == ToolRoleType.SYSTEM) to = system;
@@ -47,8 +59,9 @@ void listen(AgentMessageDto agentMessageDto) {
   if (agentMessageDto.to == ToolRoleType.LLM) to = llm;
   if (agentMessageDto.to == ToolRoleType.TOOL) to = tool;
   if (agentMessageDto.to == ToolRoleType.CLIENT) to = client;
+  if (agentMessageDto.to == ToolRoleType.REFLECTION) to = reflection;
 
   if (from.isNotEmpty && to.isNotEmpty) {
-    print("#${agentMessageDto.sessionId}:${agentMessageDto.taskId}# $from -> $to: [${agentMessageDto.type}] $message");
+    print("#${sessionId}::${agentMessageDto.taskId}# $from -> $to: [${agentMessageDto.type}] $message");
   }
 }

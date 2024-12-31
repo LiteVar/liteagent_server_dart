@@ -41,7 +41,7 @@ Future<void> main() async {
 
   if (sessionDto != null) {
     print("[sessionDto] " + sessionDto.toJson().toString());
-    WebSocket webSocket = await connectChat(sessionDto.id, (agentMessageDto) => listen(agentMessageDto));
+    WebSocket webSocket = await connectChat(sessionDto.id, (agentMessageDto) => listen(sessionDto.id, agentMessageDto));
 
     print("[webSocket] " + webSocket.toString());
 

@@ -1,29 +1,34 @@
 import 'dart:io';
+import 'package:lite_agent_core_dart/lite_agent_core.dart';
+import 'package:lite_agent_core_dart_server/lite_agent_core_dart_server.dart';
+import 'package:opentool_dart/opentool_dart.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_router/shelf_router.dart';
-import '../lib/src/config.dart';
-import '../lib/src/router.dart';
-import '../lib/src/middleware.dart';
-import '../lib/src/util/logger.dart';
+import '../example/mock/driver/mock_driver.dart';
+
+List<ToolDriver> globalToolDriverList = [
+  /// add GlobalToolDriver here, for all sessions
+];
+
+final AgentService agentService = AgentService(globalToolDriverList: globalToolDriverList);
+
+Map<String, OpenToolDriver> openToolDriverMap = {
+  /// add openToolDriverMap here, for opentool spec usage
+  "mock-tool": MockDriver()
+};
+
+final AgentController agentController = AgentController(agentService, openToolDriverMap: openToolDriverMap);
 
 void main(List<String> args) async {
-  await startServer();
-}
-
-Future<void> startServer() async {
-  final Router router = Router();
-  apiRoutes();
-  router.mount(config.server.apiPathPrefix, apiRouter);
+  apiRoutes(agentController);
+  final Router mainRouter = Router();
+  mainRouter.mount(config.server.apiPathPrefix, apiRouter);
   Handler handler = const Pipeline()
-      //.addMiddleware(checkAuthorization("<ADD_YOUR_AUTHORIZATION_HERE>"))
+  //.addMiddleware(checkAuthorization("<ADD_YOUR_AUTHORIZATION_HERE>"))
       .addMiddleware(logRequest())
-      .addHandler(router);
+      .addHandler(mainRouter);
 
-  HttpServer server =
-      await serve(handler, config.server.ip, config.server.port);
-  logger.log(
-      LogModule.http,
-      "Start Server",
-      detail: "http://${server.address.host}:${server.port}${config.server.apiPathPrefix}");
+  HttpServer server = await serve(handler, config.server.ip, config.server.port);
+  logger.log(LogModule.http, "Start Server", detail: "http://${server.address.host}:${server.port}${config.server.apiPathPrefix}");
 }

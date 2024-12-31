@@ -1,3 +1,9 @@
+## 0.5.0
+
+- add text and tool reflection
+- add tasks and tools pipeline support
+- opentool selection support
+
 ## 0.4.0
 
 - add multi agent supported

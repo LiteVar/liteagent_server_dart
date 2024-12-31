@@ -7,9 +7,9 @@ part of 'config.dart';
 // **************************************************************************
 
 Config _$ConfigFromJson(Map<String, dynamic> json) => Config(
-      version: json['version'] as String,
       server: Server.fromJson(json['server'] as Map<String, dynamic>),
       log: Log.fromJson(json['log'] as Map<String, dynamic>),
+      version: json['version'] as String? ?? "0.0.0",
     );
 
 Server _$ServerFromJson(Map<String, dynamic> json) => Server(

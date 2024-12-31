@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:logging/logging.dart';
+import 'package:yaml/yaml.dart';
 
 part 'config.g.dart';
 
@@ -12,7 +13,19 @@ Config initConfig() {
   String configJsonString = File(configFilePath).readAsStringSync();
   final Map<String, dynamic> configJson = jsonDecode(configJsonString);
   final Config config = Config.fromJson(configJson);
+  String? versionFromPubspec = getVersionFromPubspec();
+  if(versionFromPubspec != null) config.version = versionFromPubspec;
   return config;
+}
+
+String? getVersionFromPubspec() {
+  String pubspecFilePath = '${Directory.current.path}${Platform.pathSeparator}pubspec.yaml';
+  File pubspecFile = File(pubspecFilePath);
+  if (!pubspecFile.existsSync()) return null;
+
+  String pubspecYamlString = pubspecFile.readAsStringSync();
+  final YamlMap pubspecYaml = loadYaml(pubspecYamlString);
+  return pubspecYaml['version'];
 }
 
 @JsonSerializable(createToJson: false)
@@ -21,7 +34,7 @@ class Config {
   late Server server;
   late Log log;
 
-  Config({required this.version, required this.server, required this.log});
+  Config({required this.server, required this.log, this.version = "0.0.0"});
 
   factory Config.fromJson(Map<String, dynamic> json) => _$ConfigFromJson(json);
 }

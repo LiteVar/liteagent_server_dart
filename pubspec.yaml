@@ -1,24 +1,26 @@
 name: lite_agent_core_dart_server
 description: HTTP Server using `Lite Agent core for Dart`
-version: 0.4.0
+version: 0.5.0
 repository: https://github.com/LiteVar/lite_agent_core_dart_server
 
 environment:
   sdk: ^3.4.3
 
 dependencies:
+  yaml: ^3.1.3
   shelf: ^1.4.0
   shelf_router: ^1.1.0
-  shelf_web_socket: ^2.0.0
-  web_socket_channel: ^3.0.0
+  shelf_web_socket: ^2.0.1
+  web_socket_channel: ^3.0.1
   logging: ^1.2.0
   json_annotation: ^4.9.0
-  lite_agent_core_dart: ^0.4.0
+  lite_agent_core_dart: #^0.5.1
+    path: ../lite_agent_core_dart
+  opentool_dart: ^0.2.4
 
 dev_dependencies:
-  opentool_dart: ^0.2.0
   build_runner: ^2.4.9
-  json_serializable: ^6.8.0
+  json_serializable: ^6.9.2
   http: ^1.1.0
   lints: ^3.0.0
   test: ^1.24.0
