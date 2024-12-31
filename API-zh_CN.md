@@ -70,26 +70,38 @@ https://api.example.com/v1
 
 #### 请求参数
 
-| 字段名                     | 类型       | 说明                                                           |
-|-------------------------|----------|--------------------------------------------------------------|
-| `llmConfig`             | `object` | 大模型配置，包含以下字段：                                                |
-| `llmConfig.baseUrl`     | `string` | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                   |
-| `llmConfig.apiKey`      | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                              |
-| `llmConfig.model`       | `string` | 大模型名称，例如：gpt-3.5-turbo                                       |
-| `llmConfig.temperature` | `number` | （可选）温度值，默认为 0                                                |
-| `llmConfig.maxTokens`   | `number` | （可选）最大 token 数，默认为 4096                                      |
-| `llmConfig.topP`        | `number` | （可选）概率抽样的 p 值，默认为 1                                          |
-| `systemPrompt`          | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题                      |
-| `openSpecList`          | `array`  | （可选）Spec 列表，数组中每个元素为 `object`                                |
-| `openSpecList.openSpec` | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`openmodbus`、`openrpc`   |
-| `openSpecList.apiKey`   | `object` | （可选）第三方服务的 API Key                                           |
-| `openSpecList.type`     | `string` | `basic` 或 `bearer` 二选一                                       |
-| `openSpecList.apiKey`   | `string` | 第三方服务的 API Key                                               |
-| `openSpecList.protocol` | `string` | 目前支持 `openapi`、`openmodbus`、`jsonrpcHttp`                    |
-| `sessionList`           | `array`  | （可选）Session 列表，数组中每个元素为 `object`                             |
-| `sessionList.id`        | `string` | Sub Agent 的 sessionId                                        |
-| `sessionList.name`      | `string` | （可选）Sub Agent 的自定义名称，必须由 a-z、A-Z、0-9 组成，或包含下划线和破折号，最大长度为 64。 |
-| `timeoutSeconds`        | `number` | （可选）超时时间，默认为3600，以秒为单位                                       |
+| 字段名                                       | 类型       | 说明                                                                                                                 |
+|-------------------------------------------|----------|--------------------------------------------------------------------------------------------------------------------|
+| `llmConfig`                               | `object` | 大模型配置，包含以下字段：                                                                                                      |
+| `llmConfig.baseUrl`                       | `string` | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                                                                         |
+| `llmConfig.apiKey`                        | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                                                                                    |
+| `llmConfig.model`                         | `string` | 大模型名称，例如：gpt-4o-mini                                                                                               |
+| `llmConfig.temperature`                   | `number` | （可选）温度值，默认为 0                                                                                                      |
+| `llmConfig.maxTokens`                     | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
+| `llmConfig.topP`                          | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
+| `systemPrompt`                            | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题                                                                            |
+| `openSpecList`                            | `array`  | （可选）Spec 列表，数组中每个元素为 `object`                                                                                      |
+| `openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`openmodbus`、`openrpc`、`opentool`                                              |
+| `openSpecList.apiKey`                     | `object` | （可选）第三方服务的 API Key                                                                                                 |
+| `openSpecList.apiKey.type`                | `string` | `basic` 或 `bearer` 二选一                                                                                             |
+| `openSpecList.apiKey.apiKey`              | `string` | 第三方服务的 API Key                                                                                                     |
+| `openSpecList.protocol`                   | `string` | 目前支持 `openapi`、`openmodbus`、`jsonrpcHttp`、`opentool`                                                               |
+| `openSpecList.openToolId`                 | `array`  | （可选）当`protocol`为`opentool`时有效，表示选用哪些opentool作为spec，数组中每个元素为 `string`                                               |
+| `sessionList`                             | `array`  | （可选）Session 列表，数组中每个元素为 `object`                                                                                   |
+| `sessionList.id`                          | `string` | Sub Agent 的 sessionId                                                                                              |
+| `sessionList.name`                        | `string` | （可选）Sub Agent 的自定义名称，必须由 a-z、A-Z、0-9 组成，或包含下划线和破折号，最大长度为 64。                                                       |
+| `reflectPromptList`                       | `array`  | （可选）ReflectPrompt 列表，数组中每个元素为 `object`; **若`openSpecList`为空则反思LLM的text，否则反思LLM的Function Calling**                  |
+| `reflectPromptList.llmConfig`             | `object` | `ReflectAgent` 的 `llmConfig`，用于请求大模型                                                                               |
+| `reflectPromptList.llmConfig.baseUrl`     | `string` | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                                                                         |
+| `reflectPromptList.llmConfig.apiKey`      | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                                                                                    |
+| `reflectPromptList.llmConfig.model`       | `string` | 大模型名称，例如：gpt-4o-mini                                                                                               |
+| `reflectPromptList.llmConfig.temperature` | `number` | （可选）温度值，默认为 0                                                                                                      |
+| `reflectPromptList.llmConfig.maxTokens`   | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
+| `reflectPromptList.llmConfig.topP`        | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
+| `reflectPromptList.prompt`                | `string` | `ReflectAgent`的 System Prompt，用以描述reflection分数的判断标准。                                                               |
+| `timeoutSeconds`                          | `number` | （可选）超时时间，默认为3600，以秒为单位                                                                                             |
+| `taskPipelineStrategy`                    | `enum`   | （可选）同一会话下，新的任务指令，执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel`                      |
+| `toolPipelineStrategy`                    | `enum`   | （可选）同一任务下，若function calling返回为数组时，tool执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel` |
 
 #### 请求示例
 
@@ -548,20 +560,35 @@ ws://127.0.0.1:9527/api/chat?id=<sessionId>
 
 ### 1. `type`在不同类型下的`message`结构 
 
-| `type` 或 元素字段                 | message或元素字段的数据类型          | 说明                                                                                                                                                                              |
-|-------------------------------|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1. `text`                     | `string`                   | 纯文本                                                                                                                                                                             |
-| 2. `imageUrl`                 | `string`                   | 纯文本，可以为 图片链接格式 或 base64格式                                                                                                                                                       |
-| 3. `functionCallList`         | `array`                    | 大模型 `function calling` 返回的内容，元素类型为`object`                                                                                                                                      |
-| `functionCallList.id`         | `string`                   | 大模型返回的 `function calling` 的id                                                                                                                                                   |
-| `functionCallList.name`       | `string`                   | `function`的名称                                                                                                                                                                   |
-| `functionCallList.parameters` | Map\[`string`, `dynamic`\] | 大模型返回的参数map                                                                                                                                                                     |
-| 4. `toolReturn`               | `object`                   | 工具执行的返回                                                                                                                                                                         |
-| `toolReturn.id`               | `string`                   | 对应`functionCallList.id`                                                                                                                                                         |
-| `toolReturn.result`           | Map\[`string`, `dynamic`\] | 工具返回的结果                                                                                                                                                                         |
-| 5. `contentList`              | `array`                    | 用户的消息数组，元素类型为`object`                                                                                                                                                           |
-| `contentList.type`            | `string`                   | 可选类型为`text`、`imageUrl`                                                                                                                                                          |
-| `contentList.message`         | `string`                   | 消息内容，例如："给我一个随机数"; <br/>如果消息类型为imageUrl，message的String可选为：<br/>1. 图片链接："https://example.com/path/to/image.png" ，且确保公网可访问<br/>2. base64格式："data:image/jpeg;base64,{图片的base64编码}" |
+| `type` 或 元素字段                                          | message或元素字段的数据类型          | 说明                                                                                                                                                                              |
+|--------------------------------------------------------|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1. `text`                                              | `string`                   | 纯文本                                                                                                                                                                             |
+| 2. `imageUrl`                                          | `string`                   | 纯文本，可以为 图片链接格式 或 base64格式                                                                                                                                                       |
+| 3. `functionCallList`                                  | `array`                    | 大模型 `function calling` 返回的内容，元素类型为`object`                                                                                                                                      |
+| `functionCallList.id`                                  | `string`                   | 大模型返回的 `function calling` 的id                                                                                                                                                   |
+| `functionCallList.name`                                | `string`                   | `function`的名称                                                                                                                                                                   |
+| `functionCallList.parameters`                          | Map\[`string`, `dynamic`\] | 大模型返回的参数map                                                                                                                                                                     |
+| 4. `toolReturn`                                        | `object`                   | 工具执行的返回                                                                                                                                                                         |
+| `toolReturn.id`                                        | `string`                   | 对应`functionCallList.id`                                                                                                                                                         |
+| `toolReturn.result`                                    | Map\[`string`, `dynamic`\] | 工具返回的结果                                                                                                                                                                         |
+| 5. `contentList`                                       | `array`                    | 用户的消息数组，元素类型为`object`                                                                                                                                                           |
+| `contentList.type`                                     | `string`                   | 可选类型为`text`、`imageUrl`                                                                                                                                                          |
+| `contentList.message`                                  | `string`                   | 消息内容，例如："给我一个随机数"; <br/>如果消息类型为imageUrl，message的String可选为：<br/>1. 图片链接："https://example.com/path/to/image.png" ，且确保公网可访问<br/>2. base64格式："data:image/jpeg;base64,{图片的base64编码}" |
+| 6. `reflection`                                        | `object`                   | 反思的结果                                                                                                                                                                           |
+| `reflection.isPass`                                    | `boolean`                  | 反思是否通过                                                                                                                                                                          |
+| `reflection.messageScore`                              | `object`                   | 当次反思的原文及分数                                                                                                                                                                      |
+| `reflection.messageScore.contentList`                  | `array`                    | 同第5点，记录用户的原始消息                                                                                                                                                                  |
+| `reflection.messageScore.messageType`                  | `string`                   | 可选类型为`text`、`functionCalling`                                                                                                                                                   |
+| `reflection.messageScore.message`                      | `string`                   | 根据messageType不同而不同                                                                                                                                                              |
+| `reflection.messageScore.reflectScoreList`             | `array`                    | 不同反思agent得到的分数的数组，元素类型为`object`                                                                                                                                                 |
+| `reflection.messageScore.reflectScoreList.score`       | `int`                      | 分数                                                                                                                                                                              |
+| `reflection.messageScore.reflectScoreList.description` | `string`                   | （可选）得分描述                                                                                                                                                                        |
+| `reflection.passScore`                                 | `int`                      | 合格的分数，默认为8                                                                                                                                                                      |
+| `reflection.count`                                     | `int`                      | 当前反思的迭代次数                                                                                                                                                                       |
+| `reflection.maxCount`                                  | `int`                      | 最大允许的反思迭代次数，默认为10                                                                                                                                                               |
+| 7. `taskStatus`                                        | `object`                   | 用户的消息数组，元素类型为`object`                                                                                                                                                           |
+| `taskStatus.status`                                    | `string`                   | 可选类型为`start`、`stop`、`done`、`exception`                                                                                                                                          |
+| `taskStatus.description`                               | Map\[`string`, `dynamic`\] | 消息的描述，一般为`exception`时有值                                                                                                                                                         |
 
 **`text`类型消息示例**
 
