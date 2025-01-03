@@ -8,14 +8,14 @@ import 'package:shelf_router/shelf_router.dart';
 import '../example/mock/driver/mock_driver.dart';
 
 List<ToolDriver> globalToolDriverList = [
-  /// add GlobalToolDriver here, for all sessions
+  /// add GlobalToolDriver here, for all agent sessions
 ];
 
 final AgentService agentService = AgentService(globalToolDriverList: globalToolDriverList);
 
-Map<String, OpenToolDriver> openToolDriverMap = {
+Map<OpenToolDto, OpenToolDriver> openToolDriverMap = {
   /// add openToolDriverMap here, for opentool spec usage
-  "mock-tool": MockDriver()
+  OpenToolDto(openToolId: "mock-tool", description: "A Mock CRUD Sample Tools"): MockDriver()
 };
 
 final AgentController agentController = AgentController(agentService, openToolDriverMap: openToolDriverMap);
@@ -26,8 +26,8 @@ void main(List<String> args) async {
   mainRouter.mount(config.server.apiPathPrefix, apiRouter);
   Handler handler = const Pipeline()
   //.addMiddleware(checkAuthorization("<ADD_YOUR_AUTHORIZATION_HERE>"))
-      .addMiddleware(logRequest())
-      .addHandler(mainRouter);
+    .addMiddleware(logRequest())
+    .addHandler(mainRouter);
 
   HttpServer server = await serve(handler, config.server.ip, config.server.port);
   logger.log(LogModule.http, "Start Server", detail: "http://${server.address.host}:${server.port}${config.server.apiPathPrefix}");

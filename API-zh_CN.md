@@ -11,6 +11,7 @@
   - [/history](#5-获取历史消息)：取某个会话的历史消息列表。该接口不支持 SimpleAgent。
   - [/stop](#6-停止会话)：通过指定 sessionId 停止对应的会话操作，此接口不支持 SimpleAgent。
   - [/clear](#7-清除会话数据)：清除会话数据，返回对应的 sessionId，不支持 SimpleAgent。
+  - [/opentool-list](#8-获取可用的opentool列表)：获取可用的opentool列表，可用在`/init`中
 - WebSocket API
   - [客户端消息](#客户端消息)
     - [保持连接](#1-保持连接)
@@ -449,6 +450,40 @@ GET /clear?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 {
     "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
 }
+```
+
+### 8. 获取可用的OpenTool列表
+
+**请求方法**: `GET`
+
+**路径**: `/opentool-list`
+
+**功能说明**: 获取当前支持的opentool列表。
+
+#### 请求参数
+
+无
+
+#### 响应
+
+**状态码**: `200 OK`
+
+**响应体**:`array`类型，对应的`ojbect`为：
+
+| 字段名           | 类型       | 说明                                                                            |
+|---------------|----------|-------------------------------------------------------------------------------|
+| `openToolId`  | `string` | 可以调用的OpenTool的Id，用于 `2. 初始化SessionAgent会话` `/init` `openSpecList.openToolId`中 |
+| `description` | `string` | 对应OpenTool的描述                                                                 |
+
+#### 响应示例
+
+```json
+  [
+    {
+      "openToolId":"mock-tool",
+      "description":"A Mock CRUD Sample Tools"
+    }
+  ]
 ```
 
 ## WebSocket API

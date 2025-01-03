@@ -15,10 +15,10 @@ Map<String, WebSocketChannel> webSocketSessions = {};
 
 class AgentController {
   final AgentService agentService;
-  final Map<String, OpenToolDriver> openToolDriverMap = {};
+  final Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = {};
 
-  AgentController(this.agentService, {Map<String, OpenToolDriver> openToolDriverMap = const {}}) {
-    this.openToolDriverMap.addAll(openToolDriverMap);
+  AgentController(this.agentService, {Map<OpenToolDto, OpenToolDriver> openToolDriverMap = const {}}) {
+    this.openToolDriverInfoMap.addAll(openToolDriverMap);
   }
 
   Future<Response> getVersion(Request request) async {
@@ -42,6 +42,12 @@ class AgentController {
               "openSpecListLength: ${capabilityDto.openSpecList == null ?"null": capabilityDto.openSpecList!.length}," +
               "sessionListLength: ${capabilityDto.sessionList == null ?"null": capabilityDto.sessionList!.length}"
       );
+
+      Map<String, OpenToolDriver>? openToolDriverMap = {};
+
+      openToolDriverInfoMap.forEach((openToolDto, openToolDriver) {
+          openToolDriverMap[openToolDto.openToolId] = openToolDriver;
+      });
 
       SessionDto sessionDto = await agentService.initSession(capabilityDto, listen, opentoolDriverMap: openToolDriverMap);
 
@@ -229,6 +235,12 @@ class AgentController {
     webSocketChannel?.sink.add(jsonEncode(agentMessageDto.toJson()));
   }
 
+  Future<Response> getOpenToolList(Request request) async {
+    logger.log(LogModule.http, "Request getOpenToolList");
+    List<Map<String, dynamic>> openToolDtoJsonList = openToolDriverInfoMap.keys.map((openToolDto) => openToolDto.toJson()).toList();
+    logger.log(LogModule.http, "Response getOpenToolList", detail: jsonEncode(openToolDtoJsonList));
+    return Response.ok(jsonEncode(openToolDtoJsonList));
+  }
   // void pushException(String sessionId, ExceptionMessageDto exceptionMessageDto) {
   //   WebSocketChannel? webSocketChannel = webSocketSessions[sessionId];
   //   webSocketChannel?.sink.add(jsonEncode(exceptionMessageDto.toJson()));

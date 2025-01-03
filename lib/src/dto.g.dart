@@ -14,3 +14,14 @@ Map<String, dynamic> _$VersionDtoToJson(VersionDto instance) =>
     <String, dynamic>{
       'version': instance.version,
     };
+
+OpenToolDto _$OpenToolDtoFromJson(Map<String, dynamic> json) => OpenToolDto(
+      openToolId: json['openToolId'] as String,
+      description: json['description'] as String,
+    );
+
+Map<String, dynamic> _$OpenToolDtoToJson(OpenToolDto instance) =>
+    <String, dynamic>{
+      'openToolId': instance.openToolId,
+      'description': instance.description,
+    };

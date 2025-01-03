@@ -11,6 +11,7 @@
     - [/history](#5-retrieve-message-history): Retrieve the history of messages for a specific session. This API does not support SimpleAgent.
     - [/stop](#6-stop-session): Stops the specified session by sessionId. This API does not support SimpleAgent.
     - [/clear](#7-clear-session-data): Clear the session data, returning the corresponding sessionId. This API does not support SimpleAgent.
+    - [/opentool-list](#8-get-available-opentool-list): Retrieve the list of available OpenTools, which can be used in `/init`.
 - WebSocket API
     - [Client Messages](#client-messages)
         - [Keep Connection Alive](#1-keep-connection)
@@ -455,6 +456,39 @@ GET /clear?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 }
 ```
 
+### 8. Get Available OpenTool List
+
+**Request Method**: `GET`
+
+**Path**: `/opentool-list`
+
+**Description**: Retrieve the list of currently supported OpenTools.
+
+#### Request Parameters
+
+None
+
+#### Response
+
+**Status Code**: `200 OK`
+
+**Response Body**: Type `array`, where each element is an `object` with the following fields:
+
+| Field Name    | Type     | Description                                                                                                      |
+|---------------|----------|------------------------------------------------------------------------------------------------------------------|
+| `openToolId`  | `string` | The ID of the callable OpenTool, used in `2. Initialize SessionAgent Session` `/init` `openSpecList.openToolId`. |
+| `description` | `string` | Description of the OpenTool.                                                                                     |
+
+#### Response Example
+
+```json
+  [
+    {
+      "openToolId": "mock-tool",
+      "description": "A Mock CRUD Sample Tool"
+    }
+  ]
+```
 
 ## WebSocket API
 

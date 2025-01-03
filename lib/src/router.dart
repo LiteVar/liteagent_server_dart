@@ -12,4 +12,5 @@ void apiRoutes(AgentController agentController) {
   apiRouter.get('/history', agentController.history);
   apiRouter.get('/stop', agentController.stopSession);
   apiRouter.get('/clear', agentController.clearSession);
+  apiRouter.get('/opentool-list', agentController.getOpenToolList);
 }

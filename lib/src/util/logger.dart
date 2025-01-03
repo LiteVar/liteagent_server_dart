@@ -33,8 +33,7 @@ class AgentLogger {
     });
   }
 
-  void log(LogModule module, String message,
-      {String detail = "", Level level = Level.INFO}) {
+  void log(LogModule module, String message, {String detail = "{}", Level level = Level.INFO}) {
     _logger?.log(level, "[${module.name.toUpperCase()}] $message - $detail");
   }
 }
