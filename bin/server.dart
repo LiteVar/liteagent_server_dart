@@ -13,12 +13,12 @@ List<ToolDriver> globalToolDriverList = [
 
 final AgentService agentService = AgentService(globalToolDriverList: globalToolDriverList);
 
-Map<OpenToolDto, OpenToolDriver> openToolDriverMap = {
+Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = {
   /// add openToolDriverMap here, for opentool spec usage
   OpenToolDto(openToolId: "mock-tool", description: "A Mock CRUD Sample Tools"): MockDriver()
 };
 
-final AgentController agentController = AgentController(agentService, openToolDriverMap: openToolDriverMap);
+final AgentController agentController = AgentController(agentService, openToolDriverInfoMap: openToolDriverInfoMap);
 
 void main(List<String> args) async {
   apiRoutes(agentController);

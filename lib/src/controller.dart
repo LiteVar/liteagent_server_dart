@@ -17,8 +17,8 @@ class AgentController {
   final AgentService agentService;
   final Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = {};
 
-  AgentController(this.agentService, {Map<OpenToolDto, OpenToolDriver> openToolDriverMap = const {}}) {
-    this.openToolDriverInfoMap.addAll(openToolDriverMap);
+  AgentController(this.agentService, {Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = const {}}) {
+    this.openToolDriverInfoMap.addAll(openToolDriverInfoMap);
   }
 
   Future<Response> getVersion(Request request) async {
