@@ -627,6 +627,7 @@ ws://127.0.0.1:9527/api/chat?id=<sessionId>
 | `reflection.maxCount`                                  | `int`                                   | The maximum allowed iteration count for reflection, defaults to 10.                                                                                                                                                                                                                               |
 | 7. `taskStatus`                                        | `object`                                | Array of user messages, each element is an `object`.                                                                                                                                                                                                                                              |
 | `taskStatus.status`                                    | `string`                                | Possible types: `start`, `stop`, `done`, `exception`.                                                                                                                                                                                                                                             |
+| `taskStatus.taskId`                                    | `string`                                | Current Task ID                                                                                                                                                                                                                                                                                   |
 | `taskStatus.description`                               | Map\[`string`, `dynamic`\]              | Description of the message, generally provided when the status is `exception`.                                                                                                                                                                                                                    |
 
 **Example of `text` type message**
@@ -690,10 +691,13 @@ ws://127.0.0.1:9527/api/chat?id=<sessionId>
 ]
 ```
 
-### 2. Status Strings in `message` when `to` is `client`:
+### 2. Status Strings in `message` when `to` is `client`
 
-- `"[TASK_START]"`: Agent receives the user message and prepares to process it.
-- `"[TOOLS_START]"`: Preparing to submit Tools for execution.
-- `"[TOOLS_DONE]"`: Tools execution completed.
-- `"[TASK_STOP]"`: Agent receives a stop or clear command and stops the task.
-- `"[TASK_DONE]"`: Agent has completed processing.
+in `taskStatus.status`:
+
+- `"start"`: Agent receives the user message and prepares to process it.
+- `"toolsStart"`: Preparing to submit Tools for execution.
+- `"toolsDone"`: Tools execution completed.
+- `"stop"`: Agent receives a stop or clear command and stops the task.
+- `"done"`: Agent has completed processing.
+- `"exception"`: An exception occurred during processing.

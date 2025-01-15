@@ -33,27 +33,35 @@
 
 #### 3.1 典型的交互例子
 
+`/example/single_agent_example.dart`的运行结果：
+
 ```
-[/init请求] {llmConfig: ..., systemPrompt:..., openSpecList: [...]}
-[/init返回SessionId] {id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a}
-[/chat建立ws连接后，发送userMessage] {taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a, contentList: [{type: text, message: 查询某功能运行结果}]}
-[ws推送] id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a# 🤖AGENT -> 🔗CLIENT: [text] [TASK_START]
-[ws推送] id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a# 👤USER -> 🤖AGENT: [text] 查询某功能运行结果
-[ws推送] id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a# 🤖AGENT -> 💡LLM: [text] 查询某功能运行结果
-[ws推送] id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a# 💡LLM -> 🤖AGENT: [functionCallList] [{"id":"call_73xLVZDe70QgLHsURgY5BNT0","name":"SomeFunction","parameters":{"operation":"result"}}]
-[ws推送] id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a# 🤖AGENT -> 🔧TOOL: [functionCallList] [{"id":"call_73xLVZDe70QgLHsURgY5BNT0","name":"SomeFunction","parameters":{"operation":"result"}}]
-[ws推送] id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a# 🤖AGENT -> 🔗CLIENT: [text] [TOOLS_START]
-[ws推送] id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a# 🔧TOOL -> 🤖AGENT: [toolReturn] {"id":"call_73xLVZDe70QgLHsURgY5BNT0","result":{"statusCode":200,"body":"{\"code\":200,\"message\":\"FAIL\"}"}}
-[ws推送] id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a# 🤖AGENT -> 💡LLM: [toolReturn] {"id":"call_73xLVZDe70QgLHsURgY5BNT0","result":{"statusCode":200,"body":"{\"code\":200,\"message\":\"FAIL\"}"}}
-[ws推送] id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a# 🔧TOOL -> 🤖AGENT: [text] [TOOLS_DONE]
-[ws推送] id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a# 🤖AGENT -> 🔗CLIENT: [text] [TOOLS_DONE]
-[ws推送] id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a# 💡LLM -> 🤖AGENT: [text] 功能运行结果为FAIL。
-[ws推送] id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a# 🤖AGENT -> 👤USER: [text] 功能运行结果为FAIL。
-[ws推送] id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a# 🤖AGENT -> 🔗CLIENT: [text] [TASK_DONE]
-[ws推送] id: eccdacc8-a1a8-463f-b0af-7aebc278c842, taskId: 0b127f1d-4667-4a52-bbcb-0b636f9a471a# 🤖AGENT -> 🔗CLIENT: [text] [TASK_STOP]
-[/stop请求] {id: eccdacc8-a1a8-463f-b0af-7aebc278c842}
-[/clear请求] {id: eccdacc8-a1a8-463f-b0af-7aebc278c842}
-[ws关闭] WebSocket connection closed
+[capabilityDto] {llmConfig: Instance of 'LLMConfigDto', systemPrompt: A storage management tool that knows how to add, delete, modify, and query my texts., openSpecList: [Instance of 'OpenSpecDto'], timeoutSeconds: 20, taskPipelineStrategy: parallel, toolPipelineStrategy: null}
+[initChat->RES] {id: 2ed1687b-2d33-47ad-9875-fa83c7e7fb81}
+[sessionDto] {id: 2ed1687b-2d33-47ad-9875-fa83c7e7fb81}
+[webSocket] Instance of '_WebSocketImpl'
+[prompt] Find the text with ID 0.
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 🤖AGENT -> 🔗CLIENT: [taskStatus] {"status":"start","taskId":"1aaa0560-876c-410c-a5b1-53cba70b4cab"}
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 🖥SYSTEM -> 🤖AGENT: [text] 
+A storage management tool that knows how to add, delete, modify, and query my texts.
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 👤USER -> 🤖AGENT: [contentList] [{"type":"text","message":"Find the text with ID 0."}]
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 🤖AGENT -> 💡LLM: [contentList] [{"type":"text","message":"Find the text with ID 0."}]
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 💡LLM -> 🤖AGENT: [functionCallList] [{"id":"call_vGlzIzILnlJ07yCL6UPWbJCL","name":"POST-read","parameters":{"id":0}}]
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 🤖AGENT -> 🔧TOOL: [functionCallList] [{"id":"call_vGlzIzILnlJ07yCL6UPWbJCL","name":"POST-read","parameters":{"id":0}}]
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 🤖AGENT -> 🔗CLIENT: [taskStatus] {"status":"toolsStart","taskId":"1aaa0560-876c-410c-a5b1-53cba70b4cab","description":{"functionCallIdList":["call_vGlzIzILnlJ07yCL6UPWbJCL"]}}
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 🔧TOOL -> 🤖AGENT: [toolReturn] {"id":"call_vGlzIzILnlJ07yCL6UPWbJCL","result":{"statusCode":200,"body":"{\"text\":\"Hello\"}"}}
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 🤖AGENT -> 💡LLM: [toolReturn] {"id":"call_vGlzIzILnlJ07yCL6UPWbJCL","result":{"statusCode":200,"body":"{\"text\":\"Hello\"}"}}
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 🔧TOOL -> 🤖AGENT: [taskStatus] {"status":"toolsDone","taskId":"1aaa0560-876c-410c-a5b1-53cba70b4cab","description":{"functionCallIdList":["call_vGlzIzILnlJ07yCL6UPWbJCL"]}}
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 🤖AGENT -> 🔗CLIENT: [taskStatus] {"status":"toolsDone","taskId":"1aaa0560-876c-410c-a5b1-53cba70b4cab","description":{"functionCallIdList":["call_vGlzIzILnlJ07yCL6UPWbJCL"]}}
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 💡LLM -> 🤖AGENT: [text] The text with ID 0 is "Hello".
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 🤖AGENT -> 👤USER: [text] The text with ID 0 is "Hello".
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 🤖AGENT -> 🔗CLIENT: [taskStatus] {"status":"done","taskId":"1aaa0560-876c-410c-a5b1-53cba70b4cab"}
+[ping]
+[pong]
+#2ed1687b-2d33-47ad-9875-fa83c7e7fb81::1aaa0560-876c-410c-a5b1-53cba70b4cab# 🤖AGENT -> 🔗CLIENT: [taskStatus] {"status":"stop","taskId":""}
+[stopSessionDto] {id: 2ed1687b-2d33-47ad-9875-fa83c7e7fb81}
+[clearSessionDto] {id: 2ed1687b-2d33-47ad-9875-fa83c7e7fb81}
+WebSocket connection closed
 ```
 
 ## 构建运行

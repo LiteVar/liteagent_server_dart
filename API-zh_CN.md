@@ -623,7 +623,8 @@ ws://127.0.0.1:9527/api/chat?id=<sessionId>
 | `reflection.maxCount`                                  | `int`                      | 最大允许的反思迭代次数，默认为10                                                                                                                                                               |
 | 7. `taskStatus`                                        | `object`                   | 用户的消息数组，元素类型为`object`                                                                                                                                                           |
 | `taskStatus.status`                                    | `string`                   | 可选类型为`start`、`stop`、`done`、`exception`                                                                                                                                          |
-| `taskStatus.description`                               | Map\[`string`, `dynamic`\] | 消息的描述，一般为`exception`时有值                                                                                                                                                         |
+| `taskStatus.taskId`                                    | `string`                   | 当前任务状态的任务ID                                                                                                                                                                     |
+| `taskStatus.description`                               | Map\[`string`, `dynamic`\] | 消息的描述，一般为functionCall时、`exception`时有值                                                                                                                                           |
 
 **`text`类型消息示例**
 
@@ -685,10 +686,13 @@ ws://127.0.0.1:9527/api/chat?id=<sessionId>
 ]
 ```
 
-### 2. `to`为`client`时，message的几个状态字符串：
+### 2. `to`为`client`时，message的几个状态字符串
 
-- `"[TASK_START]"`：agent接收到user message，准备处理
-- `"[TOOLS_START]"`: 准备提交Tools执行
-- `"[TOOLS_DONE]"`: Tools执行完毕
-- `"[TASK_STOP]"`：agent接收到stop或者clear指令，停止任务
-- `"[TASK_DONE]"`：agent处理完成
+在`taskStatus.status`中：
+
+- `"start"`: agent接收到user message，准备处理
+- `"toolsStart"`: 准备提交Tools执行
+- `"toolsDone"`: Tools执行完毕
+- `"stop"`: agent接收到stop或者clear指令，停止任务
+- `"done"`: agent处理完成
+- `"exception"`: 处理过程中发生异常
