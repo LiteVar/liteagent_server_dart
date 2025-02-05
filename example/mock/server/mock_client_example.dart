@@ -21,7 +21,8 @@ Future<void> main() async {
       llmConfig: _buildLLMConfigDto(),
       systemPrompt: _buildSystemPrompt(),
       openSpecList: await _buildOpenSpecList(),
-      timeoutSeconds: 20);
+      timeoutSeconds: 20
+  );
 
   print("[capabilityDto] " + capabilityDto.toJson().toString());
 
@@ -155,7 +156,7 @@ LLMConfigDto _buildLLMConfigDto() {
 /// Use Prompt engineering to design SystemPrompt
 /// https://platform.openai.com/docs/guides/prompt-engineering
 String _buildSystemPrompt() {
-  return 'You are a tools caller, who can call book system tools to help me manage my storage.';
+  return 'You are a tools caller, who can call tools to help me manage my storage.';
 }
 
 Future<List<OpenSpecDto>> _buildOpenSpecList() async {

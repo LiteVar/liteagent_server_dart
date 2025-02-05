@@ -56,6 +56,9 @@ class AgentController {
     } on AgentNameException catch (e) {
       logger.log(LogModule.http, "Response initSession AgentNameException: ${e}", detail: payload, level: Level.WARNING);
       return Response.badRequest(body: e);
+    } on OpenToolIdNotFoundException catch (e) {
+      logger.log(LogModule.http, "Response initSession OpenToolIdNotFoundException: ${e}", detail: payload, level: Level.WARNING);
+      return Response.badRequest(body: e);
     } on FormatException catch (e) {
       logger.log(LogModule.http, "Response initSession FormatException: ${e}", detail: payload, level: Level.WARNING);
       return Response.badRequest(body: e);
