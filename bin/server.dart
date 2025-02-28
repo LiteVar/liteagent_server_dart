@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:lite_agent_core_dart/lite_agent_core.dart';
+import 'package:lite_agent_core_dart/lite_agent_service.dart';
 import 'package:lite_agent_core_dart_server/lite_agent_core_dart_server.dart';
 import 'package:opentool_dart/opentool_dart.dart';
 import 'package:shelf/shelf.dart';
@@ -18,10 +18,14 @@ Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = {
   OpenToolDto(openToolId: "mock-tool", description: "A Mock CRUD Sample Tools"): MockDriver()
 };
 
-final AgentController agentController = AgentController(agentService, openToolDriverInfoMap: openToolDriverInfoMap);
-
 void main(List<String> args) async {
-  apiRoutes(agentController);
+  String? dbPath = config.server.dbPath;
+  
+  final AgentController agentController = AgentController(agentService, openToolDriverInfoMap: openToolDriverInfoMap);
+  final AgentManageController agentManageController = AgentManageController(AgentManageServiceByDB(AgentDatabaseFactory.getInstance(dbPath != null?File(dbPath):null)));
+  
+  apiRoutes(agentController, agentManageController);
+  
   final Router mainRouter = Router();
   mainRouter.mount(config.server.apiPathPrefix, apiRouter);
   Handler handler = const Pipeline()

@@ -16,4 +16,5 @@ Server _$ServerFromJson(Map<String, dynamic> json) => Server(
       ip: json['ip'] as String? ?? "127.0.0.1",
       apiPathPrefix: json['apiPathPrefix'] as String? ?? "/api",
       port: (json['port'] as num?)?.toInt() ?? 9527,
+      dbPath: json['dbPath'] as String?,
     );

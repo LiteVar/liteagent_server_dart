@@ -3,7 +3,8 @@
   "server": {
     "ip": "0.0.0.0",
     "apiPathPrefix": "/api",
-    "port": 9527
+    "port": 9527,
+    "dbPath": "agent.db"
   },
   "log": {
     "level": "INFO"

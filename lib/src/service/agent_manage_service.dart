@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:lite_agent_core_dart/lite_agent_core.dart';
 import 'package:lite_agent_core_dart/lite_agent_service.dart';
-import 'package:drift/native.dart';
 import '../db/agent_database.dart';
 
 class AgentManageServiceByDB extends AgentManageService {
-  AgentDatabase agentDB = AgentDatabase(NativeDatabase.memory());
+  AgentDatabase agentDB;
+
+  AgentManageServiceByDB(this.agentDB);
 
   @override
   Future<String> addAgent(AgentDto agentDto) async {

@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:lite_agent_core_dart/lite_agent_core.dart';
 import 'package:lite_agent_core_dart/lite_agent_service.dart';
+import 'package:lite_agent_core_dart_server/src/controller/agent_message_listener.dart';
 import 'package:logging/logging.dart';
 import 'package:opentool_dart/opentool_dart.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf_web_socket/shelf_web_socket.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 import '../dto.dart';
 import '../config.dart';
 import '../util/logger.dart';
@@ -14,6 +16,7 @@ import '../util/logger.dart';
 class AgentController {
   final AgentService agentService;
   final Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = {};
+  final AgentMessageListener agentMessageListener = AgentMessageListener();
 
   AgentController(this.agentService, {Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = const {}}) {
     this.openToolDriverInfoMap.addAll(openToolDriverInfoMap);
@@ -92,47 +95,51 @@ class AgentController {
     }
   }
 
+  Future<Response> startStream(Request request) async {
+    Map<String, String> queryParameters = request.url.queryParameters;
+    final payload = await request.readAsString();
+    final data = jsonDecode(payload);
+
+    try {
+      final SessionDto sessionDto = SessionDto.fromJson(queryParameters);
+      UserTaskDto userTaskDto = UserTaskDto.fromJson(data);
+      agentService.startSession(sessionDto.id, userTaskDto);
+
+      Map<String, String> headers = {
+        HttpHeaders.contentTypeHeader: 'text/event-stream',
+        HttpHeaders.cacheControlHeader: 'no-cache',
+        HttpHeaders.connectionHeader: 'keep-alive',
+        'Cache-Control': 'no-store',
+      };
+
+      StreamController<List<int>> streamController = StreamController<List<int>>.broadcast();
+      AgentMessageSubscriber agentMessageSubscriber = AgentMessageSubscriberBySSE(streamController);
+      this.agentMessageListener.subscribe(sessionDto.id, agentMessageSubscriber);
+
+      return Response.ok(streamController.stream, headers: headers);
+    } on FormatException catch (e) {
+      logger.log(LogModule.http, "Response initSimple FormatException: ${e}", detail: payload, level: Level.WARNING);
+      return Response.badRequest(body: e);
+    } catch (e) {
+      logger.log(LogModule.http, "Response initSimple Exception: ${e}", detail: payload, level: Level.WARNING);
+      return Response.internalServerError(body: e);
+    }
+  }
+
   FutureOr<Response> startSession(Request request) {
     Map<String, String> data = request.url.queryParameters;
     logger.log(LogModule.http, "Request startSession", detail: jsonEncode(data));
-
-    String? sessionId = data["id"];
-    if(sessionId == null) return Response.badRequest(body: "Session `id` missing in query parameters.");
     final SessionDto sessionDto = SessionDto.fromJson(data);
 
-    return webSocketHandler((WebSocketChannel webSocket) {
-      webSocketSessions[sessionDto.id] = webSocket;
-      webSocket.stream.listen((message) {
-        final payload = message as String;
-        if (payload == "ping") {
-          logger.log(LogModule.ws, "Receive message", detail: payload, level: Level.FINER);
-          WebSocketChannel? webSocketChannel = webSocketSessions[sessionDto.id];
-          String pong = "pong";
-          logger.log(LogModule.ws, "Send message", detail: pong, level: Level.FINER);
-          webSocketChannel?.sink.add(pong);
-        } else {
-          final data = jsonDecode(payload);
-          UserTaskDto userTaskDto = UserTaskDto.fromJson(data);
-          logger.log(LogModule.ws, "Receive message", detail: payload);
-          agentService.startSession(sessionDto.id, userTaskDto);
-        }
-      }, onDone: () {
-        logger.log(LogModule.ws, "onDone", detail: jsonEncode(data));
-      }, onError: (e){
-        if(e is AgentNotFoundException) {
-          logger.log(LogModule.ws, "AgentNotFoundException: ${e}", detail: jsonEncode(e.toJson()), level: Level.WARNING);
-          webSocket.sink.close(WebSocketStatus.unsupportedData, jsonEncode(e.toJson()));
-        } else if(e is StrategyNotExistException) {
-          logger.log(LogModule.ws, "StrategyNotExistException: ${e}", detail: jsonEncode(e.toJson()), level: Level.WARNING);
-          webSocket.sink.close(WebSocketStatus.unsupportedData, jsonEncode(e.toJson()));
-        } else if(e is LLMException) {
-          logger.log(LogModule.ws, "LLMException: ${e}", detail: jsonEncode(e.toJson()), level: Level.WARNING);
-          webSocket.sink.close(WebSocketStatus.unsupportedData, jsonEncode(e.toJson()));
-        } else {
-          logger.log(LogModule.http, "Exception: ${e}", detail: e.toString(), level: Level.WARNING);
-          webSocket.sink.close(WebSocketStatus.internalServerError, "SessionId:${sessionDto.id}; ${e.toString()}");
-        }
+    return webSocketHandler((WebSocketChannel webSocketChannel) {
+      AgentMessageSubscriber agentMessageSubscriber = AgentMessageSubscriberByWS(webSocketChannel, sessionDto.id, onReceive: (message){
+        final payload = message;
+        final data = jsonDecode(payload);
+        UserTaskDto userTaskDto = UserTaskDto.fromJson(data);
+        logger.log(LogModule.ws, "Receive message", detail: payload);
+        agentService.startSession(sessionDto.id, userTaskDto);
       });
+      this.agentMessageListener.subscribe(sessionDto.id, agentMessageSubscriber);
     })(request);
   }
 
@@ -231,9 +238,7 @@ class AgentController {
   }
 
   void listen(String sessionId, AgentMessageDto agentMessageDto) {
-    WebSocketChannel? webSocketChannel = webSocketSessions[sessionId];
-    logger.log(LogModule.ws, "Send message", detail: jsonEncode(agentMessageDto.toJson()));
-    webSocketChannel?.sink.add(jsonEncode(agentMessageDto.toJson()));
+    agentMessageListener.listen(sessionId, agentMessageDto);
   }
 
   Future<Response> getOpenToolList(Request request) async {
@@ -242,8 +247,4 @@ class AgentController {
     logger.log(LogModule.http, "Response getOpenToolList", detail: jsonEncode(openToolDtoJsonList));
     return Response.ok(jsonEncode(openToolDtoJsonList));
   }
-// void pushException(String sessionId, ExceptionMessageDto exceptionMessageDto) {
-//   WebSocketChannel? webSocketChannel = webSocketSessions[sessionId];
-//   webSocketChannel?.sink.add(jsonEncode(exceptionMessageDto.toJson()));
-// }
 }

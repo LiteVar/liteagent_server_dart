@@ -1,12 +1,10 @@
-import 'package:lite_agent_core_dart_server/src/controller/agent_manage_controller.dart';
 import 'package:shelf_router/shelf_router.dart';
-import 'controller.dart';
+import 'controller/agent_controller.dart';
+import 'controller/agent_manage_controller.dart';
 
 final Router apiRouter = Router();
 
-AgentManageController agentManageController = AgentManageController();
-
-void apiRoutes(AgentController agentController) {
+void apiRoutes(AgentController agentController, AgentManageController agentManageController) {
   apiRouter.get('/version', agentController.getVersion);
 
   apiRouter.get('/agent/list', agentManageController.listAgent);
@@ -17,7 +15,9 @@ void apiRoutes(AgentController agentController) {
 
   apiRouter.post('/init', agentController.initSession);
   apiRouter.post('/init/simple', agentController.initSimple);
-  apiRouter.get('/chat', agentController.startSession);
+  apiRouter.get('/chat', agentController.startStream);
+  apiRouter.get('/chat/sse', agentController.startStream);
+  apiRouter.get('/chat/ws', agentController.startSession);
   apiRouter.post('/chat/simple', agentController.startSimple);
   apiRouter.get('/history', agentController.history);
   apiRouter.get('/stop', agentController.stopSession);

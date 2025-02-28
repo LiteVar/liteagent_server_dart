@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:lite_agent_core_dart/lite_agent_service.dart';
-import 'package:lite_agent_core_dart_server/src/service/agent_manage_service.dart';
 import 'package:shelf/shelf.dart';
 
-AgentManageService agentManageService = AgentManageServiceByDB();
-
 class AgentManageController {
+  AgentManageService agentManageService;
+
+  AgentManageController(this.agentManageService);
 
   Future<Response> listAgent(Request request) async {
     List<AgentInfoDto> agents = await agentManageService.getAgents();

@@ -1,11 +1,12 @@
 import 'dart:convert';
-import 'package:drift/native.dart';
 import 'package:lite_agent_core_dart/lite_agent_core.dart';
 import 'package:lite_agent_core_dart/lite_agent_service.dart';
-import '../db/session_message_database.dart';
+import '../db/agent_database.dart';
 
 class SessionMessageManageServiceByDB extends SessionMessageManageService {
-  SessionMessageDatabase messageDB = SessionMessageDatabase(NativeDatabase.memory());
+  AgentDatabase agentDB;
+
+  SessionMessageManageServiceByDB(this.agentDB);
 
   @override
   Future<void> addMessage(SessionAgentMessageDto sessionAgentMessageDto) async {
@@ -44,16 +45,16 @@ class SessionMessageManageServiceByDB extends SessionMessageManageService {
       completions: jsonEncode(sessionAgentMessageDto.agentMessageDto.completions?.toJson()),
       createTime: sessionAgentMessageDto.agentMessageDto.createTime
     );
-    await messageDB.addMessage(sessionMessageDao);
+    await agentDB.addMessage(sessionMessageDao);
   }
 
   @override
   Future<List<SessionAgentMessageDto>> getMessages() async {
-    return _convertList(await messageDB.getAllMessages());
+    return _convertList(await agentDB.getAllMessages());
   }
 
   Future<List<SessionAgentMessageDto>> getMessagesPaginated(int page, int pageSize) async {
-    return _convertList(await messageDB.getMessagesPaginated(page, pageSize));
+    return _convertList(await agentDB.getMessagesPaginated(page, pageSize));
   }
 
   List<SessionAgentMessageDto> _convertList(List<SessionMessageDao> sessionMessageDaoList) {
