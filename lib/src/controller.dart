@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:lite_agent_core_dart/lite_agent_core.dart';
+import 'package:lite_agent_core_dart/lite_agent_service.dart';
+import 'package:lite_agent_core_dart_server/src/controller/agent_manage_controller.dart';
 import 'package:logging/logging.dart';
 import 'package:opentool_dart/opentool_dart.dart';
 import 'package:shelf/shelf.dart';
@@ -33,7 +35,17 @@ class AgentController {
     final data = jsonDecode(payload);
 
     try {
-      final CapabilityDto capabilityDto = CapabilityDto.fromJson(data);
+
+      final CapabilityDto? capabilityDto;
+
+      String? agentId = request.url.queryParameters['agentId'];
+      if(agentId != null) {
+        AgentDto agentDto = await agentManageService.getAgent(agentId);
+        capabilityDto = agentDto.capability;
+      } else {
+        capabilityDto = CapabilityDto.fromJson(data);
+      }
+
       logger.log(LogModule.http, "Request initSession", detail: payload, level: Level.FINEST);
       logger.log(LogModule.http, "Request initSession",
           detail: "baseUrl: ${capabilityDto.llmConfig.baseUrl}, " +
@@ -55,6 +67,9 @@ class AgentController {
       return Response.ok(jsonEncode(sessionDto.toJson()));
     } on AgentNameException catch (e) {
       logger.log(LogModule.http, "Response initSession AgentNameException: ${e}", detail: payload, level: Level.WARNING);
+      return Response.badRequest(body: e);
+    } on AgentNotFoundException catch (e) {
+      logger.log(LogModule.http, "Response initSession AgentNotFoundException: ${e}", detail: payload, level: Level.WARNING);
       return Response.badRequest(body: e);
     } on OpenToolIdNotFoundException catch (e) {
       logger.log(LogModule.http, "Response initSession OpenToolIdNotFoundException: ${e}", detail: payload, level: Level.WARNING);

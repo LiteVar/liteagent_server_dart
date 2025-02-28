@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:lite_agent_core_dart/lite_agent_core.dart';
 import 'package:dotenv/dotenv.dart';
+import 'package:lite_agent_core_dart/lite_agent_service.dart';
 import 'package:lite_agent_core_dart_server/src/config.dart';
 
 import 'listener.dart';
