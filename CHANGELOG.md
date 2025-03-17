@@ -1,3 +1,9 @@
+## 0.7.0
+
+- move websocket to sse 
+- add serial port driver supported
+- add dynamic libs driver supported
+
 ## 0.5.0
 
 - add text and tool reflection

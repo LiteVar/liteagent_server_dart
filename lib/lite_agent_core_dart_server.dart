@@ -1,6 +1,5 @@
 library;
 
-export '';
 export 'src/config.dart';
 export 'src/dto.dart';
 export 'src/middleware.dart';
@@ -10,3 +9,4 @@ export 'src/controller/agent_manage_controller.dart';
 export 'src/service/agent_manage_service.dart';
 export 'src/db/agent_database_singleton.dart';
 export 'src/util/logger.dart';
+export 'src/util/dir.dart';

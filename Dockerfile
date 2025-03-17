@@ -22,7 +22,7 @@ RUN update-ca-certificates
 
 WORKDIR /app
 
-COPY --from=build /app/config/config.json /app/config/config.json
+COPY --from=build /app/bin/config.json /app/config.json
 COPY --from=build /app/bin/server /app/server
 
 # Start server.

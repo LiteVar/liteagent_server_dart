@@ -31,7 +31,7 @@ class $AgentsTable extends Agents with TableInfo<$AgentsTable, AgentDao> {
   late final GeneratedColumn<String> capability = GeneratedColumn<String>(
       'capability', aliasedName, false,
       additionalChecks: GeneratedColumn.checkTextLength(
-          minTextLength: 1, maxTextLength: 2048),
+          minTextLength: 1, maxTextLength: 65536),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
   @override

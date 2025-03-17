@@ -3,20 +3,25 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dotenv/dotenv.dart';
 import 'package:lite_agent_core_dart/lite_agent_service.dart';
-import 'package:lite_agent_core_dart_server/src/config.dart';
+import 'package:lite_agent_core_dart_server/lite_agent_core_dart_server.dart';
 import '../../listener.dart';
 
-String prompt = "List count of the storage";
+String prompt = "Find the text with ID 0.";
 
 Config config = initConfig();
 
-Dio dio = Dio(BaseOptions(
-  baseUrl:
-  "http://127.0.0.1:${config.server.port}${config.server.apiPathPrefix}",
-  // headers: {"Authorization": "Bearer <KEY>"}
-));
-
+/// [IMPORTANT] Prepare:
+/// 1. HTTP Server, according to `/example/mock/server/mock_http_server`, which server is running.
+/// 2. OneAPI JSON file, which is described the HTTP Server API.
+/// 3. Add LLM baseUrl and apiKey to `.env` file
 Future<void> main() async {
+
+  String baseUrl = "http://127.0.0.1:${config.server.port}${config.server.apiPathPrefix}";
+
+  Dio dio = Dio(BaseOptions(baseUrl: baseUrl,
+    // headers: {"Authorization": "Bearer <KEY>"}
+  ));
+
   CapabilityDto capabilityDto = CapabilityDto(
       llmConfig: _buildLLMConfigDto(),
       systemPrompt: _buildSystemPrompt(),
@@ -26,30 +31,34 @@ Future<void> main() async {
 
   print("[capabilityDto] " + capabilityDto.toJson().toString());
 
-  SessionDto? sessionDto = await initChat(capabilityDto);
+  SessionDto? sessionDto = await initChat(dio, capabilityDto);
 
   if (sessionDto != null) {
     print("[sessionDto] " + sessionDto.toJson().toString());
-    WebSocket webSocket = await connectChat(sessionDto.id, (agentMessageDto) => listen(sessionDto.id, agentMessageDto));
 
-    print("[webSocket] " + webSocket.toString());
+    Stream<String> sseStream = await sendUserMessage(baseUrl, sessionDto.sessionId, prompt);
 
-    await sendUserMessage(webSocket, prompt);
+    sseStream.listen((sseString) {
+      _onData(sessionDto.sessionId, sseString);
+    },
+        onDone: () {
+          print("[sseDone]");
+        },
+        onError: (e) {
+          print("[sseError] " + e.toString());
+        }
+    );
+
     print("[prompt] " + prompt);
 
-    await sleep(10);
+    await sleep(20);
 
-    await sendPing(webSocket);
-    print("[ping]");
-
-    await sleep(2);
-
-    SessionDto? stopSessionDto = await stopChat(sessionDto.id);
+    SessionDto? stopSessionDto = await stopChat(dio, sessionDto.sessionId);
     print("[stopSessionDto] " + stopSessionDto!.toJson().toString());
 
     await sleep(5);
 
-    SessionDto? clearSessionDto = await clearChat(sessionDto.id, webSocket);
+    SessionDto? clearSessionDto = await clearChat(dio, sessionDto.sessionId);
     print("[clearSessionDto] " + clearSessionDto!.toJson().toString());
   }
 }
@@ -61,12 +70,10 @@ Future<void> sleep(int seconds) async {
   }
 }
 
-Future<SessionDto?> initChat(CapabilityDto capabilityDto) async {
+Future<SessionDto?> initChat(Dio dio, CapabilityDto capabilityDto) async {
   try {
     Response response = await dio.post('/init', data: capabilityDto.toJson());
-    final payload = response.data as String;
-    final data = jsonDecode(payload);
-    SessionDto sessionDto = SessionDto.fromJson(data);
+    SessionDto sessionDto = SessionDto.fromJson(response.data);
     print("[initChat->RES] " + sessionDto.toJson().toString());
     return sessionDto;
   } catch (e) {
@@ -75,55 +82,36 @@ Future<SessionDto?> initChat(CapabilityDto capabilityDto) async {
   return null;
 }
 
-Future<WebSocket> connectChat(
-    String sessionId, onReceive(AgentMessageDto)) async {
-  final String url = 'ws://127.0.0.1:${config.server.port}${config.server.apiPathPrefix}/chat?id=$sessionId';
+Future<Stream<String>> chat(String baseUrl, String sessionId, UserTaskDto userTaskDto) async {
+  Uri uri = Uri.parse('$baseUrl/chat?sessionId=$sessionId');
+  HttpClient httpClient = HttpClient();
 
-  final WebSocket socket = await WebSocket.connect(
-    url,
-    // headers: {"Authorization": "Bearer <KEY>"}
-  );
+  HttpClientRequest request = await httpClient.postUrl(uri);
 
-  socket.listen(
-        (message) {
-      final payload = message as String;
-      if (payload != "pong") {
-        final data = jsonDecode(payload);
-        AgentMessageDto agentMessageDto = AgentMessageDto.fromJson(data);
-        onReceive(agentMessageDto);
-      } else {
-        print("[pong]");
-      }
-    },
-    onDone: () {
-      print('WebSocket connection closed');
-    },
-    onError: (error) {
-      print('WebSocket error: $error');
-    },
-    cancelOnError: true,
-  );
+  request.headers.add(HttpHeaders.acceptHeader, 'text/event-stream');
+  request.headers.add(HttpHeaders.contentTypeHeader, 'application/json');
 
-  return socket;
+  Map<String, dynamic> data = userTaskDto.toJson();
+
+  request.add(utf8.encode(jsonEncode(data)));
+
+  HttpClientResponse response = await request.close();
+
+  Stream<String> stream = response.transform(utf8.decoder);
+  return stream;
 }
 
-Future<void> sendUserMessage(WebSocket socket, String prompt) async {
+Future<Stream<String>> sendUserMessage(String baseUrl, String sessionId, String prompt) async {
   UserMessageDto userMessageDto = UserMessageDto(type: UserMessageDtoType.text, message: prompt);
   UserTaskDto userTaskDto = UserTaskDto(contentList: [userMessageDto]);
-  socket.add(jsonEncode(userTaskDto.toJson()));
+
+  return await chat(baseUrl, sessionId, userTaskDto);
 }
 
-Future<void> sendPing(WebSocket socket) async {
-  socket.add("ping");
-}
-
-Future<SessionDto?> stopChat(String sessionId) async {
+Future<SessionDto?> stopChat(Dio dio, String sessionId) async {
   try {
-    Response response =
-    await dio.get('/stop', queryParameters: {"id": sessionId});
-    final payload = response.data as String;
-    final data = jsonDecode(payload);
-    SessionDto sessionDto = SessionDto.fromJson(data);
+    Response response = await dio.get('/stop', queryParameters: {"sessionId": sessionId});
+    SessionDto sessionDto = SessionDto.fromJson(response.data);
     return sessionDto;
   } catch (e) {
     print(e);
@@ -131,14 +119,10 @@ Future<SessionDto?> stopChat(String sessionId) async {
   return null;
 }
 
-Future<SessionDto?> clearChat(String sessionId, WebSocket socket) async {
+Future<SessionDto?> clearChat(Dio dio, String sessionId) async {
   try {
-    Response response =
-    await dio.get('/clear', queryParameters: {"id": sessionId});
-    final payload = response.data as String;
-    final data = jsonDecode(payload);
-    SessionDto sessionDto = SessionDto.fromJson(data);
-    await socket.close();
+    Response response = await dio.get('/clear', queryParameters: {"sessionId": sessionId});
+    SessionDto sessionDto = SessionDto.fromJson(response.data);
     return sessionDto;
   } catch (e) {
     print(e);
@@ -156,30 +140,16 @@ LLMConfigDto _buildLLMConfigDto() {
 /// Use Prompt engineering to design SystemPrompt
 /// https://platform.openai.com/docs/guides/prompt-engineering
 String _buildSystemPrompt() {
-  return 'You are a tools caller, who can call book system tools to help me manage my storage.';
+  return 'A storage management tool that knows how to add, delete, modify, and query my texts.';
 }
 
 Future<List<OpenSpecDto>> _buildOpenSpecList() async {
-  List<OpenSpecDto> openSpecDtoList = [];
-
-  // String openAPIFolder = "${Directory.current.path}${Platform.pathSeparator}example${Platform.pathSeparator}mock${Platform.pathSeparator}server";
-  // List<String> openAPIFileNameList = [
-  //   "mock_openapi.json"
-  // ];
-  //
-  // for (String openAPIFileName in openAPIFileNameList) {
-  //   String jsonPath = "$openAPIFolder${Platform.pathSeparator}$openAPIFileName";
-  //   File file = File(jsonPath);
-  //   String jsonString = await file.readAsString();
-  //   OpenSpecDto openSpecDto =
-  //   OpenSpecDto(openSpec: jsonString, protocol: Protocol.OPENAPI);
-  //   openSpecDtoList.add(openSpecDto);
-  // }
-
   String opentoolFolder = "${Directory.current.path}${Platform.pathSeparator}example${Platform.pathSeparator}mock${Platform.pathSeparator}driver";
   List<String> opentoolFileNameList = [
     "mock-tool.json"
   ];
+
+  List<OpenSpecDto> openSpecDtoList = [];
 
   for (String opentoolFileName in opentoolFileNameList) {
     String jsonPath = "$opentoolFolder${Platform.pathSeparator}$opentoolFileName";
@@ -190,4 +160,23 @@ Future<List<OpenSpecDto>> _buildOpenSpecList() async {
   }
 
   return openSpecDtoList;
+}
+
+Future<void> _onData(String sessionId, String data) async {
+  // final eventRegex = RegExp(r"^(?:event:\s*(?<event>.+?)\r?\n)?data:\s*(?<data>\{.*\})$");
+  final eventRegex = RegExp(r'event: (\w+)\ndata: (.*?)\n\n');
+  final matches = eventRegex.allMatches(data);
+
+  for (var match in matches) {
+    final eventName = match.group(1);
+    final eventData = match.group(2);
+
+    if (eventName == SSEEventType.MESSAGE) {
+      AgentMessageDto agentMessageDto = AgentMessageDto.fromJson(jsonDecode(eventData!));
+      listen(sessionId, agentMessageDto);
+    } else if (eventName == SSEEventType.CHUNK) {
+      AgentMessageChunkDto agentMessageChunkDto = AgentMessageChunkDto.fromJson(jsonDecode(eventData!));
+      listenChunk(sessionId, agentMessageChunkDto);
+    }
+  }
 }

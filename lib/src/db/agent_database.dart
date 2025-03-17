@@ -5,7 +5,7 @@ part 'agent_database.g.dart';
 class Agents extends Table {
   TextColumn get agentId => text().withLength(min: 1, max: 64)();
   TextColumn get name => text().withLength(min: 1, max: 64)();
-  TextColumn get capability => text().withLength(min: 1, max: 2048)();
+  TextColumn get capability => text().withLength(min: 1, max: 65536)();
 }
 
 @DataClassName("SessionMessageDao")

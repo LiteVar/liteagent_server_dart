@@ -25,3 +25,11 @@ Map<String, dynamic> _$OpenToolDtoToJson(OpenToolDto instance) =>
       'openToolId': instance.openToolId,
       'description': instance.description,
     };
+
+TaskIdDto _$TaskIdDtoFromJson(Map<String, dynamic> json) => TaskIdDto(
+      taskId: json['taskId'] as String,
+    );
+
+Map<String, dynamic> _$TaskIdDtoToJson(TaskIdDto instance) => <String, dynamic>{
+      'taskId': instance.taskId,
+    };

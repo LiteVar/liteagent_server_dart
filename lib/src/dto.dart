@@ -24,3 +24,20 @@ class OpenToolDto {
 
   Map<String, dynamic> toJson() => _$OpenToolDtoToJson(this);
 }
+
+@JsonSerializable()
+class TaskIdDto {
+  late String taskId;
+
+  TaskIdDto({required this.taskId});
+
+  factory TaskIdDto.fromJson(Map<String, dynamic> json) => _$TaskIdDtoFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TaskIdDtoToJson(this);
+}
+
+class SSEEventType {
+  static const String MESSAGE = "message";
+  static const String CHUNK = "chunk";
+  static const String FUNCTION_CALL = "functionCall";
+}

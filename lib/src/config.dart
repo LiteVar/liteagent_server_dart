@@ -4,12 +4,15 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:logging/logging.dart';
 import 'package:yaml/yaml.dart';
 
+import '../lite_agent_core_dart_server.dart';
+
 part 'config.g.dart';
 
 final Config config = initConfig();
 
 Config initConfig() {
-  String configFilePath = '${Directory.current.path}${Platform.pathSeparator}config${Platform.pathSeparator}config.json';
+  String exeDir = Dir.executableDir();
+  String configFilePath = '$exeDir${Platform.pathSeparator}config.json';
   String configJsonString = File(configFilePath).readAsStringSync();
   final Map<String, dynamic> configJson = jsonDecode(configJsonString);
   final Config config = Config.fromJson(configJson);

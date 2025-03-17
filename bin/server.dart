@@ -19,10 +19,13 @@ Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = {
 };
 
 void main(List<String> args) async {
-  String? dbPath = config.server.dbPath;
+  String dbPath = config.server.dbPath??"agent.db";
+  String exeDir = Dir.executableDir();
+  String dbFullPath = '$exeDir${Platform.pathSeparator}$dbPath';
+  AgentManageService agentManageService = AgentManageServiceByDB(AgentDatabaseFactory.getInstance(File(dbFullPath)));
   
-  final AgentController agentController = AgentController(agentService, openToolDriverInfoMap: openToolDriverInfoMap);
-  final AgentManageController agentManageController = AgentManageController(AgentManageServiceByDB(AgentDatabaseFactory.getInstance(dbPath != null?File(dbPath):null)));
+  final AgentController agentController = AgentController(agentService, agentManageService, openToolDriverInfoMap: openToolDriverInfoMap);
+  final AgentManageController agentManageController = AgentManageController(agentManageService);
   
   apiRoutes(agentController, agentManageController);
   

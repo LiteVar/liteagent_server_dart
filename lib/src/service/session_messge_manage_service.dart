@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:lite_agent_core_dart/lite_agent_core.dart';
 import 'package:lite_agent_core_dart/lite_agent_service.dart';
+import 'package:opentool_dart/opentool_dart.dart';
 import '../db/agent_database.dart';
 
 class SessionMessageManageServiceByDB extends SessionMessageManageService {
@@ -21,7 +22,7 @@ class SessionMessageManageServiceByDB extends SessionMessageManageService {
       message = jsonEncode(functionCallList);
     }
     if (agentMessageDto.type == ToolMessageType.TOOL_RETURN) {
-      message = jsonEncode(agentMessageDto.message as ToolReturnDto);
+      message = jsonEncode(agentMessageDto.message as ToolReturn);
     };
     if (agentMessageDto.type == AgentMessageType.CONTENT_LIST) {
       List<ContentDto> contentList = agentMessageDto.message as List<ContentDto>;
@@ -74,7 +75,7 @@ class SessionMessageManageServiceByDB extends SessionMessageManageService {
     }
     if (sessionMessageDao.type == ToolMessageType.TOOL_RETURN) {
       Map<String, dynamic> tr = jsonDecode(sessionMessageDao.message);
-      message = ToolReturnDto.fromJson(tr);
+      message = ToolReturn.fromJson(tr);
     };
     if (sessionMessageDao.type == AgentMessageType.CONTENT_LIST) {
       List<dynamic> ctList = jsonDecode(sessionMessageDao.message);

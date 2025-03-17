@@ -1,8 +1,8 @@
 {
-  "version": "0.5.0",
+  "version": "0.7.0",
   "server": {
     "ip": "0.0.0.0",
-    "apiPathPrefix": "/api",
+    "apiPathPrefix": "/api/v1",
     "port": 9527,
     "dbPath": "agent.db"
   },

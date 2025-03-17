@@ -1,24 +1,42 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:lite_agent_core_dart/lite_agent_service.dart';
 import 'package:shelf/shelf.dart';
 
 class AgentManageController {
   AgentManageService agentManageService;
 
+  final jsonHeaders = {
+    HttpHeaders.contentTypeHeader: 'application/json',
+    HttpHeaders.cacheControlHeader: 'no-cache',
+    HttpHeaders.connectionHeader: 'keep-alive',
+  };
+
   AgentManageController(this.agentManageService);
 
   Future<Response> listAgent(Request request) async {
-    List<AgentInfoDto> agents = await agentManageService.getAgents();
-    return Response.ok(jsonEncode(agents.map((e) => e.toJson()).toList()));
+    try {
+      List<AgentInfoDto> agents = await agentManageService.getAgents();
+      return Response.ok(jsonEncode(agents.map((e) => e.toJson()).toList()), headers: jsonHeaders);
+    } catch(e) {
+      return Response.internalServerError(body: e.toString());
+    }
   }
 
   Future<Response> getAgent(Request request) async {
-    String? agentId = request.url.queryParameters['agentId'];
-    if (agentId == null) {
-      return Response.notFound(FormatException('agentId is required'));
+    try {
+      String? agentId = request.url.queryParameters['agentId'];
+      if (agentId == null) {
+        return Response.notFound(AgentNotFoundException(agentId: "NULL").toJson());
+      }
+      AgentDto? agentDto = await agentManageService.getAgent(agentId);
+      if (agentDto == null) {
+        return Response.notFound(AgentNotFoundException(agentId: agentId).toJson());
+      }
+      return Response.ok(jsonEncode(agentDto.toJson()), headers: jsonHeaders);
+    } catch(e) {
+      return Response.internalServerError(body: e.toString());
     }
-    AgentDto agentDto = await agentManageService.getAgent(agentId);
-    return Response.ok(jsonEncode(agentDto.toJson()));
   }
 
   Future<Response> createAgent(Request request) async {
@@ -27,12 +45,13 @@ class AgentManageController {
 
     try {
       AgentDto agentDto = AgentDto.fromJson(data);
+
       String agentId = await agentManageService.addAgent(agentDto);
-      return Response.ok(jsonEncode(AgentIdDto(agentId: agentId).toJson()));
+      return Response.ok(jsonEncode(AgentIdDto(agentId: agentId).toJson()), headers: jsonHeaders);
     } on FormatException catch (e) {
-      return Response.badRequest(body: e);
+      return Response.badRequest(body: e.toString());
     } catch (e) {
-      return Response.internalServerError(body: jsonEncode({'error': e.toString()}));
+      return Response.internalServerError(body: e.toString());
     }
   }
 
@@ -47,10 +66,13 @@ class AgentManageController {
 
     try {
       AgentDto agentDto = AgentDto.fromJson(data);
-      String agentIdUpdated = await agentManageService.updateAgent(agentId, agentDto);
-      return Response.ok(jsonEncode(AgentIdDto(agentId: agentIdUpdated).toJson()));
-    }catch (e) {
-      return Response.internalServerError(body: jsonEncode({'error': e.toString()}));
+      String? agentIdUpdated = await agentManageService.updateAgent(agentId, agentDto);
+      if (agentIdUpdated == null) {
+        return Response.notFound(AgentNotFoundException(agentId: agentId).toJson());
+      }
+      return Response.ok(jsonEncode(AgentIdDto(agentId: agentIdUpdated).toJson()), headers: jsonHeaders);
+    } catch (e) {
+      return Response.internalServerError(body: e.toString());
     }
   }
 
@@ -60,10 +82,13 @@ class AgentManageController {
       return Response.notFound(FormatException('agentId is required'));
     }
     try {
-      String agentIdDeleted = await agentManageService.removeAgent(agentId);
-      return Response.ok(jsonEncode(AgentIdDto(agentId: agentIdDeleted).toJson()));
+      String? agentIdDeleted = await agentManageService.removeAgent(agentId);
+      if (agentIdDeleted == null) {
+        return Response.notFound(AgentNotFoundException(agentId: agentId).toJson());
+      }
+      return Response.ok(jsonEncode(AgentIdDto(agentId: agentIdDeleted).toJson()), headers: jsonHeaders);
     }catch (e) {
-      return Response.internalServerError(body: jsonEncode({'error': e.toString()}));
+      return Response.internalServerError(body: e.toString());
     }
   }
 }
