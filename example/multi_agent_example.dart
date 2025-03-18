@@ -1,7 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:io' as io;
 import 'package:dio/dio.dart';
 import 'package:dotenv/dotenv.dart';
+import 'package:lite_agent_core_dart/lite_agent_core.dart';
 import 'package:lite_agent_core_dart/lite_agent_service.dart';
 import 'package:lite_agent_core_dart_server/lite_agent_core_dart_server.dart';
 import 'listener.dart';
@@ -49,12 +50,12 @@ Future<void> main() async {
     sseStream.listen((sseString) {
       _onData(sessionDto.sessionId, sseString);
     },
-        onDone: () {
-          print("[sseDone]");
-        },
-        onError: (e) {
-          print("[sseError] " + e.toString());
-        }
+      onDone: () {
+        print("[sseDone]");
+      },
+      onError: (e) {
+        print("[sseError] " + e.toString());
+      }
     );
 
     print("[prompt] " + prompt);
@@ -87,15 +88,15 @@ Future<SessionDto?> _buildTextAgent(Dio dio) async {
 Future<SessionDto?> _buildToolAgent(Dio dio) async {
   DotEnv env = DotEnv();env.load(['example/.env']);LLMConfigDto llmConfig = LLMConfigDto(baseUrl: env["baseUrl"]!, apiKey: env["apiKey"]!, model: "gpt-4o-mini");
 
-  String openAPIFolder = "${Directory.current.path}${Platform.pathSeparator}example${Platform.pathSeparator}mock${Platform.pathSeparator}server";
+  String openAPIFolder = "${io.Directory.current.path}${io.Platform.pathSeparator}example${io.Platform.pathSeparator}mock${io.Platform.pathSeparator}server";
   List<String> openAPIFileNameList = [
     "mock_openapi.json"
   ];
 
   List<OpenSpecDto> openSpecDtoList = [];
   for (String openAPIFileName in openAPIFileNameList) {
-    String jsonPath = "$openAPIFolder${Platform.pathSeparator}$openAPIFileName";
-    File file = File(jsonPath);
+    String jsonPath = "$openAPIFolder${io.Platform.pathSeparator}$openAPIFileName";
+    io.File file = io.File(jsonPath);
     String jsonString = await file.readAsString();
     OpenSpecDto openSpecDto = OpenSpecDto(openSpec: jsonString, protocol: Protocol.OPENAPI);
     openSpecDtoList.add(openSpecDto);
@@ -129,27 +130,26 @@ Future<SessionDto?> initChat(Dio dio, CapabilityDto capabilityDto) async {
 
 Future<Stream<String>> chat(String baseUrl, String sessionId, UserTaskDto userTaskDto) async {
   Uri uri = Uri.parse('$baseUrl/chat?sessionId=$sessionId');
-  HttpClient httpClient = HttpClient();
+  io.HttpClient httpClient = io.HttpClient();
 
-  HttpClientRequest request = await httpClient.postUrl(uri);
+  io.HttpClientRequest request = await httpClient.postUrl(uri);
 
-  request.headers.add(HttpHeaders.acceptHeader, 'text/event-stream');
-  request.headers.add(HttpHeaders.contentTypeHeader, 'application/json');
+  request.headers.add(io.HttpHeaders.acceptHeader, 'text/event-stream');
+  request.headers.add(io.HttpHeaders.contentTypeHeader, 'application/json');
 
   Map<String, dynamic> data = userTaskDto.toJson();
 
   request.add(utf8.encode(jsonEncode(data)));
 
-  HttpClientResponse response = await request.close();
+  io.HttpClientResponse response = await request.close();
 
   Stream<String> stream = response.transform(utf8.decoder);
   return stream;
 }
 
 Future<Stream<String>> sendUserMessage(String baseUrl, String sessionId, String prompt) async {
-  UserMessageDto userMessageDto = UserMessageDto(type: UserMessageDtoType.text, message: prompt);
-  UserTaskDto userTaskDto = UserTaskDto(contentList: [userMessageDto]);
-
+  ContentDto contentDto = ContentDto(type: ContentType.TEXT, message: prompt);
+  UserTaskDto userTaskDto = UserTaskDto(contentList: [contentDto]);
   return await chat(baseUrl, sessionId, userTaskDto);
 }
 

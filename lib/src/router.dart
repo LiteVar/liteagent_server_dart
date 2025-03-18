@@ -13,8 +13,8 @@ void apiRoutes(AgentController agentController, AgentManageController agentManag
   apiRouter.post('/agent/update', agentManageController.updateAgent);
   apiRouter.get('/agent/delete', agentManageController.deleteAgent);
 
-  apiRouter.post('/init', agentController.initSession);
-  apiRouter.post('/init/simple', agentController.initSimple);
+  apiRouter.post('/initSession', agentController.initSession);
+  apiRouter.post('/initSimple', agentController.initSimple);
   apiRouter.post('/chat', agentController.startStream);
   apiRouter.post('/chat/simple', agentController.startSimple);
   apiRouter.get('/history', agentController.history);

@@ -70,16 +70,16 @@ class AgentManageServiceByDB extends AgentManageService {
       }).toList();
     }
 
-    String? clientOpenTool;
-    if(agentDto.capability.clientOpenTool != null) {
-      clientOpenTool = _compressJson(agentDto.capability.clientOpenTool!);
+    ClientOpenToolDto? clientOpenToolDto = agentDto.capability.clientOpenTool;
+    if(clientOpenToolDto != null) {
+      clientOpenToolDto.opentool = _compressJson(clientOpenToolDto.opentool);
     }
 
     CapabilityDto newCapabilityDto = CapabilityDto(
         llmConfig: agentDto.capability.llmConfig,
         systemPrompt: agentDto.capability.systemPrompt,
         openSpecList: openSpecList,
-        clientOpenTool: clientOpenTool,
+        clientOpenTool: clientOpenToolDto,
         sessionList: agentDto.capability.sessionList,
         reflectPromptList: agentDto.capability.reflectPromptList,
         timeoutSeconds: agentDto.capability.timeoutSeconds,

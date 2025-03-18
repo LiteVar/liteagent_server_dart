@@ -18,7 +18,7 @@ class SessionMessageManageServiceByDB extends SessionMessageManageService {
     if (agentMessageDto.type == ToolMessageType.IMAGE_URL)
       message = agentMessageDto.message as String;
     if (agentMessageDto.type == ToolMessageType.FUNCTION_CALL_LIST) {
-      List<FunctionCallDto> functionCallList = agentMessageDto.message as List<FunctionCallDto>;
+      List<FunctionCall> functionCallList = agentMessageDto.message as List<FunctionCall>;
       message = jsonEncode(functionCallList);
     }
     if (agentMessageDto.type == ToolMessageType.TOOL_RETURN) {
@@ -70,7 +70,7 @@ class SessionMessageManageServiceByDB extends SessionMessageManageService {
       message = sessionMessageDao.message;
     if (sessionMessageDao.type == ToolMessageType.FUNCTION_CALL_LIST) {
       List<dynamic> fcList = jsonDecode(sessionMessageDao.message);
-      List<FunctionCallDto> functionCallList = fcList.map((fc) => FunctionCallDto.fromJson(fc)).toList();
+      List<FunctionCall> functionCallList = fcList.map((fc) => FunctionCall.fromJson(fc)).toList();
       message = functionCallList;
     }
     if (sessionMessageDao.type == ToolMessageType.TOOL_RETURN) {
