@@ -7,27 +7,52 @@ import 'package:logging/logging.dart';
 import 'package:opentool_dart/opentool_dart.dart';
 
 class AgentMessageListener {
-  Map<String, AgentMessageSubscriber> agentMessageSubscriberList = {};
+  Map<String, Map<String, AgentMessageSubscriber>> agentMessageSubscriberList = {};
 
-  void subscribe(String sessionId,  AgentMessageSubscriber subscriber) {
-    agentMessageSubscriberList[sessionId] = subscriber;
+  void subscribe(String sessionId, String taskId, AgentMessageSubscriber subscriber) {
+    if (!agentMessageSubscriberList.containsKey(sessionId)) {
+      agentMessageSubscriberList[sessionId] = {};
+    }
+
+    agentMessageSubscriberList[sessionId]![taskId] = subscriber;
   }
 
   void listen(String sessionId, AgentMessageDto agentMessageDto) {
     if (agentMessageSubscriberList.containsKey(sessionId)) {
-      agentMessageSubscriberList[sessionId]!.addMessage(agentMessageDto);
+      final taskId = agentMessageDto.taskId;
+      
+      if (agentMessageSubscriberList[sessionId]!.containsKey(taskId)) {
+        final subscriber = agentMessageSubscriberList[sessionId]![taskId]!;
+        subscriber.addMessage(agentMessageDto);
+      }
     }
   }
 
   void listenChunk(String sessionId, AgentMessageChunkDto agentMessageChunkDto) {
     if (agentMessageSubscriberList.containsKey(sessionId)) {
-      agentMessageSubscriberList[sessionId]!.addChunk(agentMessageChunkDto);
+      final taskId = agentMessageChunkDto.taskId;
+      
+      if (agentMessageSubscriberList[sessionId]!.containsKey(taskId)) {
+        final subscriber = agentMessageSubscriberList[sessionId]![taskId]!;
+        subscriber.addChunk(agentMessageChunkDto);
+      }
     }
   }
 
   void listenClientFunctionCall(String sessionId, FunctionCall remoteFunctionCall) {
     if (agentMessageSubscriberList.containsKey(sessionId)) {
-      agentMessageSubscriberList[sessionId]!.addRemoteFunctionCall(remoteFunctionCall);
+      // TODO: remoteFunctionCall暂时只支持单Session、单Task，所以先只取第一个可用的
+      final subscribers = agentMessageSubscriberList[sessionId]!.values;
+      try {
+        final subscriber = subscribers.firstWhere(
+          (subscriber) => 
+            subscriber is AgentMessageSubscriberBySSE && 
+            !subscriber.streamController.isClosed
+        );
+        subscriber.addRemoteFunctionCall(remoteFunctionCall);
+      } catch (e) {
+        // 
+      }
     }
   }
 }

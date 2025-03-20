@@ -127,9 +127,11 @@ class AgentController {
       final SessionDto sessionDto = SessionDto.fromJson(queryParameters);
       UserTaskDto userTaskDto = UserTaskDto.fromJson(data);
 
+      if (userTaskDto.taskId == null) userTaskDto.taskId = uniqueId();
+
       StreamController<List<int>> streamController = StreamController<List<int>>.broadcast();
       AgentMessageSubscriber agentMessageSubscriber = AgentMessageSubscriberBySSE(streamController);
-      this.agentMessageListener.subscribe(sessionDto.sessionId, agentMessageSubscriber);
+      this.agentMessageListener.subscribe(sessionDto.sessionId, userTaskDto.taskId!, agentMessageSubscriber);
 
       await agentService.startSession(sessionDto.sessionId, userTaskDto);
 
