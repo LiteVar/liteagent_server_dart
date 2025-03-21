@@ -8,6 +8,7 @@ import 'package:lite_agent_core_dart_server/lite_agent_core_dart_server.dart';
 import '../../listener.dart';
 
 String prompt = "Find the text with ID 0.";
+String prompt1 = "Find the text with ID 1.";
 
 Config config = initConfig();
 
@@ -50,9 +51,22 @@ Future<void> main() async {
       }
     );
 
+    Stream<String> sseStream2 = await sendUserMessage(baseUrl, sessionDto.sessionId, prompt1);
+
+    sseStream2.listen((sseString) {
+      _onData(sessionDto.sessionId, sseString);
+    },
+        onDone: () {
+          print("[sseDone2]");
+        },
+        onError: (e) {
+          print("[sseError2] " + e.toString());
+        }
+    );
+
     print("[prompt] " + prompt);
 
-    await sleep(20);
+    await sleep(25);
 
     SessionDto? stopSessionDto = await stopChat(dio, sessionDto.sessionId);
     print("[stopSessionDto] " + stopSessionDto!.toJson().toString());

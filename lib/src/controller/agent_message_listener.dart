@@ -13,17 +13,34 @@ class AgentMessageListener {
     if (!agentMessageSubscriberList.containsKey(sessionId)) {
       agentMessageSubscriberList[sessionId] = {};
     }
-
     agentMessageSubscriberList[sessionId]![taskId] = subscriber;
   }
 
+  void unsubscribe(String sessionId, String taskId) {
+    agentMessageSubscriberList[sessionId]?[taskId]?.close();
+    agentMessageSubscriberList[sessionId]?.remove(taskId);
+    if(agentMessageSubscriberList.containsKey(sessionId) && agentMessageSubscriberList[sessionId]!.isEmpty) {
+      agentMessageSubscriberList.remove(sessionId);
+    }
+  }
+
   void listen(String sessionId, AgentMessageDto agentMessageDto) {
-    if (agentMessageSubscriberList.containsKey(sessionId)) {
-      final taskId = agentMessageDto.taskId;
-      
-      if (agentMessageSubscriberList[sessionId]!.containsKey(taskId)) {
-        final subscriber = agentMessageSubscriberList[sessionId]![taskId]!;
-        subscriber.addMessage(agentMessageDto);
+    if(agentMessageDto.type == AgentMessageType.FUNCTION_CALL){
+      _listenClientFunctionCall(sessionId, agentMessageDto);
+    } else {
+      if (agentMessageSubscriberList.containsKey(sessionId)) {
+        final taskId = agentMessageDto.taskId;
+
+        if (agentMessageSubscriberList[sessionId]!.containsKey(taskId)) {
+          final subscriber = agentMessageSubscriberList[sessionId]![taskId]!;
+          subscriber.addMessage(agentMessageDto);
+        }
+      }
+      if(agentMessageDto.type == AgentMessageType.TASK_STATUS) {
+        TaskStatusDto taskStatusDto = agentMessageDto.message as TaskStatusDto;
+        if(taskStatusDto.status == TaskStatusType.DONE || taskStatusDto.status == TaskStatusType.STOP || taskStatusDto.status == TaskStatusType.EXCEPTION ) {
+          unsubscribe(sessionId, agentMessageDto.taskId);
+        }
       }
     }
   }
@@ -39,19 +56,13 @@ class AgentMessageListener {
     }
   }
 
-  void listenClientFunctionCall(String sessionId, FunctionCall remoteFunctionCall) {
+  void _listenClientFunctionCall(String sessionId, AgentMessageDto agentMessageDto) {
     if (agentMessageSubscriberList.containsKey(sessionId)) {
-      // TODO: remoteFunctionCall暂时只支持单Session、单Task，所以先只取第一个可用的
-      final subscribers = agentMessageSubscriberList[sessionId]!.values;
-      try {
-        final subscriber = subscribers.firstWhere(
-          (subscriber) => 
-            subscriber is AgentMessageSubscriberBySSE && 
-            !subscriber.streamController.isClosed
-        );
-        subscriber.addRemoteFunctionCall(remoteFunctionCall);
-      } catch (e) {
-        // 
+      final taskId = agentMessageDto.taskId;
+      if (agentMessageSubscriberList[sessionId]!.containsKey(taskId)) {
+        final subscriber = agentMessageSubscriberList[sessionId]![taskId]!;
+        FunctionCall functionCall = agentMessageDto.message as FunctionCall;
+        subscriber.addRemoteFunctionCall(functionCall);
       }
     }
   }
@@ -61,6 +72,7 @@ abstract class AgentMessageSubscriber {
   void addMessage(AgentMessageDto agentMessageDto);
   void addChunk(AgentMessageChunkDto agentMessageChunkDto);
   void addRemoteFunctionCall(FunctionCall functionCall);
+  void close();
 }
 
 class AgentMessageSubscriberBySSE implements AgentMessageSubscriber {
@@ -70,13 +82,6 @@ class AgentMessageSubscriberBySSE implements AgentMessageSubscriber {
 
   @override
   void addMessage(AgentMessageDto agentMessageDto) {
-    if(agentMessageDto.to == AgentRoleType.CLIENT && agentMessageDto.type == AgentMessageType.TASK_STATUS) {
-      TaskStatusDto taskStatusDto = agentMessageDto.message as TaskStatusDto;
-      if(!streamController.isClosed && (taskStatusDto.status == TaskStatusType.DONE || taskStatusDto.status == TaskStatusType.STOP || taskStatusDto.status == TaskStatusType.EXCEPTION )) {
-        _pushData(SSEEventType.MESSAGE, jsonEncode(agentMessageDto.toJson()));
-        streamController.close();
-      }
-    }
     if(!streamController.isClosed) {
       _pushData(SSEEventType.MESSAGE, jsonEncode(agentMessageDto.toJson()));
     }
@@ -96,6 +101,11 @@ class AgentMessageSubscriberBySSE implements AgentMessageSubscriber {
     String data = "event: $eventType\ndata: $dataString\n\n";
     logger.log(LogModule.sse, "SSE data", detail: data, level: Level.INFO);
     streamController.sink.add(utf8.encode(data));
+  }
+
+  @override
+  close() {
+    streamController.close();
   }
 }
 

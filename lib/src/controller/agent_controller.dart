@@ -72,7 +72,6 @@ class AgentController {
           capabilityDto, _listen,
           opentoolDriverMap: openToolDriverMap,
           listenChunk: _listenChunk,
-          listenClientFunctionCall: _listenClientFunctionCall
       );
 
       logger.log(LogModule.http, "Response initSession", detail: jsonEncode(sessionDto.toJson()));
@@ -246,10 +245,6 @@ class AgentController {
 
   void _listenChunk(String sessionId, AgentMessageChunkDto agentMessageChunkDto) {
     agentMessageListener.listenChunk(sessionId, agentMessageChunkDto);
-  }
-
-  void _listenClientFunctionCall(String sessionId, FunctionCall functionCall) {
-    agentMessageListener.listenClientFunctionCall(sessionId, functionCall);
   }
 
   Future<Response> getOpenToolList(Request request) async {
