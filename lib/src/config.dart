@@ -11,8 +11,7 @@ part 'config.g.dart';
 final Config config = initConfig();
 
 Config initConfig() {
-  String exeDir = Dir.executableDir();
-  String configFilePath = '$exeDir${Platform.pathSeparator}config.json';
+  String configFilePath = '${Directory.current.path}${Platform.pathSeparator}bin${Platform.pathSeparator}config.json';
   String configJsonString = File(configFilePath).readAsStringSync();
   final Map<String, dynamic> configJson = jsonDecode(configJsonString);
   final Config config = Config.fromJson(configJson);
