@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:lite_agent_core_dart/lite_agent_core.dart';
 import 'package:lite_agent_core_dart/lite_agent_service.dart';
-import 'package:opentool_dart/opentool_dart.dart';
 
 void listen(String sessionId, AgentMessageDto agentMessageDto) {
   String system = "🖥DEVEL ";
@@ -15,27 +14,27 @@ void listen(String sessionId, AgentMessageDto agentMessageDto) {
 
   String message = "";
   if (agentMessageDto.type == ToolMessageType.TEXT)
-    message = agentMessageDto.message as String;
+    message = agentMessageDto.content as String;
   if (agentMessageDto.type == ToolMessageType.IMAGE_URL)
-    message = agentMessageDto.message as String;
+    message = agentMessageDto.content as String;
   if (agentMessageDto.type == ToolMessageType.FUNCTION_CALL_LIST) {
-    List<String> functionCallList = (agentMessageDto.message as List<dynamic>).map((json) => jsonEncode(json)).toList();
+    List<String> functionCallList = (agentMessageDto.content as List<dynamic>).map((json) => jsonEncode(json)).toList();
     message = jsonEncode(functionCallList);
   }
   if (agentMessageDto.type == ToolMessageType.TOOL_RETURN) {
-    message = jsonEncode(agentMessageDto.message);
+    message = jsonEncode(agentMessageDto.content);
   };
   if (agentMessageDto.type == AgentMessageType.CONTENT_LIST) {
-    List<String> contentList = (agentMessageDto.message as List<dynamic>).map((json) => jsonEncode(json)).toList();
+    List<String> contentList = (agentMessageDto.content as List<dynamic>).map((json) => jsonEncode(json)).toList();
     message = jsonEncode(contentList);
   }
   if (agentMessageDto.type == AgentMessageType.TASK_STATUS) {
-    message = jsonEncode(agentMessageDto.message);
+    message = jsonEncode(agentMessageDto.content);
   }
   if (agentMessageDto.type == TextMessageType.REFLECTION) {
-    message = jsonEncode(agentMessageDto.message);
+    message = jsonEncode(agentMessageDto.content);
   } if (agentMessageDto.type == ToolMessageType.FUNCTION_CALL) {
-    String functionCall = jsonEncode(agentMessageDto.message);
+    String functionCall = jsonEncode(agentMessageDto.content);
     message = jsonEncode(functionCall);
   }
 

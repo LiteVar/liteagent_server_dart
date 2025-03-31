@@ -300,11 +300,11 @@ class $SessionMessagesTable extends SessionMessages
           GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 16),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
-  static const VerificationMeta _messageMeta =
-      const VerificationMeta('message');
+  static const VerificationMeta _contentMeta =
+      const VerificationMeta('content');
   @override
-  late final GeneratedColumn<String> message = GeneratedColumn<String>(
-      'message', aliasedName, false,
+  late final GeneratedColumn<String> content = GeneratedColumn<String>(
+      'content', aliasedName, false,
       additionalChecks: GeneratedColumn.checkTextLength(
           minTextLength: 1, maxTextLength: 2048),
       type: DriftSqlType.string,
@@ -332,7 +332,7 @@ class $SessionMessagesTable extends SessionMessages
         role,
         to,
         type,
-        message,
+        content,
         completions,
         createTime
       ];
@@ -383,11 +383,11 @@ class $SessionMessagesTable extends SessionMessages
     } else if (isInserting) {
       context.missing(_typeMeta);
     }
-    if (data.containsKey('message')) {
-      context.handle(_messageMeta,
-          message.isAcceptableOrUnknown(data['message']!, _messageMeta));
+    if (data.containsKey('content')) {
+      context.handle(_contentMeta,
+          content.isAcceptableOrUnknown(data['content']!, _contentMeta));
     } else if (isInserting) {
-      context.missing(_messageMeta);
+      context.missing(_contentMeta);
     }
     if (data.containsKey('completions')) {
       context.handle(
@@ -424,8 +424,8 @@ class $SessionMessagesTable extends SessionMessages
           .read(DriftSqlType.string, data['${effectivePrefix}to'])!,
       type: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
-      message: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}message'])!,
+      content: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}content'])!,
       completions: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}completions']),
       createTime: attachedDatabase.typeMapping
@@ -447,7 +447,7 @@ class SessionMessageDao extends DataClass
   final String role;
   final String to;
   final String type;
-  final String message;
+  final String content;
   final String? completions;
   final DateTime createTime;
   const SessionMessageDao(
@@ -457,7 +457,7 @@ class SessionMessageDao extends DataClass
       required this.role,
       required this.to,
       required this.type,
-      required this.message,
+      required this.content,
       this.completions,
       required this.createTime});
   @override
@@ -469,7 +469,7 @@ class SessionMessageDao extends DataClass
     map['role'] = Variable<String>(role);
     map['to'] = Variable<String>(to);
     map['type'] = Variable<String>(type);
-    map['message'] = Variable<String>(message);
+    map['content'] = Variable<String>(content);
     if (!nullToAbsent || completions != null) {
       map['completions'] = Variable<String>(completions);
     }
@@ -485,7 +485,7 @@ class SessionMessageDao extends DataClass
       role: Value(role),
       to: Value(to),
       type: Value(type),
-      message: Value(message),
+      content: Value(content),
       completions: completions == null && nullToAbsent
           ? const Value.absent()
           : Value(completions),
@@ -503,7 +503,7 @@ class SessionMessageDao extends DataClass
       role: serializer.fromJson<String>(json['role']),
       to: serializer.fromJson<String>(json['to']),
       type: serializer.fromJson<String>(json['type']),
-      message: serializer.fromJson<String>(json['message']),
+      content: serializer.fromJson<String>(json['content']),
       completions: serializer.fromJson<String?>(json['completions']),
       createTime: serializer.fromJson<DateTime>(json['createTime']),
     );
@@ -518,7 +518,7 @@ class SessionMessageDao extends DataClass
       'role': serializer.toJson<String>(role),
       'to': serializer.toJson<String>(to),
       'type': serializer.toJson<String>(type),
-      'message': serializer.toJson<String>(message),
+      'content': serializer.toJson<String>(content),
       'completions': serializer.toJson<String?>(completions),
       'createTime': serializer.toJson<DateTime>(createTime),
     };
@@ -531,7 +531,7 @@ class SessionMessageDao extends DataClass
           String? role,
           String? to,
           String? type,
-          String? message,
+          String? content,
           Value<String?> completions = const Value.absent(),
           DateTime? createTime}) =>
       SessionMessageDao(
@@ -541,7 +541,7 @@ class SessionMessageDao extends DataClass
         role: role ?? this.role,
         to: to ?? this.to,
         type: type ?? this.type,
-        message: message ?? this.message,
+        content: content ?? this.content,
         completions: completions.present ? completions.value : this.completions,
         createTime: createTime ?? this.createTime,
       );
@@ -555,7 +555,7 @@ class SessionMessageDao extends DataClass
       role: data.role.present ? data.role.value : this.role,
       to: data.to.present ? data.to.value : this.to,
       type: data.type.present ? data.type.value : this.type,
-      message: data.message.present ? data.message.value : this.message,
+      content: data.content.present ? data.content.value : this.content,
       completions:
           data.completions.present ? data.completions.value : this.completions,
       createTime:
@@ -572,7 +572,7 @@ class SessionMessageDao extends DataClass
           ..write('role: $role, ')
           ..write('to: $to, ')
           ..write('type: $type, ')
-          ..write('message: $message, ')
+          ..write('content: $content, ')
           ..write('completions: $completions, ')
           ..write('createTime: $createTime')
           ..write(')'))
@@ -581,7 +581,7 @@ class SessionMessageDao extends DataClass
 
   @override
   int get hashCode => Object.hash(originSessionId, sessionId, taskId, role, to,
-      type, message, completions, createTime);
+      type, content, completions, createTime);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -592,7 +592,7 @@ class SessionMessageDao extends DataClass
           other.role == this.role &&
           other.to == this.to &&
           other.type == this.type &&
-          other.message == this.message &&
+          other.content == this.content &&
           other.completions == this.completions &&
           other.createTime == this.createTime);
 }
@@ -604,7 +604,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
   final Value<String> role;
   final Value<String> to;
   final Value<String> type;
-  final Value<String> message;
+  final Value<String> content;
   final Value<String?> completions;
   final Value<DateTime> createTime;
   final Value<int> rowid;
@@ -615,7 +615,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
     this.role = const Value.absent(),
     this.to = const Value.absent(),
     this.type = const Value.absent(),
-    this.message = const Value.absent(),
+    this.content = const Value.absent(),
     this.completions = const Value.absent(),
     this.createTime = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -627,7 +627,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
     required String role,
     required String to,
     required String type,
-    required String message,
+    required String content,
     this.completions = const Value.absent(),
     required DateTime createTime,
     this.rowid = const Value.absent(),
@@ -637,7 +637,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
         role = Value(role),
         to = Value(to),
         type = Value(type),
-        message = Value(message),
+        content = Value(content),
         createTime = Value(createTime);
   static Insertable<SessionMessageDao> custom({
     Expression<String>? originSessionId,
@@ -646,7 +646,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
     Expression<String>? role,
     Expression<String>? to,
     Expression<String>? type,
-    Expression<String>? message,
+    Expression<String>? content,
     Expression<String>? completions,
     Expression<DateTime>? createTime,
     Expression<int>? rowid,
@@ -658,7 +658,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
       if (role != null) 'role': role,
       if (to != null) 'to': to,
       if (type != null) 'type': type,
-      if (message != null) 'message': message,
+      if (content != null) 'content': content,
       if (completions != null) 'completions': completions,
       if (createTime != null) 'create_time': createTime,
       if (rowid != null) 'rowid': rowid,
@@ -672,7 +672,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
       Value<String>? role,
       Value<String>? to,
       Value<String>? type,
-      Value<String>? message,
+      Value<String>? content,
       Value<String?>? completions,
       Value<DateTime>? createTime,
       Value<int>? rowid}) {
@@ -683,7 +683,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
       role: role ?? this.role,
       to: to ?? this.to,
       type: type ?? this.type,
-      message: message ?? this.message,
+      content: content ?? this.content,
       completions: completions ?? this.completions,
       createTime: createTime ?? this.createTime,
       rowid: rowid ?? this.rowid,
@@ -711,8 +711,8 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
     if (type.present) {
       map['type'] = Variable<String>(type.value);
     }
-    if (message.present) {
-      map['message'] = Variable<String>(message.value);
+    if (content.present) {
+      map['content'] = Variable<String>(content.value);
     }
     if (completions.present) {
       map['completions'] = Variable<String>(completions.value);
@@ -735,7 +735,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
           ..write('role: $role, ')
           ..write('to: $to, ')
           ..write('type: $type, ')
-          ..write('message: $message, ')
+          ..write('content: $content, ')
           ..write('completions: $completions, ')
           ..write('createTime: $createTime, ')
           ..write('rowid: $rowid')
@@ -900,7 +900,7 @@ typedef $$SessionMessagesTableCreateCompanionBuilder = SessionMessagesCompanion
   required String role,
   required String to,
   required String type,
-  required String message,
+  required String content,
   Value<String?> completions,
   required DateTime createTime,
   Value<int> rowid,
@@ -913,7 +913,7 @@ typedef $$SessionMessagesTableUpdateCompanionBuilder = SessionMessagesCompanion
   Value<String> role,
   Value<String> to,
   Value<String> type,
-  Value<String> message,
+  Value<String> content,
   Value<String?> completions,
   Value<DateTime> createTime,
   Value<int> rowid,
@@ -947,8 +947,8 @@ class $$SessionMessagesTableFilterComposer
   ColumnFilters<String> get type => $composableBuilder(
       column: $table.type, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get message => $composableBuilder(
-      column: $table.message, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get content => $composableBuilder(
+      column: $table.content, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get completions => $composableBuilder(
       column: $table.completions, builder: (column) => ColumnFilters(column));
@@ -985,8 +985,8 @@ class $$SessionMessagesTableOrderingComposer
   ColumnOrderings<String> get type => $composableBuilder(
       column: $table.type, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get message => $composableBuilder(
-      column: $table.message, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get content => $composableBuilder(
+      column: $table.content, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get completions => $composableBuilder(
       column: $table.completions, builder: (column) => ColumnOrderings(column));
@@ -1022,8 +1022,8 @@ class $$SessionMessagesTableAnnotationComposer
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
-  GeneratedColumn<String> get message =>
-      $composableBuilder(column: $table.message, builder: (column) => column);
+  GeneratedColumn<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => column);
 
   GeneratedColumn<String> get completions => $composableBuilder(
       column: $table.completions, builder: (column) => column);
@@ -1065,7 +1065,7 @@ class $$SessionMessagesTableTableManager extends RootTableManager<
             Value<String> role = const Value.absent(),
             Value<String> to = const Value.absent(),
             Value<String> type = const Value.absent(),
-            Value<String> message = const Value.absent(),
+            Value<String> content = const Value.absent(),
             Value<String?> completions = const Value.absent(),
             Value<DateTime> createTime = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -1077,7 +1077,7 @@ class $$SessionMessagesTableTableManager extends RootTableManager<
             role: role,
             to: to,
             type: type,
-            message: message,
+            content: content,
             completions: completions,
             createTime: createTime,
             rowid: rowid,
@@ -1089,7 +1089,7 @@ class $$SessionMessagesTableTableManager extends RootTableManager<
             required String role,
             required String to,
             required String type,
-            required String message,
+            required String content,
             Value<String?> completions = const Value.absent(),
             required DateTime createTime,
             Value<int> rowid = const Value.absent(),
@@ -1101,7 +1101,7 @@ class $$SessionMessagesTableTableManager extends RootTableManager<
             role: role,
             to: to,
             type: type,
-            message: message,
+            content: content,
             completions: completions,
             createTime: createTime,
             rowid: rowid,

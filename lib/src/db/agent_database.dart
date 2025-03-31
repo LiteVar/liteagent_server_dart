@@ -16,7 +16,7 @@ class SessionMessages extends Table {
   TextColumn get role => text().withLength(min: 1, max: 16)();
   TextColumn get to => text().withLength(min: 1, max: 16)();
   TextColumn get type => text().withLength(min: 1, max: 16)();
-  TextColumn get message => text().withLength(min: 1, max: 2048)();
+  TextColumn get content => text().withLength(min: 1, max: 2048)();
   TextColumn get completions => text().withLength(min: 1, max: 2048).nullable()();
   DateTimeColumn get createTime => dateTime()();
 }

@@ -14,25 +14,25 @@ class SessionMessageManageServiceByDB extends SessionMessageManageService {
     AgentMessageDto agentMessageDto = sessionAgentMessageDto.agentMessageDto;
     String message = "";
     if (agentMessageDto.type == ToolMessageType.TEXT)
-      message = agentMessageDto.message as String;
+      message = agentMessageDto.content as String;
     if (agentMessageDto.type == ToolMessageType.IMAGE_URL)
-      message = agentMessageDto.message as String;
+      message = agentMessageDto.content as String;
     if (agentMessageDto.type == ToolMessageType.FUNCTION_CALL_LIST) {
-      List<FunctionCall> functionCallList = agentMessageDto.message as List<FunctionCall>;
+      List<FunctionCall> functionCallList = agentMessageDto.content as List<FunctionCall>;
       message = jsonEncode(functionCallList);
     }
     if (agentMessageDto.type == ToolMessageType.TOOL_RETURN) {
-      message = jsonEncode(agentMessageDto.message as ToolReturn);
+      message = jsonEncode(agentMessageDto.content as ToolReturn);
     };
     if (agentMessageDto.type == AgentMessageType.CONTENT_LIST) {
-      List<ContentDto> contentList = agentMessageDto.message as List<ContentDto>;
+      List<ContentDto> contentList = agentMessageDto.content as List<ContentDto>;
       message = jsonEncode(contentList);
     }
     if (agentMessageDto.type == AgentMessageType.TASK_STATUS) {
-      message = jsonEncode(agentMessageDto.message as TaskStatusDto);
+      message = jsonEncode(agentMessageDto.content as TaskStatusDto);
     }
     if (agentMessageDto.type == TextMessageType.REFLECTION) {
-      message = jsonEncode(agentMessageDto.message as ReflectionDto);
+      message = jsonEncode(agentMessageDto.content as ReflectionDto);
     }
 
     SessionMessageDao sessionMessageDao = SessionMessageDao(
@@ -42,7 +42,7 @@ class SessionMessageManageServiceByDB extends SessionMessageManageService {
       role: sessionAgentMessageDto.agentMessageDto.role,
       to: sessionAgentMessageDto.agentMessageDto.to,
       type: sessionAgentMessageDto.agentMessageDto.type,
-      message: message,
+      content: message,
       completions: jsonEncode(sessionAgentMessageDto.agentMessageDto.completions?.toJson()),
       createTime: sessionAgentMessageDto.agentMessageDto.createTime
     );
@@ -63,32 +63,32 @@ class SessionMessageManageServiceByDB extends SessionMessageManageService {
   }
 
   SessionAgentMessageDto _convert(SessionMessageDao sessionMessageDao) {
-    dynamic message;
+    dynamic content;
     if (sessionMessageDao.type == ToolMessageType.TEXT)
-      message = sessionMessageDao.message;
+      content = sessionMessageDao.content;
     if (sessionMessageDao.type == ToolMessageType.IMAGE_URL)
-      message = sessionMessageDao.message;
+      content = sessionMessageDao.content;
     if (sessionMessageDao.type == ToolMessageType.FUNCTION_CALL_LIST) {
-      List<dynamic> fcList = jsonDecode(sessionMessageDao.message);
+      List<dynamic> fcList = jsonDecode(sessionMessageDao.content);
       List<FunctionCall> functionCallList = fcList.map((fc) => FunctionCall.fromJson(fc)).toList();
-      message = functionCallList;
+      content = functionCallList;
     }
     if (sessionMessageDao.type == ToolMessageType.TOOL_RETURN) {
-      Map<String, dynamic> tr = jsonDecode(sessionMessageDao.message);
-      message = ToolReturn.fromJson(tr);
+      Map<String, dynamic> tr = jsonDecode(sessionMessageDao.content);
+      content = ToolReturn.fromJson(tr);
     };
     if (sessionMessageDao.type == AgentMessageType.CONTENT_LIST) {
-      List<dynamic> ctList = jsonDecode(sessionMessageDao.message);
+      List<dynamic> ctList = jsonDecode(sessionMessageDao.content);
       List<ContentDto> contentList = ctList.map((ct) => ContentDto.fromJson(ct)).toList();
-      message = contentList;
+      content = contentList;
     }
     if (sessionMessageDao.type == AgentMessageType.TASK_STATUS) {
-      Map<String, dynamic> ts = jsonDecode(sessionMessageDao.message);
-      message = TaskStatusDto.fromJson(ts);
+      Map<String, dynamic> ts = jsonDecode(sessionMessageDao.content);
+      content = TaskStatusDto.fromJson(ts);
     }
     if (sessionMessageDao.type == TextMessageType.REFLECTION) {
-      Map<String, dynamic> ts = jsonDecode(sessionMessageDao.message);
-      message = ReflectionDto.fromJson(ts);
+      Map<String, dynamic> ts = jsonDecode(sessionMessageDao.content);
+      content = ReflectionDto.fromJson(ts);
     }
 
     CompletionsDto? completionsDto;
@@ -104,7 +104,7 @@ class SessionMessageManageServiceByDB extends SessionMessageManageService {
             role: sessionMessageDao.role,
             to: sessionMessageDao.to,
             type: sessionMessageDao.type,
-            message: message,
+            content: content,
             completions: completionsDto,
             createTime: sessionMessageDao.createTime
         )

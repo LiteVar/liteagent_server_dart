@@ -4,7 +4,6 @@ import 'package:lite_agent_core_dart/lite_agent_core.dart';
 import 'package:lite_agent_core_dart/lite_agent_service.dart';
 import 'package:lite_agent_core_dart_server/lite_agent_core_dart_server.dart';
 import 'package:logging/logging.dart';
-import 'package:opentool_dart/opentool_dart.dart';
 
 class AgentMessageListener {
   Map<String, Map<String, AgentMessageSubscriber>> agentMessageSubscriberList = {};
@@ -37,7 +36,7 @@ class AgentMessageListener {
         }
       }
       if(agentMessageDto.type == AgentMessageType.TASK_STATUS) {
-        TaskStatusDto taskStatusDto = agentMessageDto.message as TaskStatusDto;
+        TaskStatusDto taskStatusDto = agentMessageDto.content as TaskStatusDto;
         if(taskStatusDto.status == TaskStatusType.DONE || taskStatusDto.status == TaskStatusType.STOP || taskStatusDto.status == TaskStatusType.EXCEPTION ) {
           unsubscribe(sessionId, agentMessageDto.taskId);
         }
@@ -61,8 +60,8 @@ class AgentMessageListener {
       final taskId = agentMessageDto.taskId;
       if (agentMessageSubscriberList[sessionId]!.containsKey(taskId)) {
         final subscriber = agentMessageSubscriberList[sessionId]![taskId]!;
-        FunctionCall functionCall = agentMessageDto.message as FunctionCall;
-        subscriber.addRemoteFunctionCall(functionCall);
+        // FunctionCall functionCall = agentMessageDto.content as FunctionCall;
+        subscriber.addRemoteFunctionCall(agentMessageDto);
       }
     }
   }
@@ -71,7 +70,7 @@ class AgentMessageListener {
 abstract class AgentMessageSubscriber {
   void addMessage(AgentMessageDto agentMessageDto);
   void addChunk(AgentMessageChunkDto agentMessageChunkDto);
-  void addRemoteFunctionCall(FunctionCall functionCall);
+  void addRemoteFunctionCall(AgentMessageDto agentMessageDto);
   void close();
 }
 
@@ -93,8 +92,8 @@ class AgentMessageSubscriberBySSE implements AgentMessageSubscriber {
   }
 
   @override
-  void addRemoteFunctionCall(FunctionCall functionCall) {
-    _pushData(SSEEventType.FUNCTION_CALL, jsonEncode(functionCall.toJson()));
+  void addRemoteFunctionCall(AgentMessageDto agentMessageDto) {
+    _pushData(SSEEventType.FUNCTION_CALL, jsonEncode(agentMessageDto.toJson()));
   }
 
   void _pushData(String eventType, String dataString) {
