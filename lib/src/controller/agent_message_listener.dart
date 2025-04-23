@@ -98,12 +98,12 @@ class AgentMessageSubscriberBySSE implements AgentMessageSubscriber {
 
   void _pushData(String eventType, String dataString) {
     String data = "event: $eventType\ndata: $dataString\n\n";
-    logger.log(LogModule.sse, "SSE data", detail: data, level: Level.INFO);
+    logger.log(LogModule.sse, "SSE data", detail: data, level: Level.FINEST);
     streamController.sink.add(utf8.encode(data));
   }
 
   @override
-  close() {
+  void close() {
     streamController.close();
   }
 }

@@ -16,7 +16,7 @@ dependencies:
   json_annotation: ^4.9.0
   lite_agent_core_dart: #^0.5.1
     path: ../lite_agent_core_dart
-  opentool_dart: ^0.3.0
+  opentool_dart: ^0.5.0
   drift: ^2.25.1
   sqlite3: ^2.7.4
   sse: ^4.1.7
