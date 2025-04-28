@@ -35,8 +35,8 @@ Future<void> main() async {
     llmConfig: _buildLLMConfigDto(),
     systemPrompt: systemPrompt,
     sessionList: [
-      SessionNameDto(sessionId: sessionDto1.sessionId),
-      SessionNameDto(sessionId: sessionDto2.sessionId)
+      SessionNameDto(sessionId: sessionDto1.sessionId, name: "translator"),
+      SessionNameDto(sessionId: sessionDto2.sessionId, name: "CRUDTools")
     ]
   );
 
@@ -118,7 +118,7 @@ Future<void> sleep(int seconds) async {
 
 Future<SessionDto?> initChat(Dio dio, CapabilityDto capabilityDto) async {
   try {
-    Response response = await dio.post('/init', data: capabilityDto.toJson());
+    Response response = await dio.post('/initSession', data: capabilityDto.toJson());
     SessionDto sessionDto = SessionDto.fromJson(response.data);
     print("[initChat->RES] " + sessionDto.toJson().toString());
     return sessionDto;
@@ -149,7 +149,7 @@ Future<Stream<String>> chat(String baseUrl, String sessionId, UserTaskDto userTa
 
 Future<Stream<String>> sendUserMessage(String baseUrl, String sessionId, String prompt) async {
   ContentDto contentDto = ContentDto(type: ContentType.TEXT, message: prompt);
-  UserTaskDto userTaskDto = UserTaskDto(contentList: [contentDto]);
+  UserTaskDto userTaskDto = UserTaskDto(content: [contentDto]);
   return await chat(baseUrl, sessionId, userTaskDto);
 }
 

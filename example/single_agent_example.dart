@@ -104,7 +104,7 @@ Future<Stream<String>> chat(String baseUrl, String sessionId, UserTaskDto userTa
 
 Future<Stream<String>> sendUserMessage(String baseUrl, String sessionId, String prompt) async {
   ContentDto contentDto = ContentDto(type: ContentType.TEXT, message: prompt);
-  UserTaskDto userTaskDto = UserTaskDto(contentList: [contentDto], stream: true);
+  UserTaskDto userTaskDto = UserTaskDto(content: [contentDto], stream: true);
 
   return await chat(baseUrl, sessionId, userTaskDto);
 }
@@ -183,7 +183,7 @@ Future<List<OpenSpecDto>> _buildOpenSpecList() async {
 
 Future<void> _onData(String sessionId, String data) async {
   // final eventRegex = RegExp(r"^(?:event:\s*(?<event>.+?)\r?\n)?data:\s*(?<data>\{.*\})$");
-  final eventRegex = RegExp(r'event: (\w+)\ndata: (.*?)\n\n');
+  final eventRegex = RegExp(r'event:(\w+)\ndata:(.*?)\n\n');
   final matches = eventRegex.allMatches(data);
 
   for (var match in matches) {

@@ -149,7 +149,7 @@ Future<Stream<String>> chat(String baseUrl, String sessionId, UserTaskDto userTa
 
 Future<Stream<String>> sendUserMessage(String baseUrl, String sessionId, String prompt) async {
   ContentDto userMessageDto = ContentDto(type: ContentType.TEXT, message: prompt);
-  UserTaskDto userTaskDto = UserTaskDto(contentList: [userMessageDto]);
+  UserTaskDto userTaskDto = UserTaskDto(content: [userMessageDto]);
 
   return await chat(baseUrl, sessionId, userTaskDto);
 }
