@@ -7,7 +7,7 @@ import 'package:lite_agent_core_dart/lite_agent_service.dart';
 import 'package:lite_agent_core_dart_server/lite_agent_core_dart_server.dart';
 import 'listener.dart';
 
-String prompt = "Find the text with ID 0.";
+String prompt = "call create with text: abc";// "Find the text with ID 0.";
 
 Config config = initConfig();
 
@@ -145,20 +145,34 @@ String _buildSystemPrompt() {
 }
 
 Future<List<OpenSpecDto>> _buildOpenSpecList() async {
-  String openAPIFolder = "${io.Directory.current.path}${io.Platform.pathSeparator}example${io.Platform.pathSeparator}mock${io.Platform.pathSeparator}server";
+  String openAPIFolder = "${io.Directory.current.path}${io.Platform.pathSeparator}example${io.Platform.pathSeparator}mock${io.Platform.pathSeparator}mcp";
+
   List<String> openAPIFileNameList = [
-    "mock_openapi.json"
-    /// you can add more tool spec json file.
+    "example.json"
   ];
 
-  List<OpenSpecDto> OpenSpecDtoList = [];
+  List<OpenSpecDto> openSpecDtoList = [];
   for (String openAPIFileName in openAPIFileNameList) {
     String jsonPath = "$openAPIFolder${io.Platform.pathSeparator}$openAPIFileName";
     io.File file = io.File(jsonPath);
     String jsonString = await file.readAsString();
-    OpenSpecDto openSpecDto = OpenSpecDto(openSpec: jsonString, protocol: Protocol.OPENAPI);
-    OpenSpecDtoList.add(openSpecDto);
+    OpenSpecDto openSpecDto = OpenSpecDto(openSpec: jsonString, protocol: Protocol.MCP_STDIO_TOOLS);
+    openSpecDtoList.add(openSpecDto);
   }
+
+  // List<String> openAPIFileNameList = [
+  //   "mock_openapi.json"
+  //   /// you can add more tool spec json file.
+  // ];
+  //
+  // List<OpenSpecDto> OpenSpecDtoList = [];
+  // for (String openAPIFileName in openAPIFileNameList) {
+  //   String jsonPath = "$openAPIFolder${io.Platform.pathSeparator}$openAPIFileName";
+  //   io.File file = io.File(jsonPath);
+  //   String jsonString = await file.readAsString();
+  //   OpenSpecDto openSpecDto = OpenSpecDto(openSpec: jsonString, protocol: Protocol.OPENAPI);
+  //   OpenSpecDtoList.add(openSpecDto);
+  // }
 
   /// You can add your other tool spec
   // String openModbusFolder =
@@ -178,7 +192,7 @@ Future<List<OpenSpecDto>> _buildOpenSpecList() async {
   //   OpenSpecDtoList.add(openSpecDto);
   // }
 
-  return OpenSpecDtoList;
+  return openSpecDtoList;
 }
 
 Future<void> _onData(String sessionId, String data) async {
