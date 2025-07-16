@@ -11,3 +11,5 @@ example/.DS_Store
 lite_agent_core_dart_server.iml
 .DS_Store
 bin/agent.db
+
+.cursor/

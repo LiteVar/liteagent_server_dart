@@ -126,13 +126,18 @@ class AgentController {
       final SessionDto sessionDto = SessionDto.fromJson(queryParameters);
       UserTaskDto userTaskDto = UserTaskDto.fromJson(data);
 
-      if (userTaskDto.taskId == null) userTaskDto.taskId = uniqueId();
+      final taskId = uniqueId();
 
       StreamController<List<int>> streamController = StreamController<List<int>>.broadcast();
       AgentMessageSubscriber agentMessageSubscriber = AgentMessageSubscriberBySSE(streamController);
-      this.agentMessageListener.subscribe(sessionDto.sessionId, userTaskDto.taskId!, agentMessageSubscriber);
+      this.agentMessageListener.subscribe(sessionDto.sessionId, taskId, agentMessageSubscriber);
 
-      await agentService.startSession(sessionDto.sessionId, userTaskDto);
+      List<String> subSessionIds = agentService.getSubSessionIds(sessionDto.sessionId);
+      for (String subSessionId in subSessionIds) {
+        this.agentMessageListener.addSubSessionIdMapping(subSessionId, sessionDto.sessionId, taskId);
+      }
+
+      await agentService.startSession(sessionDto.sessionId, userTaskDto, taskId: taskId);
 
       logger.log(LogModule.http, "Response startStream", detail: jsonEncode(sessionDto.toJson()) + " & " + jsonEncode(userTaskDto.toJson()));
       return Response.ok(streamController.stream, headers: streamHeaders, context: {'shelf.io.buffer_output': false});

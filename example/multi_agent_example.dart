@@ -179,7 +179,7 @@ Future<SessionDto?> clearChat(Dio dio, String sessionId) async {
 
 Future<void> _onData(String sessionId, String data) async {
   // final eventRegex = RegExp(r"^(?:event:\s*(?<event>.+?)\r?\n)?data:\s*(?<data>\{.*\})$");
-  final eventRegex = RegExp(r'event: (\w+)\ndata: (.*?)\n\n');
+  final eventRegex = RegExp(r'event:(\w+)\ndata:(.*?)\n\n');
   final matches = eventRegex.allMatches(data);
 
   for (var match in matches) {

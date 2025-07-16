@@ -6,7 +6,8 @@ import 'package:lite_agent_core_dart_server/lite_agent_core_dart_server.dart';
 import 'package:logging/logging.dart';
 
 class AgentMessageListener {
-  Map<String, Map<String, AgentMessageSubscriber>> agentMessageSubscriberList = {};
+  Map<String, Map<String, AgentMessageSubscriber>> agentMessageSubscriberList = {}; // {sessionId: {taskId: subscriber}}
+  Map<String, (String, String)> subToRootSessionMap = {}; // {subSessionId: (rootSessionId, rootTaskId)}
 
   void subscribe(String sessionId, String taskId, AgentMessageSubscriber subscriber) {
     if (!agentMessageSubscriberList.containsKey(sessionId)) {
@@ -21,20 +22,35 @@ class AgentMessageListener {
     if(agentMessageSubscriberList.containsKey(sessionId) && agentMessageSubscriberList[sessionId]!.isEmpty) {
       agentMessageSubscriberList.remove(sessionId);
     }
+    _removeSubSessionIdMapping(sessionId);
+  }
+
+  void addSubSessionIdMapping(String subSessionId, String rootSessionId, String taskId) {
+    subToRootSessionMap[subSessionId] = (rootSessionId, taskId);
+  }
+
+  void _removeSubSessionIdMapping(String rootSessionId) {
+    subToRootSessionMap.removeWhere((key, value) => value.$1 == rootSessionId);
   }
 
   void listen(String sessionId, AgentMessageDto agentMessageDto) {
     if(agentMessageDto.type == AgentMessageType.FUNCTION_CALL){
       _listenClientFunctionCall(sessionId, agentMessageDto);
     } else {
-      if (agentMessageSubscriberList.containsKey(sessionId)) {
-        final taskId = agentMessageDto.taskId;
+      String targetSessionId = sessionId;
+      String taskId = agentMessageDto.taskId;
 
-        if (agentMessageSubscriberList[sessionId]!.containsKey(taskId)) {
-          final subscriber = agentMessageSubscriberList[sessionId]![taskId]!;
-          subscriber.addMessage(agentMessageDto);
-        }
+      // if subSessionId, find the rootSessionId and rootTaskId
+      if (!agentMessageSubscriberList.containsKey(sessionId) && subToRootSessionMap.containsKey(sessionId)) {
+        targetSessionId = subToRootSessionMap[sessionId]!.$1;
+        taskId = subToRootSessionMap[sessionId]!.$2;
       }
+
+      if (agentMessageSubscriberList.containsKey(targetSessionId) &&
+          agentMessageSubscriberList[targetSessionId]!.containsKey(taskId)) {
+        agentMessageSubscriberList[targetSessionId]![taskId]!.addMessage(agentMessageDto);
+      }
+
       if(agentMessageDto.type == AgentMessageType.TASK_STATUS) {
         TaskStatusDto taskStatusDto = agentMessageDto.content as TaskStatusDto;
         if(taskStatusDto.status == TaskStatusType.DONE || taskStatusDto.status == TaskStatusType.STOP || taskStatusDto.status == TaskStatusType.EXCEPTION ) {
@@ -45,24 +61,32 @@ class AgentMessageListener {
   }
 
   void listenChunk(String sessionId, AgentMessageChunkDto agentMessageChunkDto) {
-    if (agentMessageSubscriberList.containsKey(sessionId)) {
-      final taskId = agentMessageChunkDto.taskId;
-      
-      if (agentMessageSubscriberList[sessionId]!.containsKey(taskId)) {
-        final subscriber = agentMessageSubscriberList[sessionId]![taskId]!;
-        subscriber.addChunk(agentMessageChunkDto);
-      }
+    String targetSessionId = sessionId;
+    String taskId = agentMessageChunkDto.taskId;
+
+    if (!agentMessageSubscriberList.containsKey(sessionId) && subToRootSessionMap.containsKey(sessionId)) {
+      targetSessionId = subToRootSessionMap[sessionId]!.$1;
+      taskId = subToRootSessionMap[sessionId]!.$2;
+    }
+
+    if (agentMessageSubscriberList.containsKey(targetSessionId) &&
+        agentMessageSubscriberList[targetSessionId]!.containsKey(taskId)) {
+      agentMessageSubscriberList[targetSessionId]![taskId]!.addChunk(agentMessageChunkDto);
     }
   }
 
   void _listenClientFunctionCall(String sessionId, AgentMessageDto agentMessageDto) {
-    if (agentMessageSubscriberList.containsKey(sessionId)) {
-      final taskId = agentMessageDto.taskId;
-      if (agentMessageSubscriberList[sessionId]!.containsKey(taskId)) {
-        final subscriber = agentMessageSubscriberList[sessionId]![taskId]!;
-        // FunctionCall functionCall = agentMessageDto.content as FunctionCall;
-        subscriber.addRemoteFunctionCall(agentMessageDto);
-      }
+    String targetSessionId = sessionId;
+    String taskId = agentMessageDto.taskId;
+
+    if (!agentMessageSubscriberList.containsKey(sessionId) && subToRootSessionMap.containsKey(sessionId)) {
+      targetSessionId = subToRootSessionMap[sessionId]!.$1;
+      taskId = subToRootSessionMap[sessionId]!.$2;
+    }
+
+    if (agentMessageSubscriberList.containsKey(targetSessionId) &&
+        agentMessageSubscriberList[targetSessionId]!.containsKey(taskId)) {
+      agentMessageSubscriberList[targetSessionId]![taskId]!.addRemoteFunctionCall(agentMessageDto);
     }
   }
 }

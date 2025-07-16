@@ -17,7 +17,7 @@ class SessionMessageManageServiceByDB extends SessionMessageManageService {
       message = agentMessageDto.content as String;
     if (agentMessageDto.type == ToolMessageType.IMAGE_URL)
       message = agentMessageDto.content as String;
-    if (agentMessageDto.type == ToolMessageType.FUNCTION_CALL_LIST) {
+    if (agentMessageDto.type == ToolMessageType.TOOL_CALLS) {
       List<FunctionCall> functionCallList = agentMessageDto.content as List<FunctionCall>;
       message = jsonEncode(functionCallList);
     }
@@ -68,7 +68,7 @@ class SessionMessageManageServiceByDB extends SessionMessageManageService {
       content = sessionMessageDao.content;
     if (sessionMessageDao.type == ToolMessageType.IMAGE_URL)
       content = sessionMessageDao.content;
-    if (sessionMessageDao.type == ToolMessageType.FUNCTION_CALL_LIST) {
+    if (sessionMessageDao.type == ToolMessageType.TOOL_CALLS) {
       List<dynamic> fcList = jsonDecode(sessionMessageDao.content);
       List<FunctionCall> functionCallList = fcList.map((fc) => FunctionCall.fromJson(fc)).toList();
       content = functionCallList;
