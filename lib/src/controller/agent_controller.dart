@@ -132,11 +132,6 @@ class AgentController {
       AgentMessageSubscriber agentMessageSubscriber = AgentMessageSubscriberBySSE(streamController);
       this.agentMessageListener.subscribe(sessionDto.sessionId, taskId, agentMessageSubscriber);
 
-      List<String> subSessionIds = agentService.getSubSessionIds(sessionDto.sessionId);
-      for (String subSessionId in subSessionIds) {
-        this.agentMessageListener.addSubSessionIdMapping(subSessionId, sessionDto.sessionId, taskId);
-      }
-
       await agentService.startSession(sessionDto.sessionId, userTaskDto, taskId: taskId);
 
       logger.log(LogModule.http, "Response startStream", detail: jsonEncode(sessionDto.toJson()) + " & " + jsonEncode(userTaskDto.toJson()));
