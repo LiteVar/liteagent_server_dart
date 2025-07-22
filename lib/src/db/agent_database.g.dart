@@ -276,6 +276,15 @@ class $SessionMessagesTable extends SessionMessages
           GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 64),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
+  static const VerificationMeta _parentTaskIdMeta =
+      const VerificationMeta('parentTaskId');
+  @override
+  late final GeneratedColumn<String> parentTaskId = GeneratedColumn<String>(
+      'parent_task_id', aliasedName, true,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 64),
+      type: DriftSqlType.string,
+      requiredDuringInsert: false);
   static const VerificationMeta _roleMeta = const VerificationMeta('role');
   @override
   late final GeneratedColumn<String> role = GeneratedColumn<String>(
@@ -329,6 +338,7 @@ class $SessionMessagesTable extends SessionMessages
         originSessionId,
         sessionId,
         taskId,
+        parentTaskId,
         role,
         to,
         type,
@@ -365,6 +375,12 @@ class $SessionMessagesTable extends SessionMessages
           taskId.isAcceptableOrUnknown(data['task_id']!, _taskIdMeta));
     } else if (isInserting) {
       context.missing(_taskIdMeta);
+    }
+    if (data.containsKey('parent_task_id')) {
+      context.handle(
+          _parentTaskIdMeta,
+          parentTaskId.isAcceptableOrUnknown(
+              data['parent_task_id']!, _parentTaskIdMeta));
     }
     if (data.containsKey('role')) {
       context.handle(
@@ -418,6 +434,8 @@ class $SessionMessagesTable extends SessionMessages
           .read(DriftSqlType.string, data['${effectivePrefix}session_id'])!,
       taskId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}task_id'])!,
+      parentTaskId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}parent_task_id']),
       role: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}role'])!,
       to: attachedDatabase.typeMapping
@@ -444,6 +462,7 @@ class SessionMessageDao extends DataClass
   final String originSessionId;
   final String sessionId;
   final String taskId;
+  final String? parentTaskId;
   final String role;
   final String to;
   final String type;
@@ -454,6 +473,7 @@ class SessionMessageDao extends DataClass
       {required this.originSessionId,
       required this.sessionId,
       required this.taskId,
+      this.parentTaskId,
       required this.role,
       required this.to,
       required this.type,
@@ -466,6 +486,9 @@ class SessionMessageDao extends DataClass
     map['origin_session_id'] = Variable<String>(originSessionId);
     map['session_id'] = Variable<String>(sessionId);
     map['task_id'] = Variable<String>(taskId);
+    if (!nullToAbsent || parentTaskId != null) {
+      map['parent_task_id'] = Variable<String>(parentTaskId);
+    }
     map['role'] = Variable<String>(role);
     map['to'] = Variable<String>(to);
     map['type'] = Variable<String>(type);
@@ -482,6 +505,9 @@ class SessionMessageDao extends DataClass
       originSessionId: Value(originSessionId),
       sessionId: Value(sessionId),
       taskId: Value(taskId),
+      parentTaskId: parentTaskId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(parentTaskId),
       role: Value(role),
       to: Value(to),
       type: Value(type),
@@ -500,6 +526,7 @@ class SessionMessageDao extends DataClass
       originSessionId: serializer.fromJson<String>(json['originSessionId']),
       sessionId: serializer.fromJson<String>(json['sessionId']),
       taskId: serializer.fromJson<String>(json['taskId']),
+      parentTaskId: serializer.fromJson<String?>(json['parentTaskId']),
       role: serializer.fromJson<String>(json['role']),
       to: serializer.fromJson<String>(json['to']),
       type: serializer.fromJson<String>(json['type']),
@@ -515,6 +542,7 @@ class SessionMessageDao extends DataClass
       'originSessionId': serializer.toJson<String>(originSessionId),
       'sessionId': serializer.toJson<String>(sessionId),
       'taskId': serializer.toJson<String>(taskId),
+      'parentTaskId': serializer.toJson<String?>(parentTaskId),
       'role': serializer.toJson<String>(role),
       'to': serializer.toJson<String>(to),
       'type': serializer.toJson<String>(type),
@@ -528,6 +556,7 @@ class SessionMessageDao extends DataClass
           {String? originSessionId,
           String? sessionId,
           String? taskId,
+          Value<String?> parentTaskId = const Value.absent(),
           String? role,
           String? to,
           String? type,
@@ -538,6 +567,8 @@ class SessionMessageDao extends DataClass
         originSessionId: originSessionId ?? this.originSessionId,
         sessionId: sessionId ?? this.sessionId,
         taskId: taskId ?? this.taskId,
+        parentTaskId:
+            parentTaskId.present ? parentTaskId.value : this.parentTaskId,
         role: role ?? this.role,
         to: to ?? this.to,
         type: type ?? this.type,
@@ -552,6 +583,9 @@ class SessionMessageDao extends DataClass
           : this.originSessionId,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
       taskId: data.taskId.present ? data.taskId.value : this.taskId,
+      parentTaskId: data.parentTaskId.present
+          ? data.parentTaskId.value
+          : this.parentTaskId,
       role: data.role.present ? data.role.value : this.role,
       to: data.to.present ? data.to.value : this.to,
       type: data.type.present ? data.type.value : this.type,
@@ -569,6 +603,7 @@ class SessionMessageDao extends DataClass
           ..write('originSessionId: $originSessionId, ')
           ..write('sessionId: $sessionId, ')
           ..write('taskId: $taskId, ')
+          ..write('parentTaskId: $parentTaskId, ')
           ..write('role: $role, ')
           ..write('to: $to, ')
           ..write('type: $type, ')
@@ -580,8 +615,8 @@ class SessionMessageDao extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(originSessionId, sessionId, taskId, role, to,
-      type, content, completions, createTime);
+  int get hashCode => Object.hash(originSessionId, sessionId, taskId,
+      parentTaskId, role, to, type, content, completions, createTime);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -589,6 +624,7 @@ class SessionMessageDao extends DataClass
           other.originSessionId == this.originSessionId &&
           other.sessionId == this.sessionId &&
           other.taskId == this.taskId &&
+          other.parentTaskId == this.parentTaskId &&
           other.role == this.role &&
           other.to == this.to &&
           other.type == this.type &&
@@ -601,6 +637,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
   final Value<String> originSessionId;
   final Value<String> sessionId;
   final Value<String> taskId;
+  final Value<String?> parentTaskId;
   final Value<String> role;
   final Value<String> to;
   final Value<String> type;
@@ -612,6 +649,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
     this.originSessionId = const Value.absent(),
     this.sessionId = const Value.absent(),
     this.taskId = const Value.absent(),
+    this.parentTaskId = const Value.absent(),
     this.role = const Value.absent(),
     this.to = const Value.absent(),
     this.type = const Value.absent(),
@@ -624,6 +662,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
     required String originSessionId,
     required String sessionId,
     required String taskId,
+    this.parentTaskId = const Value.absent(),
     required String role,
     required String to,
     required String type,
@@ -643,6 +682,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
     Expression<String>? originSessionId,
     Expression<String>? sessionId,
     Expression<String>? taskId,
+    Expression<String>? parentTaskId,
     Expression<String>? role,
     Expression<String>? to,
     Expression<String>? type,
@@ -655,6 +695,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
       if (originSessionId != null) 'origin_session_id': originSessionId,
       if (sessionId != null) 'session_id': sessionId,
       if (taskId != null) 'task_id': taskId,
+      if (parentTaskId != null) 'parent_task_id': parentTaskId,
       if (role != null) 'role': role,
       if (to != null) 'to': to,
       if (type != null) 'type': type,
@@ -669,6 +710,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
       {Value<String>? originSessionId,
       Value<String>? sessionId,
       Value<String>? taskId,
+      Value<String?>? parentTaskId,
       Value<String>? role,
       Value<String>? to,
       Value<String>? type,
@@ -680,6 +722,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
       originSessionId: originSessionId ?? this.originSessionId,
       sessionId: sessionId ?? this.sessionId,
       taskId: taskId ?? this.taskId,
+      parentTaskId: parentTaskId ?? this.parentTaskId,
       role: role ?? this.role,
       to: to ?? this.to,
       type: type ?? this.type,
@@ -701,6 +744,9 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
     }
     if (taskId.present) {
       map['task_id'] = Variable<String>(taskId.value);
+    }
+    if (parentTaskId.present) {
+      map['parent_task_id'] = Variable<String>(parentTaskId.value);
     }
     if (role.present) {
       map['role'] = Variable<String>(role.value);
@@ -732,6 +778,7 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
           ..write('originSessionId: $originSessionId, ')
           ..write('sessionId: $sessionId, ')
           ..write('taskId: $taskId, ')
+          ..write('parentTaskId: $parentTaskId, ')
           ..write('role: $role, ')
           ..write('to: $to, ')
           ..write('type: $type, ')
@@ -897,6 +944,7 @@ typedef $$SessionMessagesTableCreateCompanionBuilder = SessionMessagesCompanion
   required String originSessionId,
   required String sessionId,
   required String taskId,
+  Value<String?> parentTaskId,
   required String role,
   required String to,
   required String type,
@@ -910,6 +958,7 @@ typedef $$SessionMessagesTableUpdateCompanionBuilder = SessionMessagesCompanion
   Value<String> originSessionId,
   Value<String> sessionId,
   Value<String> taskId,
+  Value<String?> parentTaskId,
   Value<String> role,
   Value<String> to,
   Value<String> type,
@@ -937,6 +986,9 @@ class $$SessionMessagesTableFilterComposer
 
   ColumnFilters<String> get taskId => $composableBuilder(
       column: $table.taskId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get parentTaskId => $composableBuilder(
+      column: $table.parentTaskId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get role => $composableBuilder(
       column: $table.role, builder: (column) => ColumnFilters(column));
@@ -976,6 +1028,10 @@ class $$SessionMessagesTableOrderingComposer
   ColumnOrderings<String> get taskId => $composableBuilder(
       column: $table.taskId, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get parentTaskId => $composableBuilder(
+      column: $table.parentTaskId,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get role => $composableBuilder(
       column: $table.role, builder: (column) => ColumnOrderings(column));
 
@@ -1012,6 +1068,9 @@ class $$SessionMessagesTableAnnotationComposer
 
   GeneratedColumn<String> get taskId =>
       $composableBuilder(column: $table.taskId, builder: (column) => column);
+
+  GeneratedColumn<String> get parentTaskId => $composableBuilder(
+      column: $table.parentTaskId, builder: (column) => column);
 
   GeneratedColumn<String> get role =>
       $composableBuilder(column: $table.role, builder: (column) => column);
@@ -1062,6 +1121,7 @@ class $$SessionMessagesTableTableManager extends RootTableManager<
             Value<String> originSessionId = const Value.absent(),
             Value<String> sessionId = const Value.absent(),
             Value<String> taskId = const Value.absent(),
+            Value<String?> parentTaskId = const Value.absent(),
             Value<String> role = const Value.absent(),
             Value<String> to = const Value.absent(),
             Value<String> type = const Value.absent(),
@@ -1074,6 +1134,7 @@ class $$SessionMessagesTableTableManager extends RootTableManager<
             originSessionId: originSessionId,
             sessionId: sessionId,
             taskId: taskId,
+            parentTaskId: parentTaskId,
             role: role,
             to: to,
             type: type,
@@ -1086,6 +1147,7 @@ class $$SessionMessagesTableTableManager extends RootTableManager<
             required String originSessionId,
             required String sessionId,
             required String taskId,
+            Value<String?> parentTaskId = const Value.absent(),
             required String role,
             required String to,
             required String type,
@@ -1098,6 +1160,7 @@ class $$SessionMessagesTableTableManager extends RootTableManager<
             originSessionId: originSessionId,
             sessionId: sessionId,
             taskId: taskId,
+            parentTaskId: parentTaskId,
             role: role,
             to: to,
             type: type,

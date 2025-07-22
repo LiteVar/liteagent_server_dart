@@ -16,17 +16,8 @@ class AgentController {
   final AgentManageService agentManageService;
   final Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = {};
   final AgentMessageListener agentMessageListener = AgentMessageListener();
-  final Map<String, String> jsonHeaders = {
-    HttpHeaders.contentTypeHeader: 'application/json',
-    HttpHeaders.cacheControlHeader: 'no-cache',
-    HttpHeaders.connectionHeader: 'keep-alive',
-  };
-  final Map<String, String> streamHeaders = {
-    HttpHeaders.contentTypeHeader: 'text/event-stream',
-    HttpHeaders.cacheControlHeader: 'no-cache',
-    HttpHeaders.connectionHeader: 'keep-alive',
-    'Cache-Control': 'no-store',
-  };
+  final Map<String, String> jsonHeaders = {HttpHeaders.contentTypeHeader: 'application/json', HttpHeaders.cacheControlHeader: 'no-cache', HttpHeaders.connectionHeader: 'keep-alive',};
+  final Map<String, String> streamHeaders = {HttpHeaders.contentTypeHeader: 'text/event-stream', HttpHeaders.cacheControlHeader: 'no-cache', HttpHeaders.connectionHeader: 'keep-alive', 'Cache-Control': 'no-store',};
 
   AgentController(this.agentService, this.agentManageService, {Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = const {}}) {
     this.openToolDriverInfoMap.addAll(openToolDriverInfoMap);
@@ -68,11 +59,7 @@ class AgentController {
         openToolDriverMap[openToolDto.openToolId] = openToolDriver;
       });
 
-      SessionDto sessionDto = await agentService.initSession(
-          capabilityDto, _listen,
-          opentoolDriverMap: openToolDriverMap,
-          listenChunk: _listenChunk,
-      );
+      SessionDto sessionDto = await agentService.initSession(capabilityDto, opentoolDriverMap: openToolDriverMap);
 
       logger.log(LogModule.http, "Response initSession", detail: jsonEncode(sessionDto.toJson()));
       return Response.ok(jsonEncode(sessionDto.toJson()), headers: jsonHeaders);
@@ -126,13 +113,14 @@ class AgentController {
       final SessionDto sessionDto = SessionDto.fromJson(queryParameters);
       UserTaskDto userTaskDto = UserTaskDto.fromJson(data);
 
-      final taskId = uniqueId();
-
       StreamController<List<int>> streamController = StreamController<List<int>>.broadcast();
       AgentMessageSubscriber agentMessageSubscriber = AgentMessageSubscriberBySSE(streamController);
-      this.agentMessageListener.subscribe(sessionDto.sessionId, taskId, agentMessageSubscriber);
 
-      await agentService.startSession(sessionDto.sessionId, userTaskDto, taskId: taskId);
+      void Function(String taskId) getTaskId = (String taskId) async {
+        this.agentMessageListener.subscribe(sessionDto.sessionId, taskId, agentMessageSubscriber);
+      };
+
+      await agentService.startSession(sessionDto.sessionId, userTaskDto, _listen, listenChunk: _listenChunk, getTaskId: getTaskId);
 
       logger.log(LogModule.http, "Response startStream", detail: jsonEncode(sessionDto.toJson()) + " & " + jsonEncode(userTaskDto.toJson()));
       return Response.ok(streamController.stream, headers: streamHeaders, context: {'shelf.io.buffer_output': false});
@@ -239,12 +227,12 @@ class AgentController {
     }
   }
 
-  void _listen(String sessionId, AgentMessageDto agentMessageDto) {
-    agentMessageListener.listen(sessionId, agentMessageDto);
+  void _listen(String sessionId, String taskId, AgentMessageDto agentMessageDto) {
+    agentMessageListener.listen(sessionId, taskId, agentMessageDto);
   }
 
-  void _listenChunk(String sessionId, AgentMessageChunkDto agentMessageChunkDto) {
-    agentMessageListener.listenChunk(sessionId, agentMessageChunkDto);
+  void _listenChunk(String sessionId, String taskId, AgentMessageChunkDto agentMessageChunkDto) {
+    agentMessageListener.listenChunk(sessionId, taskId, agentMessageChunkDto);
   }
 
   Future<Response> getOpenToolList(Request request) async {

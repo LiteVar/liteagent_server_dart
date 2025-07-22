@@ -24,7 +24,9 @@ Future<void> main() async {
   String prompt = "Find the text with ID 0 and translate it into Chinese.";
 
   SessionDto? sessionDto1 = await _buildTextAgent(dio);
+  print("session1: ${sessionDto1?.sessionId}");
   SessionDto? sessionDto2 = await _buildToolAgent(dio);
+  print("session2: ${sessionDto2?.sessionId}");
 
   if(sessionDto1 == null || sessionDto2 == null) {
     print("Init sub session failed.");
@@ -177,8 +179,8 @@ Future<SessionDto?> clearChat(Dio dio, String sessionId) async {
   return null;
 }
 
-Future<void> _onData(String sessionId, String data) async {
-  // final eventRegex = RegExp(r"^(?:event:\s*(?<event>.+?)\r?\n)?data:\s*(?<data>\{.*\})$");
+Future<void> _onData(String originalSessionId, String data) async {
+  print(data);
   final eventRegex = RegExp(r'event:(\w+)\ndata:(.*?)\n\n');
   final matches = eventRegex.allMatches(data);
 
@@ -188,10 +190,10 @@ Future<void> _onData(String sessionId, String data) async {
 
     if (eventName == SSEEventType.MESSAGE) {
       AgentMessageDto agentMessageDto = AgentMessageDto.fromJson(jsonDecode(eventData!));
-      listen(sessionId, agentMessageDto);
+      listen(originalSessionId, agentMessageDto);
     } else if (eventName == SSEEventType.CHUNK) {
       AgentMessageChunkDto agentMessageChunkDto = AgentMessageChunkDto.fromJson(jsonDecode(eventData!));
-      listenChunk(sessionId, agentMessageChunkDto);
+      listenChunk(originalSessionId, agentMessageChunkDto);
     }
   }
 }

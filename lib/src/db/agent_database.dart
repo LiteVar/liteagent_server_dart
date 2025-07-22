@@ -13,6 +13,7 @@ class SessionMessages extends Table {
   TextColumn get originSessionId => text().withLength(min: 1, max: 64)();
   TextColumn get sessionId => text().withLength(min: 1, max: 64)();
   TextColumn get taskId => text().withLength(min: 1, max: 64)();
+  TextColumn get parentTaskId => text().withLength(min: 1, max: 64).nullable()();
   TextColumn get role => text().withLength(min: 1, max: 16)();
   TextColumn get to => text().withLength(min: 1, max: 16)();
   TextColumn get type => text().withLength(min: 1, max: 16)();

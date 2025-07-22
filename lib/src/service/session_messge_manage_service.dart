@@ -101,6 +101,7 @@ class SessionMessageManageServiceByDB extends SessionMessageManageService {
         agentMessageDto: AgentMessageDto(
             sessionId: sessionMessageDao.sessionId,
             taskId: sessionMessageDao.taskId,
+            parentTaskId: sessionMessageDao.parentTaskId,
             role: sessionMessageDao.role,
             to: sessionMessageDao.to,
             type: sessionMessageDao.type,

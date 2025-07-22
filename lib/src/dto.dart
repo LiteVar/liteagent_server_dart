@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'dto.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class VersionDto {
   late String version;
 
@@ -13,7 +13,7 @@ class VersionDto {
   Map<String, dynamic> toJson() => _$VersionDtoToJson(this);
 }
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class OpenToolDto {
   late String openToolId;
   late String description;
@@ -25,7 +25,7 @@ class OpenToolDto {
   Map<String, dynamic> toJson() => _$OpenToolDtoToJson(this);
 }
 
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false, explicitToJson: true)
 class TaskIdDto {
   late String taskId;
 

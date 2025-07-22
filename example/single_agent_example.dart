@@ -104,7 +104,7 @@ Future<Stream<String>> chat(String baseUrl, String sessionId, UserTaskDto userTa
 
 Future<Stream<String>> sendUserMessage(String baseUrl, String sessionId, String prompt) async {
   ContentDto contentDto = ContentDto(type: ContentType.TEXT, message: prompt);
-  UserTaskDto userTaskDto = UserTaskDto(content: [contentDto], stream: true);
+  UserTaskDto userTaskDto = UserTaskDto(content: [contentDto], isChunk: true);
 
   return await chat(baseUrl, sessionId, userTaskDto);
 }
