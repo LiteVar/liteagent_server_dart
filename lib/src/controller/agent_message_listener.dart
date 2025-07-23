@@ -31,7 +31,7 @@ class AgentMessageListener {
         final subscriber = agentMessageSubscriberList[originalSessionId]![taskId]!;
         subscriber.addMessage(agentMessageDto);
       }
-      if (agentMessageSubscriberList.containsKey(originalSessionId)) {
+      if (agentMessageSubscriberList.containsKey(originalSessionId) && agentMessageSubscriberList[originalSessionId]!.containsKey(agentMessageDto.taskId)) {
         if(agentMessageDto.type == AgentMessageType.TASK_STATUS) {
           TaskStatusDto taskStatusDto = agentMessageDto.content as TaskStatusDto;
           if(taskStatusDto.status == TaskStatusType.DONE || taskStatusDto.status == TaskStatusType.STOP || taskStatusDto.status == TaskStatusType.EXCEPTION ) {
