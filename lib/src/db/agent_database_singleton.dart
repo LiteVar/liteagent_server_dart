@@ -22,5 +22,4 @@ class AgentDatabaseFactory {
       return _instance;
     }
   }
-
 }

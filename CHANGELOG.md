@@ -1,3 +1,8 @@
+## 1.0.0
+
+- add parentTaskId in messages
+- follow lite_agent_core_dart new version
+
 ## 0.7.0
 
 - move websocket to sse 
