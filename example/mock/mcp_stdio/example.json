@@ -1,0 +1,5 @@
+{
+  "command": "dart",
+  "args": ["run", "./example/mock/mcp/mcp_mock_server.dart"]
+}
+

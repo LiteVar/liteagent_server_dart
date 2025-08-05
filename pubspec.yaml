@@ -14,7 +14,8 @@ dependencies:
   web_socket_channel: ^3.0.1
   logging: ^1.2.0
   json_annotation: ^4.9.0
-  lite_agent_core_dart: ^1.0.0
+  lite_agent_core_dart:
+    path: ../lite_agent_core_dart
   drift: ^2.25.1
   sqlite3: ^2.7.4
   sse: ^4.1.7

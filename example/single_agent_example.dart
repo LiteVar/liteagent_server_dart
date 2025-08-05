@@ -156,7 +156,7 @@ Future<List<OpenSpecDto>> _buildOpenSpecList() async {
     String jsonPath = "$openAPIFolder${io.Platform.pathSeparator}$openAPIFileName";
     io.File file = io.File(jsonPath);
     String jsonString = await file.readAsString();
-    OpenSpecDto openSpecDto = OpenSpecDto(openSpec: jsonString, protocol: Protocol.MCP_STDIO_TOOLS);
+    OpenSpecDto openSpecDto = OpenSpecDto(openSpec: jsonString, protocol: Protocol.MCP_STDIO);
     openSpecDtoList.add(openSpecDto);
   }
 

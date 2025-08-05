@@ -1,0 +1,7 @@
+{
+  "url": "http://mcpserver.com:4321",
+  "oAuthTokens": {
+    "accessToken": "<ACCESS_TOKEN>",
+    "refreshToken": "<REFRESH_TOKEN>"
+  }
+}

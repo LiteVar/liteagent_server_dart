@@ -1,0 +1,7 @@
+{
+  "command": "<CMD>",
+  "args": [
+    "ARG_A",
+    "ARG_B"
+  ]
+}
