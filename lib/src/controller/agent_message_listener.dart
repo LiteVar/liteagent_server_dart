@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:lite_agent_core_dart/lite_agent_core.dart';
 import 'package:lite_agent_core_dart/lite_agent_service.dart';
 import 'package:lite_agent_core_dart_server/lite_agent_core_dart_server.dart';
-import 'package:logging/logging.dart';
 
 class AgentMessageListener {
   Map<String, Map<String, AgentMessageSubscriber>> agentMessageSubscriberList = {}; // sessionId & taskId -> subscriber, for Push messages to task
@@ -76,26 +75,26 @@ class AgentMessageSubscriberBySSE implements AgentMessageSubscriber {
   @override
   void addMessage(AgentMessageDto agentMessageDto) {
     if(!streamController.isClosed) {
-      print(agentMessageDto.toJson());
+      // print(agentMessageDto.toJson());
       _pushData(SSEEventType.MESSAGE, jsonEncode(agentMessageDto.toJson()));
     }
   }
 
   @override
   void addChunk(AgentMessageChunkDto agentMessageChunkDto) {
-    print(agentMessageChunkDto.toJson());
+    // print(agentMessageChunkDto.toJson());
     _pushData(SSEEventType.CHUNK, jsonEncode(agentMessageChunkDto.toJson()));
   }
 
   @override
   void addRemoteFunctionCall(AgentMessageDto agentMessageDto) {
-    print(agentMessageDto.toJson());
+    // print(agentMessageDto.toJson());
     _pushData(SSEEventType.FUNCTION_CALL, jsonEncode(agentMessageDto.toJson()));
   }
 
   void _pushData(String eventType, String dataString) {
     String data = "event:$eventType\ndata:$dataString\n\n";
-    logger.log(LogModule.sse, "SSE data", detail: data, level: Level.FINEST);
+    logger.log(LogModule.sse, "SSE data", detail: data, level: config.log.level);
     streamController.sink.add(utf8.encode(data));
   }
 
