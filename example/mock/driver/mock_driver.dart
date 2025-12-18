@@ -1,38 +1,61 @@
-import 'package:lite_agent_core_dart/lite_agent_core.dart';
-import 'package:opentool_dart/opentool_dart.dart';
+import 'package:liteagent_core_dart/liteagent_core.dart';
+import 'package:opentool_dart/opentool_client.dart';
 
 import 'mock_util.dart';
 
 class MockDriver extends OpenToolDriver {
-  MockUtil mockAPI = MockUtil();
+  MockUtil mockUtil = MockUtil();
 
-  MockDriver(super.opentool);
+  MockDriver(OpenTool opentool): super(opentool);
 
   @override
   Future<ToolReturn> call(FunctionCall functionCall) async{
     String functionName = functionCall.name;
     if(functionName == "count") {
-      int count = mockAPI.count();
+      int count = mockUtil.count();
       return ToolReturn(id: functionCall.id, result: {"count": count});
     } else if(functionName == "create") {
       String text = functionCall.arguments["text"] as String;
-      int id = mockAPI.create(text);
+      int id = mockUtil.create(text);
       return ToolReturn(id: functionCall.id, result: {"id": id});
     } else if(functionName == "read") {
       int id = functionCall.arguments["id"] as int;
-      String text = mockAPI.read(id);
+      String text = mockUtil.read(id);
       return ToolReturn(id: functionCall.id, result: {"text": text});
     } else if(functionName == "update") {
       int id = functionCall.arguments["id"] as int;
       String text = functionCall.arguments["text"] as String;
-      mockAPI.update(id, text);
+      mockUtil.update(id, text);
       return ToolReturn(id: functionCall.id, result: {"result": "Update successfully."});
     } else if(functionName == "delete") {
       int id = functionCall.arguments["id"] as int;
-      mockAPI.delete(id);
+      mockUtil.delete(id);
+      return ToolReturn(id: functionCall.id, result: {"result": "Delete successfully."});
+    } else if(functionName == "run") {
+      try {
+        mockUtil.run();
+      } catch(e) {
+        throw ToolBreakException(e.toString());
+      }
       return ToolReturn(id: functionCall.id, result: {"result": "Delete successfully."});
     } else {
       return ToolReturn(id: functionCall.id, result: FunctionNotSupportedException(functionName: functionName).toJson());
+    }
+  }
+
+  @override
+  Future<void> streamCall(FunctionCall functionCall, void Function(String event, ToolReturn toolReturn) onStream) async {
+    String functionName = functionCall.name;
+    if(functionName == "sequentiallyRead") {
+      await mockUtil.sequentiallyRead((String data) {
+        ToolReturn toolReturn = ToolReturn(id: functionCall.id, result: {"data": data});
+        onStream(EventType.DATA, toolReturn);
+      });
+      ToolReturn toolReturn = ToolReturn(id: functionCall.id, result: {});
+      onStream(EventType.DONE, toolReturn);
+    } else {
+      ToolReturn toolReturn = ToolReturn(id: functionCall.id, result: FunctionNotSupportedException(functionName: functionName).toJson());
+      onStream(EventType.ERROR, toolReturn);
     }
   }
 }

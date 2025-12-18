@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io' as io;
 import 'package:dio/dio.dart';
 import 'package:dotenv/dotenv.dart';
-import 'package:lite_agent_core_dart/lite_agent_core.dart';
-import 'package:lite_agent_core_dart/lite_agent_service.dart';
-import 'package:lite_agent_core_dart_server/lite_agent_core_dart_server.dart';
+import 'package:liteagent_core_dart/liteagent_core.dart';
+import 'package:liteagent_core_dart/liteagent_service.dart';
+import 'package:liteagent_server_dart/liteagent_server_dart.dart';
 import 'listener.dart';
 
 Config config = initConfig();

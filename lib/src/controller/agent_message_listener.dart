@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:lite_agent_core_dart/lite_agent_core.dart';
-import 'package:lite_agent_core_dart/lite_agent_service.dart';
-import 'package:lite_agent_core_dart_server/lite_agent_core_dart_server.dart';
+import 'package:liteagent_core_dart/liteagent_core.dart';
+import 'package:liteagent_core_dart/liteagent_service.dart';
+import 'package:liteagent_server_dart/liteagent_server_dart.dart';
+import 'package:logging/logging.dart';
 
 class AgentMessageListener {
   Map<String, Map<String, AgentMessageSubscriber>> agentMessageSubscriberList = {}; // sessionId & taskId -> subscriber, for Push messages to task
@@ -94,7 +95,7 @@ class AgentMessageSubscriberBySSE implements AgentMessageSubscriber {
 
   void _pushData(String eventType, String dataString) {
     String data = "event:$eventType\ndata:$dataString\n\n";
-    logger.log(LogModule.sse, "SSE data", detail: data, level: config.log.level);
+    logger.log(LogModule.sse, "SSE data", detail: data, level: Level.FINEST);
     streamController.sink.add(utf8.encode(data));
   }
 

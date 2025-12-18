@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:lite_agent_core_dart/lite_agent_service.dart';
-import 'package:lite_agent_core_dart_server/lite_agent_core_dart_server.dart';
+import 'package:liteagent_core_dart/liteagent_service.dart';
+import 'package:liteagent_server_dart/liteagent_server_dart.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_router/shelf_router.dart';

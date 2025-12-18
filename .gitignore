@@ -8,8 +8,9 @@ build/
 pubspec.lock
 example/.env
 example/.DS_Store
-lite_agent_core_dart_server.iml
+*.iml
 .DS_Store
 bin/agent.db
 
 .cursor/
+AGENTS.md

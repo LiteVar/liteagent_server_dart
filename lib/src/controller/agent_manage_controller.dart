@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:lite_agent_core_dart/lite_agent_service.dart';
+import 'package:liteagent_core_dart/liteagent_service.dart';
 import 'package:shelf/shelf.dart';
 
 class AgentManageController {

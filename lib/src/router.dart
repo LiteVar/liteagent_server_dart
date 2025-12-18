@@ -4,7 +4,10 @@ import 'controller/agent_manage_controller.dart';
 
 final Router apiRouter = Router();
 
-void apiRoutes(AgentController agentController, AgentManageController agentManageController) {
+void apiRoutes(
+  AgentController agentController,
+  AgentManageController agentManageController,
+) {
   apiRouter.get('/version', agentController.getVersion);
 
   apiRouter.get('/agent/list', agentManageController.listAgent);
@@ -22,4 +25,5 @@ void apiRoutes(AgentController agentController, AgentManageController agentManag
   apiRouter.get('/clear', agentController.clearSession);
   apiRouter.get('/opentool-list', agentController.getOpenToolList);
   apiRouter.post('/callback', agentController.callback);
+  apiRouter.post('/streamCallback', agentController.streamCallback);
 }

@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:lite_agent_core_dart/lite_agent_core.dart';
-import 'package:lite_agent_core_dart/lite_agent_service.dart';
+import 'package:liteagent_core_dart/liteagent_service.dart';
 import 'package:lzstring/lzstring.dart';
+import 'package:opentool_daemon/opentool_daemon_utils.dart';
 import '../db/agent_database.dart';
 
 class AgentManageServiceByDB extends AgentManageService {
@@ -70,16 +70,16 @@ class AgentManageServiceByDB extends AgentManageService {
       }).toList();
     }
 
-    ClientOpenToolDto? clientOpenToolDto = agentDto.capability.clientOpenTool;
-    if(clientOpenToolDto != null) {
-      clientOpenToolDto.opentool = _compressJson(clientOpenToolDto.opentool);
+    CallbackOpenToolDto? callbackOpenToolDto = agentDto.capability.callbackOpenTool;
+    if(callbackOpenToolDto != null) {
+      callbackOpenToolDto.opentool = _compressJson(callbackOpenToolDto.opentool);
     }
 
     CapabilityDto newCapabilityDto = CapabilityDto(
         llmConfig: agentDto.capability.llmConfig,
         systemPrompt: agentDto.capability.systemPrompt,
         openSpecList: openSpecList,
-        clientOpenTool: clientOpenToolDto,
+        callbackOpenTool: callbackOpenToolDto,
         sessionList: agentDto.capability.sessionList,
         reflectPromptList: agentDto.capability.reflectPromptList,
         timeoutSeconds: agentDto.capability.timeoutSeconds,
