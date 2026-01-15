@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:liteagent_core_dart/liteagent_service.dart';
 import 'package:lzstring/lzstring.dart';
-import 'package:opentool_daemon/opentool_daemon_utils.dart';
+import 'package:unique_id_dart/unique_id_dart.dart';
 import '../db/agent_database.dart';
 
 class AgentManageServiceByDB extends AgentManageService {
