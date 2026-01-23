@@ -6,6 +6,11 @@ class Agents extends Table {
   TextColumn get agentId => text().withLength(min: 1, max: 64)();
   TextColumn get name => text().withLength(min: 1, max: 64)();
   TextColumn get capability => text().withLength(min: 1, max: 65536)();
+  DateTimeColumn get createTime => dateTime()();
+  DateTimeColumn get updateTime => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {agentId};
 }
 
 @DataClassName("SessionMessageDao")

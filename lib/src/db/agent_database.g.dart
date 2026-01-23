@@ -8,79 +8,165 @@ class $AgentsTable extends Agents with TableInfo<$AgentsTable, AgentDao> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $AgentsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _agentIdMeta =
-      const VerificationMeta('agentId');
+  static const VerificationMeta _agentIdMeta = const VerificationMeta(
+    'agentId',
+  );
   @override
   late final GeneratedColumn<String> agentId = GeneratedColumn<String>(
-      'agent_id', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 64),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
+    'agent_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 64),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
-  static const VerificationMeta _capabilityMeta =
-      const VerificationMeta('capability');
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _capabilityMeta = const VerificationMeta(
+    'capability',
+  );
   @override
   late final GeneratedColumn<String> capability = GeneratedColumn<String>(
-      'capability', aliasedName, false,
-      additionalChecks: GeneratedColumn.checkTextLength(
-          minTextLength: 1, maxTextLength: 65536),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
+    'capability',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 65536,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createTimeMeta = const VerificationMeta(
+    'createTime',
+  );
   @override
-  List<GeneratedColumn> get $columns => [agentId, name, capability];
+  late final GeneratedColumn<DateTime> createTime = GeneratedColumn<DateTime>(
+    'create_time',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updateTimeMeta = const VerificationMeta(
+    'updateTime',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updateTime = GeneratedColumn<DateTime>(
+    'update_time',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    agentId,
+    name,
+    capability,
+    createTime,
+    updateTime,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'agents';
   @override
-  VerificationContext validateIntegrity(Insertable<AgentDao> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<AgentDao> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('agent_id')) {
-      context.handle(_agentIdMeta,
-          agentId.isAcceptableOrUnknown(data['agent_id']!, _agentIdMeta));
+      context.handle(
+        _agentIdMeta,
+        agentId.isAcceptableOrUnknown(data['agent_id']!, _agentIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_agentIdMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('capability')) {
       context.handle(
-          _capabilityMeta,
-          capability.isAcceptableOrUnknown(
-              data['capability']!, _capabilityMeta));
+        _capabilityMeta,
+        capability.isAcceptableOrUnknown(data['capability']!, _capabilityMeta),
+      );
     } else if (isInserting) {
       context.missing(_capabilityMeta);
+    }
+    if (data.containsKey('create_time')) {
+      context.handle(
+        _createTimeMeta,
+        createTime.isAcceptableOrUnknown(data['create_time']!, _createTimeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createTimeMeta);
+    }
+    if (data.containsKey('update_time')) {
+      context.handle(
+        _updateTimeMeta,
+        updateTime.isAcceptableOrUnknown(data['update_time']!, _updateTimeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updateTimeMeta);
     }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => const {};
+  Set<GeneratedColumn> get $primaryKey => {agentId};
   @override
   AgentDao map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AgentDao(
-      agentId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}agent_id'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      capability: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}capability'])!,
+      agentId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}agent_id'],
+          )!,
+      name:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}name'],
+          )!,
+      capability:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}capability'],
+          )!,
+      createTime:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}create_time'],
+          )!,
+      updateTime:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}update_time'],
+          )!,
     );
   }
 
@@ -94,14 +180,23 @@ class AgentDao extends DataClass implements Insertable<AgentDao> {
   final String agentId;
   final String name;
   final String capability;
-  const AgentDao(
-      {required this.agentId, required this.name, required this.capability});
+  final DateTime createTime;
+  final DateTime updateTime;
+  const AgentDao({
+    required this.agentId,
+    required this.name,
+    required this.capability,
+    required this.createTime,
+    required this.updateTime,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['agent_id'] = Variable<String>(agentId);
     map['name'] = Variable<String>(name);
     map['capability'] = Variable<String>(capability);
+    map['create_time'] = Variable<DateTime>(createTime);
+    map['update_time'] = Variable<DateTime>(updateTime);
     return map;
   }
 
@@ -110,16 +205,22 @@ class AgentDao extends DataClass implements Insertable<AgentDao> {
       agentId: Value(agentId),
       name: Value(name),
       capability: Value(capability),
+      createTime: Value(createTime),
+      updateTime: Value(updateTime),
     );
   }
 
-  factory AgentDao.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory AgentDao.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AgentDao(
       agentId: serializer.fromJson<String>(json['agentId']),
       name: serializer.fromJson<String>(json['name']),
       capability: serializer.fromJson<String>(json['capability']),
+      createTime: serializer.fromJson<DateTime>(json['createTime']),
+      updateTime: serializer.fromJson<DateTime>(json['updateTime']),
     );
   }
   @override
@@ -129,21 +230,34 @@ class AgentDao extends DataClass implements Insertable<AgentDao> {
       'agentId': serializer.toJson<String>(agentId),
       'name': serializer.toJson<String>(name),
       'capability': serializer.toJson<String>(capability),
+      'createTime': serializer.toJson<DateTime>(createTime),
+      'updateTime': serializer.toJson<DateTime>(updateTime),
     };
   }
 
-  AgentDao copyWith({String? agentId, String? name, String? capability}) =>
-      AgentDao(
-        agentId: agentId ?? this.agentId,
-        name: name ?? this.name,
-        capability: capability ?? this.capability,
-      );
+  AgentDao copyWith({
+    String? agentId,
+    String? name,
+    String? capability,
+    DateTime? createTime,
+    DateTime? updateTime,
+  }) => AgentDao(
+    agentId: agentId ?? this.agentId,
+    name: name ?? this.name,
+    capability: capability ?? this.capability,
+    createTime: createTime ?? this.createTime,
+    updateTime: updateTime ?? this.updateTime,
+  );
   AgentDao copyWithCompanion(AgentsCompanion data) {
     return AgentDao(
       agentId: data.agentId.present ? data.agentId.value : this.agentId,
       name: data.name.present ? data.name.value : this.name,
       capability:
           data.capability.present ? data.capability.value : this.capability,
+      createTime:
+          data.createTime.present ? data.createTime.value : this.createTime,
+      updateTime:
+          data.updateTime.present ? data.updateTime.value : this.updateTime,
     );
   }
 
@@ -152,64 +266,86 @@ class AgentDao extends DataClass implements Insertable<AgentDao> {
     return (StringBuffer('AgentDao(')
           ..write('agentId: $agentId, ')
           ..write('name: $name, ')
-          ..write('capability: $capability')
+          ..write('capability: $capability, ')
+          ..write('createTime: $createTime, ')
+          ..write('updateTime: $updateTime')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(agentId, name, capability);
+  int get hashCode =>
+      Object.hash(agentId, name, capability, createTime, updateTime);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is AgentDao &&
           other.agentId == this.agentId &&
           other.name == this.name &&
-          other.capability == this.capability);
+          other.capability == this.capability &&
+          other.createTime == this.createTime &&
+          other.updateTime == this.updateTime);
 }
 
 class AgentsCompanion extends UpdateCompanion<AgentDao> {
   final Value<String> agentId;
   final Value<String> name;
   final Value<String> capability;
+  final Value<DateTime> createTime;
+  final Value<DateTime> updateTime;
   final Value<int> rowid;
   const AgentsCompanion({
     this.agentId = const Value.absent(),
     this.name = const Value.absent(),
     this.capability = const Value.absent(),
+    this.createTime = const Value.absent(),
+    this.updateTime = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AgentsCompanion.insert({
     required String agentId,
     required String name,
     required String capability,
+    required DateTime createTime,
+    required DateTime updateTime,
     this.rowid = const Value.absent(),
-  })  : agentId = Value(agentId),
-        name = Value(name),
-        capability = Value(capability);
+  }) : agentId = Value(agentId),
+       name = Value(name),
+       capability = Value(capability),
+       createTime = Value(createTime),
+       updateTime = Value(updateTime);
   static Insertable<AgentDao> custom({
     Expression<String>? agentId,
     Expression<String>? name,
     Expression<String>? capability,
+    Expression<DateTime>? createTime,
+    Expression<DateTime>? updateTime,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (agentId != null) 'agent_id': agentId,
       if (name != null) 'name': name,
       if (capability != null) 'capability': capability,
+      if (createTime != null) 'create_time': createTime,
+      if (updateTime != null) 'update_time': updateTime,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  AgentsCompanion copyWith(
-      {Value<String>? agentId,
-      Value<String>? name,
-      Value<String>? capability,
-      Value<int>? rowid}) {
+  AgentsCompanion copyWith({
+    Value<String>? agentId,
+    Value<String>? name,
+    Value<String>? capability,
+    Value<DateTime>? createTime,
+    Value<DateTime>? updateTime,
+    Value<int>? rowid,
+  }) {
     return AgentsCompanion(
       agentId: agentId ?? this.agentId,
       name: name ?? this.name,
       capability: capability ?? this.capability,
+      createTime: createTime ?? this.createTime,
+      updateTime: updateTime ?? this.updateTime,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -226,6 +362,12 @@ class AgentsCompanion extends UpdateCompanion<AgentDao> {
     if (capability.present) {
       map['capability'] = Variable<String>(capability.value);
     }
+    if (createTime.present) {
+      map['create_time'] = Variable<DateTime>(createTime.value);
+    }
+    if (updateTime.present) {
+      map['update_time'] = Variable<DateTime>(updateTime.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -238,6 +380,8 @@ class AgentsCompanion extends UpdateCompanion<AgentDao> {
           ..write('agentId: $agentId, ')
           ..write('name: $name, ')
           ..write('capability: $capability, ')
+          ..write('createTime: $createTime, ')
+          ..write('updateTime: $updateTime, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -250,141 +394,210 @@ class $SessionMessagesTable extends SessionMessages
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SessionMessagesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _originSessionIdMeta =
-      const VerificationMeta('originSessionId');
+  static const VerificationMeta _originSessionIdMeta = const VerificationMeta(
+    'originSessionId',
+  );
   @override
   late final GeneratedColumn<String> originSessionId = GeneratedColumn<String>(
-      'origin_session_id', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 64),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
-  static const VerificationMeta _sessionIdMeta =
-      const VerificationMeta('sessionId');
+    'origin_session_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
   @override
   late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
-      'session_id', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 64),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
+    'session_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _taskIdMeta = const VerificationMeta('taskId');
   @override
   late final GeneratedColumn<String> taskId = GeneratedColumn<String>(
-      'task_id', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 64),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
-  static const VerificationMeta _parentTaskIdMeta =
-      const VerificationMeta('parentTaskId');
+    'task_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _parentTaskIdMeta = const VerificationMeta(
+    'parentTaskId',
+  );
   @override
   late final GeneratedColumn<String> parentTaskId = GeneratedColumn<String>(
-      'parent_task_id', aliasedName, true,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 64),
-      type: DriftSqlType.string,
-      requiredDuringInsert: false);
+    'parent_task_id',
+    aliasedName,
+    true,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _roleMeta = const VerificationMeta('role');
   @override
   late final GeneratedColumn<String> role = GeneratedColumn<String>(
-      'role', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 16),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
+    'role',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _toMeta = const VerificationMeta('to');
   @override
   late final GeneratedColumn<String> to = GeneratedColumn<String>(
-      'to', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 16),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
+    'to',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
-      'type', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 16),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
-  static const VerificationMeta _contentMeta =
-      const VerificationMeta('content');
+    'type',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 16,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _contentMeta = const VerificationMeta(
+    'content',
+  );
   @override
   late final GeneratedColumn<String> content = GeneratedColumn<String>(
-      'content', aliasedName, false,
-      additionalChecks: GeneratedColumn.checkTextLength(
-          minTextLength: 1, maxTextLength: 2048),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
-  static const VerificationMeta _completionsMeta =
-      const VerificationMeta('completions');
+    'content',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 2048,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _completionsMeta = const VerificationMeta(
+    'completions',
+  );
   @override
   late final GeneratedColumn<String> completions = GeneratedColumn<String>(
-      'completions', aliasedName, true,
-      additionalChecks: GeneratedColumn.checkTextLength(
-          minTextLength: 1, maxTextLength: 2048),
-      type: DriftSqlType.string,
-      requiredDuringInsert: false);
-  static const VerificationMeta _createTimeMeta =
-      const VerificationMeta('createTime');
+    'completions',
+    aliasedName,
+    true,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 2048,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createTimeMeta = const VerificationMeta(
+    'createTime',
+  );
   @override
   late final GeneratedColumn<DateTime> createTime = GeneratedColumn<DateTime>(
-      'create_time', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+    'create_time',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        originSessionId,
-        sessionId,
-        taskId,
-        parentTaskId,
-        role,
-        to,
-        type,
-        content,
-        completions,
-        createTime
-      ];
+    originSessionId,
+    sessionId,
+    taskId,
+    parentTaskId,
+    role,
+    to,
+    type,
+    content,
+    completions,
+    createTime,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'session_messages';
   @override
-  VerificationContext validateIntegrity(Insertable<SessionMessageDao> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<SessionMessageDao> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('origin_session_id')) {
       context.handle(
+        _originSessionIdMeta,
+        originSessionId.isAcceptableOrUnknown(
+          data['origin_session_id']!,
           _originSessionIdMeta,
-          originSessionId.isAcceptableOrUnknown(
-              data['origin_session_id']!, _originSessionIdMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_originSessionIdMeta);
     }
     if (data.containsKey('session_id')) {
-      context.handle(_sessionIdMeta,
-          sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta));
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_sessionIdMeta);
     }
     if (data.containsKey('task_id')) {
-      context.handle(_taskIdMeta,
-          taskId.isAcceptableOrUnknown(data['task_id']!, _taskIdMeta));
+      context.handle(
+        _taskIdMeta,
+        taskId.isAcceptableOrUnknown(data['task_id']!, _taskIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_taskIdMeta);
     }
     if (data.containsKey('parent_task_id')) {
       context.handle(
+        _parentTaskIdMeta,
+        parentTaskId.isAcceptableOrUnknown(
+          data['parent_task_id']!,
           _parentTaskIdMeta,
-          parentTaskId.isAcceptableOrUnknown(
-              data['parent_task_id']!, _parentTaskIdMeta));
+        ),
+      );
     }
     if (data.containsKey('role')) {
       context.handle(
-          _roleMeta, role.isAcceptableOrUnknown(data['role']!, _roleMeta));
+        _roleMeta,
+        role.isAcceptableOrUnknown(data['role']!, _roleMeta),
+      );
     } else if (isInserting) {
       context.missing(_roleMeta);
     }
@@ -395,27 +608,34 @@ class $SessionMessagesTable extends SessionMessages
     }
     if (data.containsKey('type')) {
       context.handle(
-          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
     } else if (isInserting) {
       context.missing(_typeMeta);
     }
     if (data.containsKey('content')) {
-      context.handle(_contentMeta,
-          content.isAcceptableOrUnknown(data['content']!, _contentMeta));
+      context.handle(
+        _contentMeta,
+        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
+      );
     } else if (isInserting) {
       context.missing(_contentMeta);
     }
     if (data.containsKey('completions')) {
       context.handle(
+        _completionsMeta,
+        completions.isAcceptableOrUnknown(
+          data['completions']!,
           _completionsMeta,
-          completions.isAcceptableOrUnknown(
-              data['completions']!, _completionsMeta));
+        ),
+      );
     }
     if (data.containsKey('create_time')) {
       context.handle(
-          _createTimeMeta,
-          createTime.isAcceptableOrUnknown(
-              data['create_time']!, _createTimeMeta));
+        _createTimeMeta,
+        createTime.isAcceptableOrUnknown(data['create_time']!, _createTimeMeta),
+      );
     } else if (isInserting) {
       context.missing(_createTimeMeta);
     }
@@ -428,26 +648,54 @@ class $SessionMessagesTable extends SessionMessages
   SessionMessageDao map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SessionMessageDao(
-      originSessionId: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}origin_session_id'])!,
-      sessionId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}session_id'])!,
-      taskId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}task_id'])!,
-      parentTaskId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}parent_task_id']),
-      role: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}role'])!,
-      to: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}to'])!,
-      type: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
-      content: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}content'])!,
-      completions: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}completions']),
-      createTime: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}create_time'])!,
+      originSessionId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}origin_session_id'],
+          )!,
+      sessionId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}session_id'],
+          )!,
+      taskId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}task_id'],
+          )!,
+      parentTaskId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}parent_task_id'],
+      ),
+      role:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}role'],
+          )!,
+      to:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}to'],
+          )!,
+      type:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}type'],
+          )!,
+      content:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}content'],
+          )!,
+      completions: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}completions'],
+      ),
+      createTime:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}create_time'],
+          )!,
     );
   }
 
@@ -469,17 +717,18 @@ class SessionMessageDao extends DataClass
   final String content;
   final String? completions;
   final DateTime createTime;
-  const SessionMessageDao(
-      {required this.originSessionId,
-      required this.sessionId,
-      required this.taskId,
-      this.parentTaskId,
-      required this.role,
-      required this.to,
-      required this.type,
-      required this.content,
-      this.completions,
-      required this.createTime});
+  const SessionMessageDao({
+    required this.originSessionId,
+    required this.sessionId,
+    required this.taskId,
+    this.parentTaskId,
+    required this.role,
+    required this.to,
+    required this.type,
+    required this.content,
+    this.completions,
+    required this.createTime,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -505,22 +754,26 @@ class SessionMessageDao extends DataClass
       originSessionId: Value(originSessionId),
       sessionId: Value(sessionId),
       taskId: Value(taskId),
-      parentTaskId: parentTaskId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(parentTaskId),
+      parentTaskId:
+          parentTaskId == null && nullToAbsent
+              ? const Value.absent()
+              : Value(parentTaskId),
       role: Value(role),
       to: Value(to),
       type: Value(type),
       content: Value(content),
-      completions: completions == null && nullToAbsent
-          ? const Value.absent()
-          : Value(completions),
+      completions:
+          completions == null && nullToAbsent
+              ? const Value.absent()
+              : Value(completions),
       createTime: Value(createTime),
     );
   }
 
-  factory SessionMessageDao.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory SessionMessageDao.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SessionMessageDao(
       originSessionId: serializer.fromJson<String>(json['originSessionId']),
@@ -552,40 +805,41 @@ class SessionMessageDao extends DataClass
     };
   }
 
-  SessionMessageDao copyWith(
-          {String? originSessionId,
-          String? sessionId,
-          String? taskId,
-          Value<String?> parentTaskId = const Value.absent(),
-          String? role,
-          String? to,
-          String? type,
-          String? content,
-          Value<String?> completions = const Value.absent(),
-          DateTime? createTime}) =>
-      SessionMessageDao(
-        originSessionId: originSessionId ?? this.originSessionId,
-        sessionId: sessionId ?? this.sessionId,
-        taskId: taskId ?? this.taskId,
-        parentTaskId:
-            parentTaskId.present ? parentTaskId.value : this.parentTaskId,
-        role: role ?? this.role,
-        to: to ?? this.to,
-        type: type ?? this.type,
-        content: content ?? this.content,
-        completions: completions.present ? completions.value : this.completions,
-        createTime: createTime ?? this.createTime,
-      );
+  SessionMessageDao copyWith({
+    String? originSessionId,
+    String? sessionId,
+    String? taskId,
+    Value<String?> parentTaskId = const Value.absent(),
+    String? role,
+    String? to,
+    String? type,
+    String? content,
+    Value<String?> completions = const Value.absent(),
+    DateTime? createTime,
+  }) => SessionMessageDao(
+    originSessionId: originSessionId ?? this.originSessionId,
+    sessionId: sessionId ?? this.sessionId,
+    taskId: taskId ?? this.taskId,
+    parentTaskId: parentTaskId.present ? parentTaskId.value : this.parentTaskId,
+    role: role ?? this.role,
+    to: to ?? this.to,
+    type: type ?? this.type,
+    content: content ?? this.content,
+    completions: completions.present ? completions.value : this.completions,
+    createTime: createTime ?? this.createTime,
+  );
   SessionMessageDao copyWithCompanion(SessionMessagesCompanion data) {
     return SessionMessageDao(
-      originSessionId: data.originSessionId.present
-          ? data.originSessionId.value
-          : this.originSessionId,
+      originSessionId:
+          data.originSessionId.present
+              ? data.originSessionId.value
+              : this.originSessionId,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
       taskId: data.taskId.present ? data.taskId.value : this.taskId,
-      parentTaskId: data.parentTaskId.present
-          ? data.parentTaskId.value
-          : this.parentTaskId,
+      parentTaskId:
+          data.parentTaskId.present
+              ? data.parentTaskId.value
+              : this.parentTaskId,
       role: data.role.present ? data.role.value : this.role,
       to: data.to.present ? data.to.value : this.to,
       type: data.type.present ? data.type.value : this.type,
@@ -615,8 +869,18 @@ class SessionMessageDao extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(originSessionId, sessionId, taskId,
-      parentTaskId, role, to, type, content, completions, createTime);
+  int get hashCode => Object.hash(
+    originSessionId,
+    sessionId,
+    taskId,
+    parentTaskId,
+    role,
+    to,
+    type,
+    content,
+    completions,
+    createTime,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -670,14 +934,14 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
     this.completions = const Value.absent(),
     required DateTime createTime,
     this.rowid = const Value.absent(),
-  })  : originSessionId = Value(originSessionId),
-        sessionId = Value(sessionId),
-        taskId = Value(taskId),
-        role = Value(role),
-        to = Value(to),
-        type = Value(type),
-        content = Value(content),
-        createTime = Value(createTime);
+  }) : originSessionId = Value(originSessionId),
+       sessionId = Value(sessionId),
+       taskId = Value(taskId),
+       role = Value(role),
+       to = Value(to),
+       type = Value(type),
+       content = Value(content),
+       createTime = Value(createTime);
   static Insertable<SessionMessageDao> custom({
     Expression<String>? originSessionId,
     Expression<String>? sessionId,
@@ -706,18 +970,19 @@ class SessionMessagesCompanion extends UpdateCompanion<SessionMessageDao> {
     });
   }
 
-  SessionMessagesCompanion copyWith(
-      {Value<String>? originSessionId,
-      Value<String>? sessionId,
-      Value<String>? taskId,
-      Value<String?>? parentTaskId,
-      Value<String>? role,
-      Value<String>? to,
-      Value<String>? type,
-      Value<String>? content,
-      Value<String?>? completions,
-      Value<DateTime>? createTime,
-      Value<int>? rowid}) {
+  SessionMessagesCompanion copyWith({
+    Value<String>? originSessionId,
+    Value<String>? sessionId,
+    Value<String>? taskId,
+    Value<String?>? parentTaskId,
+    Value<String>? role,
+    Value<String>? to,
+    Value<String>? type,
+    Value<String>? content,
+    Value<String?>? completions,
+    Value<DateTime>? createTime,
+    Value<int>? rowid,
+  }) {
     return SessionMessagesCompanion(
       originSessionId: originSessionId ?? this.originSessionId,
       sessionId: sessionId ?? this.sessionId,
@@ -795,8 +1060,9 @@ abstract class _$AgentDatabase extends GeneratedDatabase {
   _$AgentDatabase(QueryExecutor e) : super(e);
   $AgentDatabaseManager get managers => $AgentDatabaseManager(this);
   late final $AgentsTable agents = $AgentsTable(this);
-  late final $SessionMessagesTable sessionMessages =
-      $SessionMessagesTable(this);
+  late final $SessionMessagesTable sessionMessages = $SessionMessagesTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -804,18 +1070,24 @@ abstract class _$AgentDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [agents, sessionMessages];
 }
 
-typedef $$AgentsTableCreateCompanionBuilder = AgentsCompanion Function({
-  required String agentId,
-  required String name,
-  required String capability,
-  Value<int> rowid,
-});
-typedef $$AgentsTableUpdateCompanionBuilder = AgentsCompanion Function({
-  Value<String> agentId,
-  Value<String> name,
-  Value<String> capability,
-  Value<int> rowid,
-});
+typedef $$AgentsTableCreateCompanionBuilder =
+    AgentsCompanion Function({
+      required String agentId,
+      required String name,
+      required String capability,
+      required DateTime createTime,
+      required DateTime updateTime,
+      Value<int> rowid,
+    });
+typedef $$AgentsTableUpdateCompanionBuilder =
+    AgentsCompanion Function({
+      Value<String> agentId,
+      Value<String> name,
+      Value<String> capability,
+      Value<DateTime> createTime,
+      Value<DateTime> updateTime,
+      Value<int> rowid,
+    });
 
 class $$AgentsTableFilterComposer
     extends Composer<_$AgentDatabase, $AgentsTable> {
@@ -827,13 +1099,29 @@ class $$AgentsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get agentId => $composableBuilder(
-      column: $table.agentId, builder: (column) => ColumnFilters(column));
+    column: $table.agentId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnFilters(column));
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get capability => $composableBuilder(
-      column: $table.capability, builder: (column) => ColumnFilters(column));
+    column: $table.capability,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createTime => $composableBuilder(
+    column: $table.createTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updateTime => $composableBuilder(
+    column: $table.updateTime,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$AgentsTableOrderingComposer
@@ -846,13 +1134,29 @@ class $$AgentsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get agentId => $composableBuilder(
-      column: $table.agentId, builder: (column) => ColumnOrderings(column));
+    column: $table.agentId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnOrderings(column));
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get capability => $composableBuilder(
-      column: $table.capability, builder: (column) => ColumnOrderings(column));
+    column: $table.capability,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createTime => $composableBuilder(
+    column: $table.createTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updateTime => $composableBuilder(
+    column: $table.updateTime,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AgentsTableAnnotationComposer
@@ -871,102 +1175,136 @@ class $$AgentsTableAnnotationComposer
       $composableBuilder(column: $table.name, builder: (column) => column);
 
   GeneratedColumn<String> get capability => $composableBuilder(
-      column: $table.capability, builder: (column) => column);
+    column: $table.capability,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createTime => $composableBuilder(
+    column: $table.createTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updateTime => $composableBuilder(
+    column: $table.updateTime,
+    builder: (column) => column,
+  );
 }
 
-class $$AgentsTableTableManager extends RootTableManager<
-    _$AgentDatabase,
-    $AgentsTable,
-    AgentDao,
-    $$AgentsTableFilterComposer,
-    $$AgentsTableOrderingComposer,
-    $$AgentsTableAnnotationComposer,
-    $$AgentsTableCreateCompanionBuilder,
-    $$AgentsTableUpdateCompanionBuilder,
-    (AgentDao, BaseReferences<_$AgentDatabase, $AgentsTable, AgentDao>),
-    AgentDao,
-    PrefetchHooks Function()> {
+class $$AgentsTableTableManager
+    extends
+        RootTableManager<
+          _$AgentDatabase,
+          $AgentsTable,
+          AgentDao,
+          $$AgentsTableFilterComposer,
+          $$AgentsTableOrderingComposer,
+          $$AgentsTableAnnotationComposer,
+          $$AgentsTableCreateCompanionBuilder,
+          $$AgentsTableUpdateCompanionBuilder,
+          (AgentDao, BaseReferences<_$AgentDatabase, $AgentsTable, AgentDao>),
+          AgentDao,
+          PrefetchHooks Function()
+        > {
   $$AgentsTableTableManager(_$AgentDatabase db, $AgentsTable table)
-      : super(TableManagerState(
+    : super(
+        TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$AgentsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$AgentsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$AgentsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> agentId = const Value.absent(),
-            Value<String> name = const Value.absent(),
-            Value<String> capability = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              AgentsCompanion(
-            agentId: agentId,
-            name: name,
-            capability: capability,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String agentId,
-            required String name,
-            required String capability,
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              AgentsCompanion.insert(
-            agentId: agentId,
-            name: name,
-            capability: capability,
-            rowid: rowid,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          createFilteringComposer:
+              () => $$AgentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$AgentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$AgentsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> agentId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> capability = const Value.absent(),
+                Value<DateTime> createTime = const Value.absent(),
+                Value<DateTime> updateTime = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AgentsCompanion(
+                agentId: agentId,
+                name: name,
+                capability: capability,
+                createTime: createTime,
+                updateTime: updateTime,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String agentId,
+                required String name,
+                required String capability,
+                required DateTime createTime,
+                required DateTime updateTime,
+                Value<int> rowid = const Value.absent(),
+              }) => AgentsCompanion.insert(
+                agentId: agentId,
+                name: name,
+                capability: capability,
+                createTime: createTime,
+                updateTime: updateTime,
+                rowid: rowid,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$AgentsTableProcessedTableManager = ProcessedTableManager<
-    _$AgentDatabase,
-    $AgentsTable,
-    AgentDao,
-    $$AgentsTableFilterComposer,
-    $$AgentsTableOrderingComposer,
-    $$AgentsTableAnnotationComposer,
-    $$AgentsTableCreateCompanionBuilder,
-    $$AgentsTableUpdateCompanionBuilder,
-    (AgentDao, BaseReferences<_$AgentDatabase, $AgentsTable, AgentDao>),
-    AgentDao,
-    PrefetchHooks Function()>;
-typedef $$SessionMessagesTableCreateCompanionBuilder = SessionMessagesCompanion
-    Function({
-  required String originSessionId,
-  required String sessionId,
-  required String taskId,
-  Value<String?> parentTaskId,
-  required String role,
-  required String to,
-  required String type,
-  required String content,
-  Value<String?> completions,
-  required DateTime createTime,
-  Value<int> rowid,
-});
-typedef $$SessionMessagesTableUpdateCompanionBuilder = SessionMessagesCompanion
-    Function({
-  Value<String> originSessionId,
-  Value<String> sessionId,
-  Value<String> taskId,
-  Value<String?> parentTaskId,
-  Value<String> role,
-  Value<String> to,
-  Value<String> type,
-  Value<String> content,
-  Value<String?> completions,
-  Value<DateTime> createTime,
-  Value<int> rowid,
-});
+typedef $$AgentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AgentDatabase,
+      $AgentsTable,
+      AgentDao,
+      $$AgentsTableFilterComposer,
+      $$AgentsTableOrderingComposer,
+      $$AgentsTableAnnotationComposer,
+      $$AgentsTableCreateCompanionBuilder,
+      $$AgentsTableUpdateCompanionBuilder,
+      (AgentDao, BaseReferences<_$AgentDatabase, $AgentsTable, AgentDao>),
+      AgentDao,
+      PrefetchHooks Function()
+    >;
+typedef $$SessionMessagesTableCreateCompanionBuilder =
+    SessionMessagesCompanion Function({
+      required String originSessionId,
+      required String sessionId,
+      required String taskId,
+      Value<String?> parentTaskId,
+      required String role,
+      required String to,
+      required String type,
+      required String content,
+      Value<String?> completions,
+      required DateTime createTime,
+      Value<int> rowid,
+    });
+typedef $$SessionMessagesTableUpdateCompanionBuilder =
+    SessionMessagesCompanion Function({
+      Value<String> originSessionId,
+      Value<String> sessionId,
+      Value<String> taskId,
+      Value<String?> parentTaskId,
+      Value<String> role,
+      Value<String> to,
+      Value<String> type,
+      Value<String> content,
+      Value<String?> completions,
+      Value<DateTime> createTime,
+      Value<int> rowid,
+    });
 
 class $$SessionMessagesTableFilterComposer
     extends Composer<_$AgentDatabase, $SessionMessagesTable> {
@@ -978,35 +1316,54 @@ class $$SessionMessagesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get originSessionId => $composableBuilder(
-      column: $table.originSessionId,
-      builder: (column) => ColumnFilters(column));
+    column: $table.originSessionId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get sessionId => $composableBuilder(
-      column: $table.sessionId, builder: (column) => ColumnFilters(column));
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get taskId => $composableBuilder(
-      column: $table.taskId, builder: (column) => ColumnFilters(column));
+    column: $table.taskId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get parentTaskId => $composableBuilder(
-      column: $table.parentTaskId, builder: (column) => ColumnFilters(column));
+    column: $table.parentTaskId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get role => $composableBuilder(
-      column: $table.role, builder: (column) => ColumnFilters(column));
+    column: $table.role,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get to => $composableBuilder(
-      column: $table.to, builder: (column) => ColumnFilters(column));
+    column: $table.to,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnFilters(column));
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get content => $composableBuilder(
-      column: $table.content, builder: (column) => ColumnFilters(column));
+    column: $table.content,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get completions => $composableBuilder(
-      column: $table.completions, builder: (column) => ColumnFilters(column));
+    column: $table.completions,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createTime => $composableBuilder(
-      column: $table.createTime, builder: (column) => ColumnFilters(column));
+    column: $table.createTime,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SessionMessagesTableOrderingComposer
@@ -1019,36 +1376,54 @@ class $$SessionMessagesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get originSessionId => $composableBuilder(
-      column: $table.originSessionId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.originSessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get sessionId => $composableBuilder(
-      column: $table.sessionId, builder: (column) => ColumnOrderings(column));
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get taskId => $composableBuilder(
-      column: $table.taskId, builder: (column) => ColumnOrderings(column));
+    column: $table.taskId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get parentTaskId => $composableBuilder(
-      column: $table.parentTaskId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.parentTaskId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get role => $composableBuilder(
-      column: $table.role, builder: (column) => ColumnOrderings(column));
+    column: $table.role,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get to => $composableBuilder(
-      column: $table.to, builder: (column) => ColumnOrderings(column));
+    column: $table.to,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnOrderings(column));
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get content => $composableBuilder(
-      column: $table.content, builder: (column) => ColumnOrderings(column));
+    column: $table.content,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get completions => $composableBuilder(
-      column: $table.completions, builder: (column) => ColumnOrderings(column));
+    column: $table.completions,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createTime => $composableBuilder(
-      column: $table.createTime, builder: (column) => ColumnOrderings(column));
+    column: $table.createTime,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SessionMessagesTableAnnotationComposer
@@ -1061,7 +1436,9 @@ class $$SessionMessagesTableAnnotationComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   GeneratedColumn<String> get originSessionId => $composableBuilder(
-      column: $table.originSessionId, builder: (column) => column);
+    column: $table.originSessionId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get sessionId =>
       $composableBuilder(column: $table.sessionId, builder: (column) => column);
@@ -1070,7 +1447,9 @@ class $$SessionMessagesTableAnnotationComposer
       $composableBuilder(column: $table.taskId, builder: (column) => column);
 
   GeneratedColumn<String> get parentTaskId => $composableBuilder(
-      column: $table.parentTaskId, builder: (column) => column);
+    column: $table.parentTaskId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get role =>
       $composableBuilder(column: $table.role, builder: (column) => column);
@@ -1085,112 +1464,146 @@ class $$SessionMessagesTableAnnotationComposer
       $composableBuilder(column: $table.content, builder: (column) => column);
 
   GeneratedColumn<String> get completions => $composableBuilder(
-      column: $table.completions, builder: (column) => column);
+    column: $table.completions,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createTime => $composableBuilder(
-      column: $table.createTime, builder: (column) => column);
+    column: $table.createTime,
+    builder: (column) => column,
+  );
 }
 
-class $$SessionMessagesTableTableManager extends RootTableManager<
-    _$AgentDatabase,
-    $SessionMessagesTable,
-    SessionMessageDao,
-    $$SessionMessagesTableFilterComposer,
-    $$SessionMessagesTableOrderingComposer,
-    $$SessionMessagesTableAnnotationComposer,
-    $$SessionMessagesTableCreateCompanionBuilder,
-    $$SessionMessagesTableUpdateCompanionBuilder,
-    (
-      SessionMessageDao,
-      BaseReferences<_$AgentDatabase, $SessionMessagesTable, SessionMessageDao>
-    ),
-    SessionMessageDao,
-    PrefetchHooks Function()> {
+class $$SessionMessagesTableTableManager
+    extends
+        RootTableManager<
+          _$AgentDatabase,
+          $SessionMessagesTable,
+          SessionMessageDao,
+          $$SessionMessagesTableFilterComposer,
+          $$SessionMessagesTableOrderingComposer,
+          $$SessionMessagesTableAnnotationComposer,
+          $$SessionMessagesTableCreateCompanionBuilder,
+          $$SessionMessagesTableUpdateCompanionBuilder,
+          (
+            SessionMessageDao,
+            BaseReferences<
+              _$AgentDatabase,
+              $SessionMessagesTable,
+              SessionMessageDao
+            >,
+          ),
+          SessionMessageDao,
+          PrefetchHooks Function()
+        > {
   $$SessionMessagesTableTableManager(
-      _$AgentDatabase db, $SessionMessagesTable table)
-      : super(TableManagerState(
+    _$AgentDatabase db,
+    $SessionMessagesTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SessionMessagesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SessionMessagesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$SessionMessagesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> originSessionId = const Value.absent(),
-            Value<String> sessionId = const Value.absent(),
-            Value<String> taskId = const Value.absent(),
-            Value<String?> parentTaskId = const Value.absent(),
-            Value<String> role = const Value.absent(),
-            Value<String> to = const Value.absent(),
-            Value<String> type = const Value.absent(),
-            Value<String> content = const Value.absent(),
-            Value<String?> completions = const Value.absent(),
-            Value<DateTime> createTime = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              SessionMessagesCompanion(
-            originSessionId: originSessionId,
-            sessionId: sessionId,
-            taskId: taskId,
-            parentTaskId: parentTaskId,
-            role: role,
-            to: to,
-            type: type,
-            content: content,
-            completions: completions,
-            createTime: createTime,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String originSessionId,
-            required String sessionId,
-            required String taskId,
-            Value<String?> parentTaskId = const Value.absent(),
-            required String role,
-            required String to,
-            required String type,
-            required String content,
-            Value<String?> completions = const Value.absent(),
-            required DateTime createTime,
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              SessionMessagesCompanion.insert(
-            originSessionId: originSessionId,
-            sessionId: sessionId,
-            taskId: taskId,
-            parentTaskId: parentTaskId,
-            role: role,
-            to: to,
-            type: type,
-            content: content,
-            completions: completions,
-            createTime: createTime,
-            rowid: rowid,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
+          createFilteringComposer:
+              () =>
+                  $$SessionMessagesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$SessionMessagesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer:
+              () => $$SessionMessagesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> originSessionId = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
+                Value<String> taskId = const Value.absent(),
+                Value<String?> parentTaskId = const Value.absent(),
+                Value<String> role = const Value.absent(),
+                Value<String> to = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> content = const Value.absent(),
+                Value<String?> completions = const Value.absent(),
+                Value<DateTime> createTime = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SessionMessagesCompanion(
+                originSessionId: originSessionId,
+                sessionId: sessionId,
+                taskId: taskId,
+                parentTaskId: parentTaskId,
+                role: role,
+                to: to,
+                type: type,
+                content: content,
+                completions: completions,
+                createTime: createTime,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String originSessionId,
+                required String sessionId,
+                required String taskId,
+                Value<String?> parentTaskId = const Value.absent(),
+                required String role,
+                required String to,
+                required String type,
+                required String content,
+                Value<String?> completions = const Value.absent(),
+                required DateTime createTime,
+                Value<int> rowid = const Value.absent(),
+              }) => SessionMessagesCompanion.insert(
+                originSessionId: originSessionId,
+                sessionId: sessionId,
+                taskId: taskId,
+                parentTaskId: parentTaskId,
+                role: role,
+                to: to,
+                type: type,
+                content: content,
+                completions: completions,
+                createTime: createTime,
+                rowid: rowid,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$SessionMessagesTableProcessedTableManager = ProcessedTableManager<
-    _$AgentDatabase,
-    $SessionMessagesTable,
-    SessionMessageDao,
-    $$SessionMessagesTableFilterComposer,
-    $$SessionMessagesTableOrderingComposer,
-    $$SessionMessagesTableAnnotationComposer,
-    $$SessionMessagesTableCreateCompanionBuilder,
-    $$SessionMessagesTableUpdateCompanionBuilder,
-    (
+typedef $$SessionMessagesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AgentDatabase,
+      $SessionMessagesTable,
       SessionMessageDao,
-      BaseReferences<_$AgentDatabase, $SessionMessagesTable, SessionMessageDao>
-    ),
-    SessionMessageDao,
-    PrefetchHooks Function()>;
+      $$SessionMessagesTableFilterComposer,
+      $$SessionMessagesTableOrderingComposer,
+      $$SessionMessagesTableAnnotationComposer,
+      $$SessionMessagesTableCreateCompanionBuilder,
+      $$SessionMessagesTableUpdateCompanionBuilder,
+      (
+        SessionMessageDao,
+        BaseReferences<
+          _$AgentDatabase,
+          $SessionMessagesTable,
+          SessionMessageDao
+        >,
+      ),
+      SessionMessageDao,
+      PrefetchHooks Function()
+    >;
 
 class $AgentDatabaseManager {
   final _$AgentDatabase _db;

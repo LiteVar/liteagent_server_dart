@@ -8,6 +8,8 @@ import 'package:logging/logging.dart';
 class AgentMessageListener {
   Map<String, Map<String, AgentMessageSubscriber>> agentMessageSubscriberList = {}; // sessionId & taskId -> subscriber, for Push messages to task
 
+  Map<String, List<AgentMessageSubscriber>> sessionSubscribers = {}; // sessionId -> List<AgentMessageSubscriber>
+
   void subscribe(String sessionId, String taskId, AgentMessageSubscriber subscriber) {
     if (!agentMessageSubscriberList.containsKey(sessionId)) {
       agentMessageSubscriberList[sessionId] = {};
@@ -21,6 +23,23 @@ class AgentMessageListener {
     if(agentMessageSubscriberList.containsKey(sessionId) && agentMessageSubscriberList[sessionId]!.isEmpty) {
       agentMessageSubscriberList.remove(sessionId);
     }
+  }
+
+  void subscribeSession(String sessionId, AgentMessageSubscriber subscriber) {
+    sessionSubscribers.putIfAbsent(sessionId, () => []);
+    sessionSubscribers[sessionId]!.add(subscriber);
+  }
+
+  void unsubscribeSession(String sessionId, AgentMessageSubscriber subscriber) {
+    sessionSubscribers[sessionId]?.remove(subscriber);
+    subscriber.close();
+    if (sessionSubscribers[sessionId]?.isEmpty ?? false) {
+      sessionSubscribers.remove(sessionId);
+    }
+  }
+
+  int getSessionSubscriberCount(String sessionId) {
+    return sessionSubscribers[sessionId]?.length ?? 0;
   }
 
   void listen(String originalSessionId, String taskId, AgentMessageDto agentMessageDto) {
@@ -39,6 +58,8 @@ class AgentMessageListener {
           }
         }
       }
+
+      _broadcastToSessionSubscribers(originalSessionId, agentMessageDto);
     }
   }
 
@@ -46,6 +67,26 @@ class AgentMessageListener {
     if (agentMessageSubscriberList.containsKey(originalSessionId) && agentMessageSubscriberList[originalSessionId]!.containsKey(taskId)) {
         final subscriber = agentMessageSubscriberList[originalSessionId]![taskId]!;
         subscriber.addChunk(agentMessageChunkDto);
+    }
+
+    _broadcastChunkToSessionSubscribers(originalSessionId, agentMessageChunkDto);
+  }
+
+  void _broadcastToSessionSubscribers(String sessionId, AgentMessageDto agentMessageDto) {
+    final subscribers = sessionSubscribers[sessionId];
+    if (subscribers != null && subscribers.isNotEmpty) {
+      for (final subscriber in subscribers) {
+        subscriber.addMessage(agentMessageDto);
+      }
+    }
+  }
+
+  void _broadcastChunkToSessionSubscribers(String sessionId, AgentMessageChunkDto agentMessageChunkDto) {
+    final subscribers = sessionSubscribers[sessionId];
+    if (subscribers != null && subscribers.isNotEmpty) {
+      for (final subscriber in subscribers) {
+        subscriber.addChunk(agentMessageChunkDto);
+      }
     }
   }
 

@@ -86,6 +86,7 @@ class AgentController {
 
       SessionDto sessionDto = await agentService.initSession(
         capabilityDto,
+        agentId: agentId,
         opentoolDriverMap: openToolDriverMap,
       );
 
@@ -587,6 +588,120 @@ class AgentController {
         LogModule.http,
         "Response streamCallback Exception: ${e}",
         detail: payload,
+        level: Level.WARNING,
+      );
+      return Response.internalServerError(body: e.toString());
+    }
+  }
+
+  Future<Response> listSessions(Request request) async {
+    final queryParameters = request.url.queryParameters;
+    final agentId = queryParameters['agentId'];
+
+    logger.log(
+      LogModule.http,
+      "Request listSessions",
+      detail: "agentId: $agentId",
+    );
+
+    if (agentId == null || agentId.isEmpty) {
+      logger.log(
+        LogModule.http,
+        "Response listSessions BadRequest: agentId is required",
+        level: Level.WARNING,
+      );
+      return Response.badRequest(body: "agentId is required");
+    }
+
+    try {
+      List<SessionInfoDto> sessionList = agentService.getSessionsByAgentId(agentId);
+
+      logger.log(
+        LogModule.http,
+        "Response listSessions",
+        detail: "agentId: $agentId, sessionCount: ${sessionList.length}",
+      );
+
+      List<Map<String, dynamic>> sessionListJson = sessionList
+          .map((sessionInfoDto) => sessionInfoDto.toJson())
+          .toList();
+
+      return Response.ok(jsonEncode(sessionListJson), headers: jsonHeaders);
+    } catch (e) {
+      logger.log(
+        LogModule.http,
+        "Response listSessions Exception: ${e}",
+        detail: "agentId: $agentId",
+        level: Level.WARNING,
+      );
+      return Response.internalServerError(body: e.toString());
+    }
+  }
+
+  Future<Response> subscribeSession(Request request) async {
+    final queryParameters = request.url.queryParameters;
+    final sessionId = queryParameters['sessionId'];
+
+    logger.log(
+      LogModule.http,
+      "Request subscribeSession",
+      detail: "sessionId: $sessionId",
+    );
+
+    if (sessionId == null || sessionId.isEmpty) {
+      logger.log(
+        LogModule.http,
+        "Response subscribeSession BadRequest: sessionId is required",
+        level: Level.WARNING,
+      );
+      return Response.badRequest(body: "sessionId is required");
+    }
+
+    try {
+      final sessionAgent = agentService.getSessionAgent(sessionId);
+      if (sessionAgent == null) {
+        logger.log(
+          LogModule.http,
+          "Response subscribeSession NotFound: session not found",
+          detail: "sessionId: $sessionId",
+          level: Level.WARNING,
+        );
+        return Response.notFound("Session not found: $sessionId");
+      }
+
+      StreamController<List<int>> streamController =
+          StreamController<List<int>>.broadcast();
+
+      AgentMessageSubscriber subscriber =
+          AgentMessageSubscriberBySSE(streamController);
+
+      agentMessageListener.subscribeSession(sessionId, subscriber);
+
+      streamController.onCancel = () {
+        logger.log(
+          LogModule.http,
+          "subscribeSession: client disconnected",
+          detail: "sessionId: $sessionId",
+        );
+        agentMessageListener.unsubscribeSession(sessionId, subscriber);
+      };
+
+      logger.log(
+        LogModule.http,
+        "Response subscribeSession: SSE stream started",
+        detail: "sessionId: $sessionId, subscriberCount: ${agentMessageListener.getSessionSubscriberCount(sessionId)}",
+      );
+
+      return Response.ok(
+        streamController.stream,
+        headers: streamHeaders,
+        context: {'shelf.io.buffer_output': false},
+      );
+    } catch (e) {
+      logger.log(
+        LogModule.http,
+        "Response subscribeSession Exception: ${e}",
+        detail: "sessionId: $sessionId",
         level: Level.WARNING,
       );
       return Response.internalServerError(body: e.toString());

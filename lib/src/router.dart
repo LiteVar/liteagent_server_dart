@@ -26,4 +26,7 @@ void apiRoutes(
   apiRouter.get('/opentool-list', agentController.getOpenToolList);
   apiRouter.post('/callback', agentController.callback);
   apiRouter.post('/streamCallback', agentController.streamCallback);
+
+  apiRouter.get('/session/list', agentController.listSessions);
+  apiRouter.get('/session/subscribe', agentController.subscribeSession);
 }
