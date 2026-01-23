@@ -29,10 +29,10 @@ class AgentController {
   };
 
   AgentController(
-    this.agentService,
-    this.agentManageService, {
-    Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = const {},
-  }) {
+      this.agentService,
+      this.agentManageService, {
+        Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = const {},
+      }) {
     this.openToolDriverInfoMap.addAll(openToolDriverInfoMap);
   }
 
@@ -45,6 +45,33 @@ class AgentController {
       detail: jsonEncode(versionDto.toJson()),
     );
     return Response.ok(jsonEncode(versionDto.toJson()), headers: jsonHeaders);
+  }
+
+  Future<Response> addPresetOpenSpec(Request request) async {
+    final payload = await request.readAsString();
+    final data = jsonDecode(payload);
+
+    try {
+      PresetOpenSpecDto presetOpenSpec = PresetOpenSpecDto.fromJson(data);
+      agentService.addPresetOpenSpec(presetOpenSpec);
+      return Response.ok("{}");
+    } on FormatException catch (e) {
+      logger.log(
+        LogModule.http,
+        "Response initSession FormatException: ${e}",
+        detail: payload,
+        level: Level.WARNING,
+      );
+      return Response.badRequest(body: e.toString());
+    } catch (e) {
+      logger.log(
+        LogModule.http,
+        "Response initSession Exception: ${e}",
+        detail: payload,
+        level: Level.WARNING,
+      );
+      return Response.internalServerError(body: e.toString());
+    }
   }
 
   Future<Response> initSession(Request request) async {
@@ -70,7 +97,7 @@ class AgentController {
           LogModule.http,
           "Request initSession",
           detail:
-              "baseUrl: ${capabilityDto.llmConfig.baseUrl}, " +
+          "baseUrl: ${capabilityDto.llmConfig.baseUrl}, " +
               "model: ${capabilityDto.llmConfig.model}, " +
               "systemMessageLength: ${capabilityDto.systemPrompt.length}," +
               "openSpecListLength: ${capabilityDto.openSpecList == null ? "null" : capabilityDto.openSpecList!.length}," +
@@ -137,7 +164,7 @@ class AgentController {
 
     try {
       final SimpleCapabilityDto simpleCapabilityDto =
-          SimpleCapabilityDto.fromJson(data);
+      SimpleCapabilityDto.fromJson(data);
       logger.log(
         LogModule.http,
         "Request initSimple",
@@ -148,7 +175,7 @@ class AgentController {
         LogModule.http,
         "Request initSimple",
         detail:
-            "baseUrl: ${simpleCapabilityDto.llmConfig.baseUrl}, " +
+        "baseUrl: ${simpleCapabilityDto.llmConfig.baseUrl}, " +
             "model: ${simpleCapabilityDto.llmConfig.model}, " +
             "systemMessageLength: ${simpleCapabilityDto.systemPrompt.length}",
       );
@@ -192,9 +219,9 @@ class AgentController {
       UserTaskDto userTaskDto = UserTaskDto.fromJson(data);
 
       StreamController<List<int>> streamController =
-          StreamController<List<int>>.broadcast();
+      StreamController<List<int>>.broadcast();
       AgentMessageSubscriber agentMessageSubscriber =
-          AgentMessageSubscriberBySSE(streamController);
+      AgentMessageSubscriberBySSE(streamController);
 
       void Function(String taskId) getTaskId = (String taskId) async {
         this.agentMessageListener.subscribe(
@@ -216,7 +243,7 @@ class AgentController {
         LogModule.http,
         "Response startStream",
         detail:
-            jsonEncode(sessionDto.toJson()) +
+        jsonEncode(sessionDto.toJson()) +
             " & " +
             jsonEncode(userTaskDto.toJson()),
       );
@@ -441,18 +468,18 @@ class AgentController {
   }
 
   void _listen(
-    String sessionId,
-    String taskId,
-    AgentMessageDto agentMessageDto,
-  ) {
+      String sessionId,
+      String taskId,
+      AgentMessageDto agentMessageDto,
+      ) {
     agentMessageListener.listen(sessionId, taskId, agentMessageDto);
   }
 
   void _listenChunk(
-    String sessionId,
-    String taskId,
-    AgentMessageChunkDto agentMessageChunkDto,
-  ) {
+      String sessionId,
+      String taskId,
+      AgentMessageChunkDto agentMessageChunkDto,
+      ) {
     agentMessageListener.listenChunk(sessionId, taskId, agentMessageChunkDto);
   }
 
@@ -670,10 +697,10 @@ class AgentController {
       }
 
       StreamController<List<int>> streamController =
-          StreamController<List<int>>.broadcast();
+      StreamController<List<int>>.broadcast();
 
       AgentMessageSubscriber subscriber =
-          AgentMessageSubscriberBySSE(streamController);
+      AgentMessageSubscriberBySSE(streamController);
 
       agentMessageListener.subscribeSession(sessionId, subscriber);
 

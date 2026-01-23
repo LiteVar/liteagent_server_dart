@@ -25,8 +25,8 @@ dependencies:
   unique_id_dart: ^1.0.0
 
 dev_dependencies:
-  build_runner: ^2.4.9
-  json_serializable: ^6.9.2
+  build_runner: ^2.5.4
+  json_serializable: 6.9.5
   drift_dev: ^2.25.2
   http: ^1.1.0
   lints: ^3.0.0

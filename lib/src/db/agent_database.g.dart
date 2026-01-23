@@ -142,31 +142,26 @@ class $AgentsTable extends Agents with TableInfo<$AgentsTable, AgentDao> {
   AgentDao map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AgentDao(
-      agentId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}agent_id'],
-          )!,
-      name:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}name'],
-          )!,
-      capability:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}capability'],
-          )!,
-      createTime:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}create_time'],
-          )!,
-      updateTime:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}update_time'],
-          )!,
+      agentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}agent_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      capability: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}capability'],
+      )!,
+      createTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}create_time'],
+      )!,
+      updateTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}update_time'],
+      )!,
     );
   }
 
@@ -252,12 +247,15 @@ class AgentDao extends DataClass implements Insertable<AgentDao> {
     return AgentDao(
       agentId: data.agentId.present ? data.agentId.value : this.agentId,
       name: data.name.present ? data.name.value : this.name,
-      capability:
-          data.capability.present ? data.capability.value : this.capability,
-      createTime:
-          data.createTime.present ? data.createTime.value : this.createTime,
-      updateTime:
-          data.updateTime.present ? data.updateTime.value : this.updateTime,
+      capability: data.capability.present
+          ? data.capability.value
+          : this.capability,
+      createTime: data.createTime.present
+          ? data.createTime.value
+          : this.createTime,
+      updateTime: data.updateTime.present
+          ? data.updateTime.value
+          : this.updateTime,
     );
   }
 
@@ -648,54 +646,46 @@ class $SessionMessagesTable extends SessionMessages
   SessionMessageDao map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SessionMessageDao(
-      originSessionId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}origin_session_id'],
-          )!,
-      sessionId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}session_id'],
-          )!,
-      taskId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}task_id'],
-          )!,
+      originSessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}origin_session_id'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      taskId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}task_id'],
+      )!,
       parentTaskId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}parent_task_id'],
       ),
-      role:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}role'],
-          )!,
-      to:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}to'],
-          )!,
-      type:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}type'],
-          )!,
-      content:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}content'],
-          )!,
+      role: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}role'],
+      )!,
+      to: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}to'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      content: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content'],
+      )!,
       completions: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}completions'],
       ),
-      createTime:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}create_time'],
-          )!,
+      createTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}create_time'],
+      )!,
     );
   }
 
@@ -754,18 +744,16 @@ class SessionMessageDao extends DataClass
       originSessionId: Value(originSessionId),
       sessionId: Value(sessionId),
       taskId: Value(taskId),
-      parentTaskId:
-          parentTaskId == null && nullToAbsent
-              ? const Value.absent()
-              : Value(parentTaskId),
+      parentTaskId: parentTaskId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(parentTaskId),
       role: Value(role),
       to: Value(to),
       type: Value(type),
       content: Value(content),
-      completions:
-          completions == null && nullToAbsent
-              ? const Value.absent()
-              : Value(completions),
+      completions: completions == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completions),
       createTime: Value(createTime),
     );
   }
@@ -830,24 +818,24 @@ class SessionMessageDao extends DataClass
   );
   SessionMessageDao copyWithCompanion(SessionMessagesCompanion data) {
     return SessionMessageDao(
-      originSessionId:
-          data.originSessionId.present
-              ? data.originSessionId.value
-              : this.originSessionId,
+      originSessionId: data.originSessionId.present
+          ? data.originSessionId.value
+          : this.originSessionId,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
       taskId: data.taskId.present ? data.taskId.value : this.taskId,
-      parentTaskId:
-          data.parentTaskId.present
-              ? data.parentTaskId.value
-              : this.parentTaskId,
+      parentTaskId: data.parentTaskId.present
+          ? data.parentTaskId.value
+          : this.parentTaskId,
       role: data.role.present ? data.role.value : this.role,
       to: data.to.present ? data.to.value : this.to,
       type: data.type.present ? data.type.value : this.type,
       content: data.content.present ? data.content.value : this.content,
-      completions:
-          data.completions.present ? data.completions.value : this.completions,
-      createTime:
-          data.createTime.present ? data.createTime.value : this.createTime,
+      completions: data.completions.present
+          ? data.completions.value
+          : this.completions,
+      createTime: data.createTime.present
+          ? data.createTime.value
+          : this.createTime,
     );
   }
 
@@ -1210,12 +1198,12 @@ class $$AgentsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$AgentsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$AgentsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$AgentsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$AgentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AgentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AgentsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> agentId = const Value.absent(),
@@ -1248,16 +1236,9 @@ class $$AgentsTableTableManager
                 updateTime: updateTime,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -1503,19 +1484,12 @@ class $$SessionMessagesTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () =>
-                  $$SessionMessagesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$SessionMessagesTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer:
-              () => $$SessionMessagesTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () =>
+              $$SessionMessagesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SessionMessagesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SessionMessagesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> originSessionId = const Value.absent(),
@@ -1568,16 +1542,9 @@ class $$SessionMessagesTableTableManager
                 createTime: createTime,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );

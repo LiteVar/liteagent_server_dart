@@ -16,6 +16,7 @@ void apiRoutes(
   apiRouter.post('/agent/update', agentManageController.updateAgent);
   apiRouter.get('/agent/delete', agentManageController.deleteAgent);
 
+  apiRouter.post('/presetOpenSpec', agentController.addPresetOpenSpec);
   apiRouter.post('/initSession', agentController.initSession);
   apiRouter.post('/initSimple', agentController.initSimple);
   apiRouter.post('/chat', agentController.startStream);
