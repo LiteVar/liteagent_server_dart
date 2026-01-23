@@ -9,18 +9,22 @@
   - [/agent/list](#1-列出系统所有agent)：获取已经保存过的Agent信息列表。
   - [/agent](#2-获取agent的信息)：根据AgentId获取已经保存过的Agent信息。
   - [/agent/create](#3-创建agent)：创建Agent并保存到数据库中。
-  - [/agent/list](#4-更新agent)：更新Agent信息。
-  - [/agent/list](#5-删除agent)：删除Agent信息。
+  - [/agent/update](#4-更新agent)：更新Agent信息。
+  - [/agent/delete](#5-删除agent)：删除Agent信息。
   - [/version](#6-获取版本)：获取当前服务器版本。
   - [/initSession](#7-初始化agent会话)：初始化SessionAgent会话，返回SessionId。
-  - [/chat](#8-提交用户消息订阅会话执行过程)：提交用户消息，订阅会话执行过程。
-  - [/callback](#9-响应functioncall结果)：客户端接收到FunctionCall要求后，调用此接口返回结果。
-  - [/history](#10-获取历史消息)：取某个会话的历史消息列表。
-  - [/stop](#11-停止会话)：通过指定 sessionId 停止对应的会话操作。
-  - [/clear](#12-清除会话数据)：清除会话数据，返回对应的 sessionId。
+  - [/initSimple](#8-初始化simpleagent会话)：初始化SimpleAgent会话，返回SessionId。
+  - [/chat](#9-提交用户消息订阅会话执行过程)：提交用户消息，订阅会话执行过程。
+  - [/chat/simple](#10-获取simpleagent一次性响应)：发送一次请求获取SimpleAgent返回。
+  - [/callback](#11-响应functioncall结果)：客户端接收到FunctionCall要求后，调用此接口返回结果。
+  - [/streamCallback](#12-响应functioncall流式结果)：客户端以流式方式返回FunctionCall结果。
+  - [/history](#13-获取历史消息)：取某个会话的历史消息列表。
+  - [/stop](#14-停止会话)：通过指定 sessionId 停止对应的会话操作。
+  - [/clear](#15-清除会话数据)：清除会话数据，返回对应的 sessionId。
+  - [/opentool-list](#16-获取opentool列表)：获取可用的OpenTool列表。
 - AgentMessage说明
-  - [`type`在不同类型下的`message`结构](#1-type在不同类型下的message结构)
-  - [`to`为`client`时`message`的几个状态字符串](#2-to为client时message的几个状态字符串)
+  - [`type`在不同类型下的`content`结构](#1-type在不同类型下的content结构)
+  - [`to`为`client`时`content`的几个状态字符串](#2-to为client时content的几个状态字符串)
 
 ## HTTP API
 
@@ -50,7 +54,6 @@ https://api.example.com/v1
 
 | 字段名                                                  | 类型       | 说明                                                                                                                 |
 |------------------------------------------------------|----------|--------------------------------------------------------------------------------------------------------------------|
-| `agentId`                                            | `string` | Agent的Id                                                                                                           |
 | `name`                                               | `string` | Agent的名称                                                                                                           |
 | `capability`                                         | `object` | Agent配置，包含以下字段：                                                                                                    |
 | `capability.llmConfig`                               | `object` | 大模型配置，包含以下字段：                                                                                                      |
@@ -60,19 +63,21 @@ https://api.example.com/v1
 | `capability.llmConfig.temperature`                   | `number` | （可选）温度值，默认为 0                                                                                                      |
 | `capability.llmConfig.maxTokens`                     | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
 | `capability.llmConfig.topP`                          | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
+| `capability.llmConfig.supportsToolCalling`           | `boolean` | （可选）模型是否支持工具调用，默认为true                                                                                       |
+| `capability.llmConfig.supportsDeepThinking`          | `boolean` | （可选）模型是否支持深度思考，默认为false                                                                                      |
 | `capability.systemPrompt`                            | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题                                                                            |
 | `capability.openSpecList`                            | `array`  | （可选）Spec 列表，数组中每个元素为 `object`                                                                                      |
-| `capability.openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`openmodbus`、`openrpc`、`opentool`                                              |
+| `capability.openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`                                              |
 | `capability.openSpecList.apiKey`                     | `object` | （可选）第三方服务的 API Key                                                                                                 |
 | `capability.openSpecList.apiKey.type`                | `string` | `basic` 或 `bearer` 二选一                                                                                             |
 | `capability.openSpecList.apiKey.apiKey`              | `string` | 第三方服务的 API Key                                                                                                     |
-| `capability.openSpecList.protocol`                   | `string` | 目前支持 `openapi`、`openmodbus`、`jsonrpcHttp`、`opentool`                                                               |
-| `capability.openSpecList.openToolId`                 | `array`  | （可选）当`protocol`为`opentool`时有效，表示选用哪些opentool作为spec，数组中每个元素为 `string`                                               |
-| `capability.clientOpenTool`                          | `object` | （可选）第三方客户端回调的工具调用                                                                                                  |
-| `capability.clientOpenTool.opentool`                 | `string` | 第三方客户端回调的工具调用的JSON文字，支持`opentool`格式                                                                                |
-| `capability.clientOpenTool.timeout`                  | `int`    | （可选）第三方客户端回调工具超时时间，默认为60秒                                                                                          |
+| `capability.openSpecList.protocol`                   | `string` | 目前支持 `openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`                                                               |
+| `capability.openSpecList.serverUrl`                  | `string` | （可选）Spec对应的服务地址，用于覆盖openSpec内的地址                                                                    |
+| `capability.callbackOpenTool`                          | `object` | （可选）第三方客户端回调的工具调用                                                                                                  |
+| `capability.callbackOpenTool.opentool`                 | `string` | 第三方客户端回调的工具调用的JSON文字，支持`opentool`格式                                                                                |
+| `capability.callbackOpenTool.timeout`                  | `int`    | （可选）第三方客户端回调工具超时时间，默认为60秒                                                                                          |
 | `capability.sessionList`                             | `array`  | （可选）Session 列表，数组中每个元素为 `object`                                                                                   |
-| `capability.sessionList.id`                          | `string` | Sub Agent 的 sessionId                                                                                              |
+| `capability.sessionList.sessionId`                          | `string` | Sub Agent 的 sessionId                                                                                              |
 | `capability.sessionList.name`                        | `string` | （可选）Sub Agent 的自定义名称，必须由 a-z、A-Z、0-9 组成，或包含下划线和破折号，最大长度为 64。                                                       |
 | `capability.sessionList.description`                 | `string` | （可选）Sub Agent 的描述，如果为`null`，则使用Sub Agent的`system prompt`截取前1024字符作为。                                               |
 | `capability.reflectPromptList`                       | `array`  | （可选）ReflectPrompt 列表，数组中每个元素为 `object`; **若`openSpecList`为空则反思LLM的text，否则反思LLM的Function Calling**                  |
@@ -87,6 +92,9 @@ https://api.example.com/v1
 | `capability.timeoutSeconds`                          | `number` | （可选）超时时间，默认为3600，以秒为单位                                                                                             |
 | `capability.taskPipelineStrategy`                    | `enum`   | （可选）同一会话下，新的任务指令，执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel`                      |
 | `capability.toolPipelineStrategy`                    | `enum`   | （可选）同一任务下，若function calling返回为数组时，tool执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel` |
+| `capability.auto`                                    | `boolean`| （可选）是否自动执行任务                                                                                                                     |
+| `capability.llmConfigList`                           | `array`  | （可选）备用模型配置列表，元素结构同`llmConfig`                                                                                                   |
+| `capability.enableThinking`                          | `boolean`| （可选）是否开启思考输出                                                                                                                       |
 
 #### 响应示例
 
@@ -107,7 +115,7 @@ https://api.example.com/v1
       "systemPrompt": "扮演某某角色，具有某某能力，需要帮助用户解决某某问题",
       "openSpecList": [
         {
-          "openSpec": "<spec的json描述文本，目前支持的类型是openapi、openmodbus、openrpc>",
+          "openSpec": "<spec的json描述文本，目前支持的类型是openapi、jsonrpcHttp、opentool、mcpStdio、mcpHttp>",
           "apiKey": {
             "type": "bearer",
             "apiKey": "sk-xxxxxxxxxxxxxxxx"
@@ -116,10 +124,10 @@ https://api.example.com/v1
         },
         {
           "openSpec": "<另一段spec的json描述，可以不同类型混用>",
-          "protocol": "openmodbus"
+          "protocol": "jsonrpcHttp"
         }
       ],
-      "clientOpenTool": "<spec的json描述文本，目前支持的类型是opentool>",
+      "callbackOpenTool": "<spec的json描述文本，目前支持的类型是opentool>",
       "sessionList": [
         {
           "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
@@ -174,19 +182,21 @@ GET /agent?agentId=671763aae989ec22357fea88
 | `capability.llmConfig.temperature`                   | `number` | （可选）温度值，默认为 0                                                                                                      |
 | `capability.llmConfig.maxTokens`                     | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
 | `capability.llmConfig.topP`                          | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
+| `capability.llmConfig.supportsToolCalling`           | `boolean` | （可选）模型是否支持工具调用，默认为true                                                                                       |
+| `capability.llmConfig.supportsDeepThinking`          | `boolean` | （可选）模型是否支持深度思考，默认为false                                                                                      |
 | `capability.systemPrompt`                            | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题                                                                            |
 | `capability.openSpecList`                            | `array`  | （可选）Spec 列表，数组中每个元素为 `object`                                                                                      |
-| `capability.openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`openmodbus`、`openrpc`、`opentool`                                              |
+| `capability.openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`                                              |
 | `capability.openSpecList.apiKey`                     | `object` | （可选）第三方服务的 API Key                                                                                                 |
 | `capability.openSpecList.apiKey.type`                | `string` | `basic` 或 `bearer` 二选一                                                                                             |
 | `capability.openSpecList.apiKey.apiKey`              | `string` | 第三方服务的 API Key                                                                                                     |
-| `capability.openSpecList.protocol`                   | `string` | 目前支持 `openapi`、`openmodbus`、`jsonrpcHttp`、`opentool`                                                               |
-| `capability.openSpecList.openToolId`                 | `array`  | （可选）当`protocol`为`opentool`时有效，表示选用哪些opentool作为spec，数组中每个元素为 `string`                                               |
-| `capability.clientOpenTool`                          | `object` | （可选）第三方客户端回调的工具调用                                                                                                  |
-| `capability.clientOpenTool.opentool`                 | `string` | 第三方客户端回调的工具调用的JSON文字，支持`opentool`格式                                                                                |
-| `capability.clientOpenTool.timeout`                  | `int`    | （可选）第三方客户端回调工具超时时间，默认为60秒                                                                                          |
+| `capability.openSpecList.protocol`                   | `string` | 目前支持 `openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`                                                               |
+| `capability.openSpecList.serverUrl`                  | `string` | （可选）Spec对应的服务地址，用于覆盖openSpec内的地址                                                                    |
+| `capability.callbackOpenTool`                          | `object` | （可选）第三方客户端回调的工具调用                                                                                                  |
+| `capability.callbackOpenTool.opentool`                 | `string` | 第三方客户端回调的工具调用的JSON文字，支持`opentool`格式                                                                                |
+| `capability.callbackOpenTool.timeout`                  | `int`    | （可选）第三方客户端回调工具超时时间，默认为60秒                                                                                          |
 | `capability.sessionList`                             | `array`  | （可选）Session 列表，数组中每个元素为 `object`                                                                                   |
-| `capability.sessionList.id`                          | `string` | Sub Agent 的 sessionId                                                                                              |
+| `capability.sessionList.sessionId`                          | `string` | Sub Agent 的 sessionId                                                                                              |
 | `capability.sessionList.name`                        | `string` | （可选）Sub Agent 的自定义名称，必须由 a-z、A-Z、0-9 组成，或包含下划线和破折号，最大长度为 64。                                                       |
 | `capability.sessionList.description`                 | `string` | （可选）Sub Agent 的描述，如果为`null`，则使用Sub Agent的`system prompt`截取前1024字符作为。                                               |
 | `capability.reflectPromptList`                       | `array`  | （可选）ReflectPrompt 列表，数组中每个元素为 `object`; **若`openSpecList`为空则反思LLM的text，否则反思LLM的Function Calling**                  |
@@ -201,12 +211,14 @@ GET /agent?agentId=671763aae989ec22357fea88
 | `capability.timeoutSeconds`                          | `number` | （可选）超时时间，默认为3600，以秒为单位                                                                                             |
 | `capability.taskPipelineStrategy`                    | `enum`   | （可选）同一会话下，新的任务指令，执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel`                      |
 | `capability.toolPipelineStrategy`                    | `enum`   | （可选）同一任务下，若function calling返回为数组时，tool执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel` |
+| `capability.auto`                                    | `boolean`| （可选）是否自动执行任务                                                                                                                     |
+| `capability.llmConfigList`                           | `array`  | （可选）备用模型配置列表，元素结构同`llmConfig`                                                                                                   |
+| `capability.enableThinking`                          | `boolean`| （可选）是否开启思考输出                                                                                                                       |
 
 #### 响应示例
 
 ```json
 {
-  "agentId": "671763aae989ec22357fea88",
   "name": "Agent例子",
   "capability": {
     "llmConfig": {
@@ -220,7 +232,7 @@ GET /agent?agentId=671763aae989ec22357fea88
     "systemPrompt": "扮演某某角色，具有某某能力，需要帮助用户解决某某问题",
     "openSpecList": [
       {
-        "openSpec": "<spec的json描述文本，目前支持的类型是openapi、openmodbus、openrpc>",
+        "openSpec": "<spec的json描述文本，目前支持的类型是openapi、jsonrpcHttp、opentool、mcpStdio、mcpHttp>",
         "apiKey": {
           "type": "bearer",
           "apiKey": "sk-xxxxxxxxxxxxxxxx"
@@ -229,10 +241,10 @@ GET /agent?agentId=671763aae989ec22357fea88
       },
       {
         "openSpec": "<另一段spec的json描述，可以不同类型混用>",
-        "protocol": "openmodbus"
+        "protocol": "jsonrpcHttp"
       }
     ],
-    "clientOpenTool": "<spec的json描述文本，目前支持的类型是opentool>",
+    "callbackOpenTool": "<spec的json描述文本，目前支持的类型是opentool>",
     "sessionList": [
       {
         "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
@@ -269,19 +281,21 @@ GET /agent?agentId=671763aae989ec22357fea88
 | `capability.llmConfig.temperature`                   | `number` | （可选）温度值，默认为 0                                                                                                      |
 | `capability.llmConfig.maxTokens`                     | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
 | `capability.llmConfig.topP`                          | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
+| `capability.llmConfig.supportsToolCalling`           | `boolean` | （可选）模型是否支持工具调用，默认为true                                                                                       |
+| `capability.llmConfig.supportsDeepThinking`          | `boolean` | （可选）模型是否支持深度思考，默认为false                                                                                      |
 | `capability.systemPrompt`                            | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题                                                                            |
 | `capability.openSpecList`                            | `array`  | （可选）Spec 列表，数组中每个元素为 `object`                                                                                      |
-| `capability.openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`openmodbus`、`openrpc`、`opentool`                                              |
+| `capability.openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`                                              |
 | `capability.openSpecList.apiKey`                     | `object` | （可选）第三方服务的 API Key                                                                                                 |
 | `capability.openSpecList.apiKey.type`                | `string` | `basic` 或 `bearer` 二选一                                                                                             |
 | `capability.openSpecList.apiKey.apiKey`              | `string` | 第三方服务的 API Key                                                                                                     |
-| `capability.openSpecList.protocol`                   | `string` | 目前支持 `openapi`、`openmodbus`、`jsonrpcHttp`、`opentool`                                                               |
-| `capability.openSpecList.openToolId`                 | `array`  | （可选）当`protocol`为`opentool`时有效，表示选用哪些opentool作为spec，数组中每个元素为 `string`                                               |
-| `capability.clientOpenTool`                          | `object` | （可选）第三方客户端回调的工具调用                                                                                                  |
-| `capability.clientOpenTool.opentool`                 | `string` | 第三方客户端回调的工具调用的JSON文字，支持`opentool`格式                                                                                |
-| `capability.clientOpenTool.timeout`                  | `int`    | （可选）第三方客户端回调工具超时时间，默认为60秒                                                                                          |
+| `capability.openSpecList.protocol`                   | `string` | 目前支持 `openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`                                                               |
+| `capability.openSpecList.serverUrl`                  | `string` | （可选）Spec对应的服务地址，用于覆盖openSpec内的地址                                                                    |
+| `capability.callbackOpenTool`                          | `object` | （可选）第三方客户端回调的工具调用                                                                                                  |
+| `capability.callbackOpenTool.opentool`                 | `string` | 第三方客户端回调的工具调用的JSON文字，支持`opentool`格式                                                                                |
+| `capability.callbackOpenTool.timeout`                  | `int`    | （可选）第三方客户端回调工具超时时间，默认为60秒                                                                                          |
 | `capability.sessionList`                             | `array`  | （可选）Session 列表，数组中每个元素为 `object`                                                                                   |
-| `capability.sessionList.id`                          | `string` | Sub Agent 的 sessionId                                                                                              |
+| `capability.sessionList.sessionId`                          | `string` | Sub Agent 的 sessionId                                                                                              |
 | `capability.sessionList.name`                        | `string` | （可选）Sub Agent 的自定义名称，必须由 a-z、A-Z、0-9 组成，或包含下划线和破折号，最大长度为 64。                                                       |
 | `capability.sessionList.description`                 | `string` | （可选）Sub Agent 的描述，如果为`null`，则使用Sub Agent的`system prompt`截取前1024字符作为。                                               |
 | `capability.reflectPromptList`                       | `array`  | （可选）ReflectPrompt 列表，数组中每个元素为 `object`; **若`openSpecList`为空则反思LLM的text，否则反思LLM的Function Calling**                  |
@@ -296,6 +310,9 @@ GET /agent?agentId=671763aae989ec22357fea88
 | `capability.timeoutSeconds`                          | `number` | （可选）超时时间，默认为3600，以秒为单位                                                                                             |
 | `capability.taskPipelineStrategy`                    | `enum`   | （可选）同一会话下，新的任务指令，执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel`                      |
 | `capability.toolPipelineStrategy`                    | `enum`   | （可选）同一任务下，若function calling返回为数组时，tool执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel` |
+| `capability.auto`                                    | `boolean`| （可选）是否自动执行任务                                                                                                                     |
+| `capability.llmConfigList`                           | `array`  | （可选）备用模型配置列表，元素结构同`llmConfig`                                                                                                   |
+| `capability.enableThinking`                          | `boolean`| （可选）是否开启思考输出                                                                                                                       |
 
 #### 请求示例
 
@@ -314,7 +331,7 @@ GET /agent?agentId=671763aae989ec22357fea88
     "systemPrompt": "扮演某某角色，具有某某能力，需要帮助用户解决某某问题",
     "openSpecList": [
       {
-        "openSpec": "<spec的json描述文本，目前支持的类型是openapi、openmodbus、openrpc>",
+        "openSpec": "<spec的json描述文本，目前支持的类型是openapi、jsonrpcHttp、opentool、mcpStdio、mcpHttp>",
         "apiKey": {
           "type": "bearer",
           "apiKey": "sk-xxxxxxxxxxxxxxxx"
@@ -323,10 +340,10 @@ GET /agent?agentId=671763aae989ec22357fea88
       },
       {
         "openSpec": "<另一段spec的json描述，可以不同类型混用>",
-        "protocol": "openmodbus"
+        "protocol": "jsonrpcHttp"
       }
     ],
-    "clientOpenTool": "<spec的json描述文本，目前支持的类型是opentool>",
+    "callbackOpenTool": "<spec的json描述文本，目前支持的类型是opentool>",
     "sessionList": [
       {
         "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
@@ -393,19 +410,21 @@ GET /agent/update?agentId=671763aae989ec22357fea88
 | `capability.llmConfig.temperature`                   | `number` | （可选）温度值，默认为 0                                                                                                      |
 | `capability.llmConfig.maxTokens`                     | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
 | `capability.llmConfig.topP`                          | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
+| `capability.llmConfig.supportsToolCalling`           | `boolean` | （可选）模型是否支持工具调用，默认为true                                                                                       |
+| `capability.llmConfig.supportsDeepThinking`          | `boolean` | （可选）模型是否支持深度思考，默认为false                                                                                      |
 | `capability.systemPrompt`                            | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题                                                                            |
 | `capability.openSpecList`                            | `array`  | （可选）Spec 列表，数组中每个元素为 `object`                                                                                      |
-| `capability.openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`openmodbus`、`openrpc`、`opentool`                                              |
+| `capability.openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`                                              |
 | `capability.openSpecList.apiKey`                     | `object` | （可选）第三方服务的 API Key                                                                                                 |
 | `capability.openSpecList.apiKey.type`                | `string` | `basic` 或 `bearer` 二选一                                                                                             |
 | `capability.openSpecList.apiKey.apiKey`              | `string` | 第三方服务的 API Key                                                                                                     |
-| `capability.openSpecList.protocol`                   | `string` | 目前支持 `openapi`、`openmodbus`、`jsonrpcHttp`、`opentool`                                                               |
-| `capability.openSpecList.openToolId`                 | `array`  | （可选）当`protocol`为`opentool`时有效，表示选用哪些opentool作为spec，数组中每个元素为 `string`                                               |
-| `capability.clientOpenTool`                          | `object` | （可选）第三方客户端回调的工具调用                                                                                                  |
-| `capability.clientOpenTool.opentool`                 | `string` | 第三方客户端回调的工具调用的JSON文字，支持`opentool`格式                                                                                |
-| `capability.clientOpenTool.timeout`                  | `int`    | （可选）第三方客户端回调工具超时时间，默认为60秒                                                                                          |
+| `capability.openSpecList.protocol`                   | `string` | 目前支持 `openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`                                                               |
+| `capability.openSpecList.serverUrl`                  | `string` | （可选）Spec对应的服务地址，用于覆盖openSpec内的地址                                                                    |
+| `capability.callbackOpenTool`                          | `object` | （可选）第三方客户端回调的工具调用                                                                                                  |
+| `capability.callbackOpenTool.opentool`                 | `string` | 第三方客户端回调的工具调用的JSON文字，支持`opentool`格式                                                                                |
+| `capability.callbackOpenTool.timeout`                  | `int`    | （可选）第三方客户端回调工具超时时间，默认为60秒                                                                                          |
 | `capability.sessionList`                             | `array`  | （可选）Session 列表，数组中每个元素为 `object`                                                                                   |
-| `capability.sessionList.id`                          | `string` | Sub Agent 的 sessionId                                                                                              |
+| `capability.sessionList.sessionId`                          | `string` | Sub Agent 的 sessionId                                                                                              |
 | `capability.sessionList.name`                        | `string` | （可选）Sub Agent 的自定义名称，必须由 a-z、A-Z、0-9 组成，或包含下划线和破折号，最大长度为 64。                                                       |
 | `capability.sessionList.description`                 | `string` | （可选）Sub Agent 的描述，如果为`null`，则使用Sub Agent的`system prompt`截取前1024字符作为。                                               |
 | `capability.reflectPromptList`                       | `array`  | （可选）ReflectPrompt 列表，数组中每个元素为 `object`; **若`openSpecList`为空则反思LLM的text，否则反思LLM的Function Calling**                  |
@@ -420,6 +439,9 @@ GET /agent/update?agentId=671763aae989ec22357fea88
 | `capability.timeoutSeconds`                          | `number` | （可选）超时时间，默认为3600，以秒为单位                                                                                             |
 | `capability.taskPipelineStrategy`                    | `enum`   | （可选）同一会话下，新的任务指令，执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel`                      |
 | `capability.toolPipelineStrategy`                    | `enum`   | （可选）同一任务下，若function calling返回为数组时，tool执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel` |
+| `capability.auto`                                    | `boolean`| （可选）是否自动执行任务                                                                                                                     |
+| `capability.llmConfigList`                           | `array`  | （可选）备用模型配置列表，元素结构同`llmConfig`                                                                                                   |
+| `capability.enableThinking`                          | `boolean`| （可选）是否开启思考输出                                                                                                                       |
 
 #### 请求示例
 
@@ -438,7 +460,7 @@ GET /agent/update?agentId=671763aae989ec22357fea88
     "systemPrompt": "扮演某某角色，具有某某能力，需要帮助用户解决某某问题",
     "openSpecList": [
       {
-        "openSpec": "<spec的json描述文本，目前支持的类型是openapi、openmodbus、openrpc>",
+        "openSpec": "<spec的json描述文本，目前支持的类型是openapi、jsonrpcHttp、opentool、mcpStdio、mcpHttp>",
         "apiKey": {
           "type": "bearer",
           "apiKey": "sk-xxxxxxxxxxxxxxxx"
@@ -447,10 +469,10 @@ GET /agent/update?agentId=671763aae989ec22357fea88
       },
       {
         "openSpec": "<另一段spec的json描述，可以不同类型混用>",
-        "protocol": "openmodbus"
+        "protocol": "jsonrpcHttp"
       }
     ],
-    "clientOpenTool": "<spec的json描述文本，目前支持的类型是opentool>",
+    "callbackOpenTool": "<spec的json描述文本，目前支持的类型是opentool>",
     "sessionList": [
       {
         "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
@@ -569,8 +591,12 @@ GET /agent/delete?agentId=671763aae989ec22357fea88
 #### 路径示例
 
 ```http request
-GET /initSession?agentId=671763aae989ec22357fea88
+POST /initSession?agentId=671763aae989ec22357fea88
 ```
+
+#### 请求参数
+
+当不传 `agentId` 时，请求体为 `CapabilityDto`，字段与创建Agent接口一致。
 
 #### 响应
 
@@ -590,7 +616,64 @@ GET /initSession?agentId=671763aae989ec22357fea88
 }
 ```
 
-### 8. 提交用户消息，订阅会话执行过程
+### 8. 初始化SimpleAgent会话
+
+**请求方法**: `POST`
+
+**路径**: `/initSimple`
+
+**功能说明**: 初始化SimpleAgent会话，返回SessionId。SimpleAgent不需要SSE连接，后续通过`/chat/simple`获取一次性回复。
+
+#### 请求参数
+
+| 字段名                             | 类型       | 说明                                                                 |
+|----------------------------------|----------|--------------------------------------------------------------------|
+| `llmConfig`                      | `object` | 大模型配置，包含以下字段：                                                   |
+| `llmConfig.baseUrl`              | `string` | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                      |
+| `llmConfig.apiKey`               | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                               |
+| `llmConfig.model`                | `string` | 大模型名称，例如：gpt-4o-mini                                          |
+| `llmConfig.temperature`          | `number` | （可选）温度值，默认为 0                                               |
+| `llmConfig.maxTokens`            | `number` | （可选）最大 token 数，默认为 4096                                     |
+| `llmConfig.topP`                 | `number` | （可选）概率抽样的 p 值，默认为 1                                         |
+| `llmConfig.supportsToolCalling`  | `boolean`| （可选）模型是否支持工具调用，默认为 true                                   |
+| `llmConfig.supportsDeepThinking` | `boolean`| （可选）模型是否支持深度思考，默认为 false                                  |
+| `systemPrompt`                   | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题         |
+
+#### 请求示例
+
+```json
+{
+  "llmConfig": {
+    "baseUrl": "https://api.openai.com/v1",
+    "apiKey": "sk-xxxxxxxxxx",
+    "model": "gpt-4o-mini",
+    "temperature": 0,
+    "maxTokens": 4096,
+    "topP": 1
+  },
+  "systemPrompt": "扮演某某角色，具有某某能力，需要帮助用户解决某某问题"
+}
+```
+
+#### 响应
+
+**状态码**: `200 OK`
+
+**响应体**:
+
+| 字段名         | 类型       | 说明                                               |
+|-------------|----------|--------------------------------------------------|
+| `sessionId` | `string` | 会话ID，系统生成的唯一标识符。用以后续对该session的操作             |
+
+#### 响应示例
+
+```json
+{
+  "sessionId": "1901883204734947328"
+}
+```
+
+### 9. 提交用户消息，订阅会话执行过程
 
 **请求方法**: `POST`
 
@@ -607,18 +690,17 @@ GET /initSession?agentId=671763aae989ec22357fea88
 #### 路径示例
 
 ```http request
-GET /chat?sessionId=1901883204734947328
+POST /chat?sessionId=1901883204734947328
 ```
 
 #### 请求参数
 
 | 字段名               | 类型        | 说明                                                                                                                                                                              |
 |-------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `taskId`          | `string`  | （可选）用于识别 AgentMessage 来自于哪个任务，若不设置，则系统自行生成。                                                                                                                                     |
 | `content`         | `array`   | 消息内容列表，数组中每个元素为 `object`                                                                                                                                                        |
 | `content.type`    | `string`  | 消息类型，可选为 `text` `imageUrl`                                                                                                                                                      |
 | `content.message` | `string`  | 消息内容，例如："给我一个随机数"; <br/>如果消息类型为imageUrl，message的String可选为：<br/>1. 图片链接："https://example.com/path/to/image.png" ，且确保公网可访问<br/>2. base64格式："data:image/jpeg;base64,{图片的base64编码}" |
-| `stream`          | `boolean` | （可选）用于订阅 LiteAgent返回消息的方式，默认为`false`                                                                                                                                            |
+| `isChunk`         | `boolean` | （可选）是否启用分片输出，默认为`false`                                                                                                                                                           |
 
 #### 请求示例
 
@@ -627,7 +709,7 @@ GET /chat?sessionId=1901883204734947328
   "content": [
     { "type": "text", "message":"你是谁？" }
   ],
-  "stream": true
+  "isChunk": true
 }
 ```
 
@@ -635,7 +717,7 @@ GET /chat?sessionId=1901883204734947328
 
 - 采用SSE，`Content-Type: text/event-stream`
 
-- 消息类型`event`有3种类型:`message`、`chunk`与`functionCall`。其中，`chunk`类型只有`stream`为`true`时，且`role`为`assistant`有效。
+- 消息类型`event`有3种类型:`message`、`chunk`与`functionCall`。其中，`chunk`类型只有`isChunk`为`true`时，且`role`为`assistant`有效。
 
 当`event`为`message`时，`data`类型为`object`类型，`data`结构如下:
 
@@ -646,7 +728,7 @@ GET /chat?sessionId=1901883204734947328
 | `role`                               | `string`  | 角色，可选值包括： `developer`、`user`、`agent`、`assistant`、`reflection`、`tool`、`client`                     |
 | `to`                                 | `string`  | 消息发送的目标，可选值包括与`role`一致                                                                            |
 | `type`                               | `string`  | 消息类型，可能包含的值有:`text`、`imageUrl`、`contentList`、`toolCalls`、`reflection`、`toolReturn`、`functionCall` |
-| `content`                            | `dynamic` | 见以下示例定义，详情定义见 [`type`在不同类型下的`message`结构](#1-type在不同类型下的message结构)                                 |
+| `content`                            | `dynamic` | 见以下示例定义，详情定义见 [`type`在不同类型下的`content`结构](#1-type在不同类型下的content结构)                                 |
 | `completions`                        | `object`  | （可选）大模型完成的详细信息，包含以下字段：                                                                            |
 | `completions.usage`                  | `object`  | token 使用信息                                                                                        |
 | `completions.usage.promptTokens`     | `number`  | 提示符 token 数                                                                                       |
@@ -743,7 +825,7 @@ GET /chat?sessionId=1901883204734947328
   }
   ```
 
-- 当`stream`=`false`，LLM返回的结果
+- 当`isChunk`=`false`，LLM返回的结果
   ```json
   {
     "sessionId":"1901883204734947328",
@@ -790,7 +872,7 @@ GET /chat?sessionId=1901883204734947328
   }
   ```
 
-当`stream`=`true`时，LLM的消息返回`event`为`chunk`，`role`为`agent` `assistant`。`data`类型为`object`类型，`data`结构如下:
+当`isChunk`=`true`时，LLM的消息返回`event`为`chunk`，`role`为`agent` `assistant`。`data`类型为`object`类型，`data`结构如下:
 
 | 字段                                   | 类型       | 说明                                  |
 |--------------------------------------|----------|-------------------------------------|
@@ -867,7 +949,7 @@ GET /chat?sessionId=1901883204734947328
 |--------------|----------------------------|-------------------------------|
 | `id`         | `string`                   | 大模型返回的 `function calling` 的id |
 | `name`       | `string`                   | `function`的名称                 |
-| `parameters` | Map\[`string`, `dynamic`\] | 大模型返回的参数map                   |
+| `arguments`  | Map\[`string`, `dynamic`\] | 大模型返回的参数map                   |
 
 #### `event`为`functionCall`的`data`示例
 
@@ -880,13 +962,95 @@ GET /chat?sessionId=1901883204734947328
   }
   ```
 
-### 9. 响应FunctionCall结果
+### 10. 获取SimpleAgent一次性响应
+
+**请求方法**: `POST`
+
+**路径**: `/chat/simple`
+
+**功能说明**: 发送一次请求获取SimpleAgent回复，不建立SSE连接。
+
+#### 路径参数
+
+| 字段名         | 类型       | 说明                                   |
+|-------------|----------|--------------------------------------|
+| `sessionId` | `string` | 通过`initSimple`接口获取到的会话ID           |
+
+#### 路径示例
+
+```http request
+POST /chat/simple?sessionId=1901883204734947328
+```
+
+#### 请求参数
+
+| 字段名               | 类型        | 说明                                                                                                                                                                              |
+|-------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `content`         | `array`   | 消息内容列表，数组中每个元素为 `object`                                                                                                                                                        |
+| `content.type`    | `string`  | 消息类型，可选为 `text` `imageUrl`                                                                                                                                                      |
+| `content.message` | `string`  | 消息内容，例如："给我一个随机数"; <br/>如果消息类型为imageUrl，message的String可选为：<br/>1. 图片链接且确保公网可访问<br/>2. base64格式："data:image/jpeg;base64,{图片的base64编码}" |
+| `isChunk`         | `boolean` | （可选）是否启用分片返回（对SimpleAgent一般不使用）                                                                                                                                                |
+
+#### 请求示例
+
+```json
+{
+  "content": [
+    { "type": "text", "message":"你是谁？" }
+  ]
+}
+```
+
+#### 响应
+
+**状态码**: `200 OK`
+
+**响应体**:
+
+| 字段名                                   | 类型       | 说明                                                                                                |
+|--------------------------------------|----------|---------------------------------------------------------------------------------------------------|
+| `sessionId`                          | `string` | 会话id                                                                                              |
+| `taskId`                             | `string` | 任务id                                                                                              |
+| `role`                               | `string` | 角色，可选值包括： `developer`、`user`、`agent`、`assistant`、`reflection`、`tool`、`client`                     |
+| `to`                                 | `string` | 消息发送的目标，可选值包括与`role`一致                                                                            |
+| `type`                               | `string` | 消息类型，可能包含的值有:`text`、`imageUrl`、`contentList`、`toolCalls`、`reflection`、`toolReturn`、`functionCall` |
+| `content`                            | `dynamic` | 消息内容                                                                                             |
+| `completions`                        | `object` | （可选）大模型完成的详细信息，包含以下字段：                                                                            |
+| `completions.usage`                  | `object` | token 使用信息                                                                                        |
+| `completions.usage.promptTokens`     | `number` | 提示符 token 数                                                                                       |
+| `completions.usage.completionTokens` | `number` | 生成 token 数                                                                                        |
+| `completions.usage.totalTokens`      | `number` | 总 token 数                                                                                         |
+| `completions.id`                     | `string` | 大模型返回的消息 ID                                                                                       |
+| `completions.model`                  | `string` | 大模型名称，例如 gpt-4o-mini                                                                              |
+| `createTime`                         | `string` | 消息创建时间，格式为 yyyy-MM-ddTHH:mm:ss.SSSZ                                                               |
+
+#### 响应示例
+
+```json
+{
+  "sessionId":"1901883204734947328",
+  "taskId":"1901883415867822080",
+  "role":"assistant",
+  "to":"agent",
+  "type":"text",
+  "content":"你好，我是LiteAgent。",
+  "createTime":"2023-06-18T15:45:30.000+0800"
+}
+```
+
+### 11. 响应FunctionCall结果
 
 **请求方法**: `POST`
 
 **路径**: `/callback`
 
 **功能说明**: 客户端接收到FunctionCall要求后，调用此接口返回结果。
+
+#### 路径参数
+
+| 字段名         | 类型       | 说明        |
+|-------------|----------|-----------|
+| `sessionId` | `string` | 会话ID      |
 
 #### 请求参数
 
@@ -913,9 +1077,56 @@ GET /chat?sessionId=1901883204734947328
 
 **响应体**:
 
-无
+| 字段名         | 类型       | 说明   |
+|-------------|----------|------|
+| `sessionId` | `string` | 会话ID |
 
-### 10. 获取历史消息
+### 12. 响应FunctionCall流式结果
+
+**请求方法**: `POST`
+
+**路径**: `/streamCallback`
+
+**功能说明**: 客户端以流式方式返回FunctionCall结果。
+
+#### 路径参数
+
+| 字段名         | 类型       | 说明                                  |
+|-------------|----------|-------------------------------------|
+| `sessionId` | `string` | 会话ID                                |
+
+#### 请求参数
+
+| 字段名         | 类型       |   | 说明                                          |
+|-------------|----------|:--|---------------------------------------------|
+| `event`     | `string` |   | 流式事件名（如 `data`、`done`、`error`）        |
+| `toolReturn` | `object` |   | 工具返回的结果，包含 `id` 和 `result` 字段         |
+
+#### 请求示例
+
+```json
+{
+  "event": "data",
+  "toolReturn": {
+    "id": "call_z5FK2dAfU8TXzn61IJXzRl5I",
+    "result": {
+      "status": "operate successfully."
+    }
+  }
+}
+```
+
+#### 响应
+
+**状态码**: `200 OK`
+
+**响应体**:
+
+| 字段名         | 类型       | 说明   |
+|-------------|----------|------|
+| `sessionId` | `string` | 会话ID |
+
+### 13. 获取历史消息
 
 **请求方法**: `GET`
 
@@ -925,14 +1136,14 @@ GET /chat?sessionId=1901883204734947328
 
 #### 路径参数
 
-| 字段名      | 类型       | 说明                     |
-|----------|----------|------------------------|
-| `id`     | `string` | 会话 ID，读取对应Agent的当前会话历史 |
+| 字段名         | 类型       | 说明                     |
+|-------------|----------|------------------------|
+| `sessionId` | `string` | 会话 ID，读取对应Agent的当前会话历史 |
 
 #### 路径示例
 
 ```http request
-GET /history?id=1901883204734947328
+GET /history?sessionId=1901883204734947328
 ```
 
 #### 响应
@@ -948,7 +1159,7 @@ GET /history?id=1901883204734947328
 | `role`                               | `string` | 消息来源，可能的值包括：`developer`、`user`、`agent`、`assistant`、`reflection`、`tool`、`client`                  |
 | `to`                                 | `string` | 消息目标，可能的值与`role`一致                                                                               |
 | `type`                               | `string` | 消息类型，可能的值包括：`text`、`imageUrl`、`contentList`、`toolCalls`、`reflection`、`toolReturn`、`functionCall` |
-| `message`                            | `any`    | 消息内容，具体类型需根据 `type` 字段解析                                                                         |
+| `content`                            | `any`    | 消息内容，具体类型需根据 `type` 字段解析                                                                         |
 | `completions`                        | `object` | 大模型完成的详细信息，包含以下字段：                                                                               |
 | `completions.usage`                  | `object` | Token 使用信息                                                                                       |
 | `completions.usage.promptTokens`     | `number` | 提示符 token 数                                                                                      |
@@ -968,7 +1179,7 @@ GET /history?id=1901883204734947328
     "role": "developer",
     "to": "user",
     "type": "text",
-    "message": "This is an example message",
+    "content": "This is an example message",
     "completions": {
       "usage": {
         "promptTokens": 100,
@@ -983,7 +1194,7 @@ GET /history?id=1901883204734947328
 ]
 ```
 
-### 11. 停止会话
+### 14. 停止会话
 
 **请求方法**: `GET`
 
@@ -1030,7 +1241,7 @@ GET /stop?sessionId=1901883204734947328&taskId=1901883415867822080
 }
 ```
 
-### 12. 清除会话数据
+### 15. 清除会话数据
 
 **请求方法**: `GET`
 
@@ -1064,13 +1275,47 @@ GET /clear?sessionId=1901883204734947328
 
 ```json
 {
-    "id": "1901883204734947328"
+    "sessionId": "1901883204734947328"
 }
+```
+
+### 16. 获取OpenTool列表
+
+**请求方法**: `GET`
+
+**路径**: `/opentool-list`
+
+**功能说明**: 获取可用的OpenTool列表，可用于`/initSession`配置opentool规范。
+
+#### 请求参数
+
+无
+
+#### 响应
+
+**状态码**: `200 OK`
+
+**响应体**: `array`类型，对应的`object`为：
+
+| 字段名         | 类型       | 说明              |
+|-------------|----------|-----------------|
+| `openToolId`  | `string` | OpenTool的ID     |
+| `description` | `string` | OpenTool描述     |
+
+#### 响应示例
+
+```json
+[
+  {
+    "openToolId": "mock-tool",
+    "description": "A Mock CRUD Sample Tool"
+  }
+]
 ```
 
 ## AgentMessage说明
 
-### 1. `type`在不同类型下的`message`结构
+### 1. `type`在不同类型下的`content`结构
 
 - `type`为`text`或`imageUrl`
 
@@ -1079,13 +1324,21 @@ GET /clear?sessionId=1901883204734947328
 | `text`     | `string`    | 纯文本 |
 | `imageUrl` | `string`    | 纯文本 |
 
+- `type`为`functionCall`，类型为`object`，元素结构为：
+
+| `type`       | content数据类型                | 说明                            |
+|--------------|----------------------------|-------------------------------|
+| `id`         | `string`                   | 大模型返回的 `function calling` 的id |
+| `name`       | `string`                   | `function`的名称                 |
+| `arguments`  | Map\[`string`, `dynamic`\] | 大模型返回的参数map                   |
+
 - `type`为`toolCalls`，类型为`array`，元素结构为：
 
 | `type`       | content数据类型                | 说明                            |
 |--------------|----------------------------|-------------------------------|
 | `id`         | `string`                   | 大模型返回的 `function calling` 的id |
 | `name`       | `string`                   | `function`的名称                 |
-| `parameters` | Map\[`string`, `dynamic`\] | 大模型返回的参数map                   |
+| `arguments`  | Map\[`string`, `dynamic`\] | 大模型返回的参数map                   |
 
 - `type`为`toolReturn`，类型为`object`，元素结构为：
 
@@ -1126,15 +1379,7 @@ GET /clear?sessionId=1901883204734947328
 | `status`      | `string`                   | 可选类型为`start`、`stop`、`done`、`toolsStart`、`toolsDone`、`exception` |
 | `description` | Map\[`string`, `dynamic`\] | 消息的描述，一般为functionCall时、`exception`时有值                           |
 
-- `type`为`funtionCall`，类型为`object`，元素结构为：
-
-| `type`       | content数据类型                | 说明                            |
-|--------------|----------------------------|-------------------------------|
-| `id`         | `string`                   | 大模型返回的 `function calling` 的id |
-| `name`       | `string`                   | `function`的名称                 |
-| `parameters` | Map\[`string`, `dynamic`\] | 大模型返回的参数map                   |
-
-### 2. `to`为`client`时，message的几个状态字符串
+### 2. `to`为`client`时，content的几个状态字符串
 
 在`taskStatus.status`中：
 

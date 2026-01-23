@@ -4,24 +4,25 @@
 
 ## Contents
 - HTTP API
-    - [/version](#1-get-version): Retrieve the current version.
-    - [/init](#2-initialize-sessionagent-session): Initialize a SessionAgent session and return a SessionId.
-    - [/init/simple](#3-initialize-simpleagent-session): Initialize a SimpleAgent session. SimpleAgent does not require WebSocket, and subsequent requests to `/chat/simple` directly respond with text messages from the LLM.
-    - [/chat/simple](#4-get-simpleagent-one-time-response): Obtain a one-time response from a large model by sending a request-response, without subscribing to WebSocket messages.
-    - [/history](#5-retrieve-message-history): Retrieve the history of messages for a specific session. This API does not support SimpleAgent.
-    - [/stop](#6-stop-session): Stops the specified session by sessionId. This API does not support SimpleAgent.
-    - [/clear](#7-clear-session-data): Clear the session data, returning the corresponding sessionId. This API does not support SimpleAgent.
-    - [/opentool-list](#8-get-available-opentool-list): Retrieve the list of available OpenTools, which can be used in `/init`.
-- WebSocket API
-    - [Client Messages](#client-messages)
-        - [Keep Connection Alive](#1-keep-connection)
-        - [User Messages](#2-user-message)
-    - [Server Messages](#server-messages)
-        - [Keep Connection Response](#1-keep-connection-response)
-        - [Agent Messages](#2-agent-message)
+    - [/agent/list](#1-list-agents): List saved agents.
+    - [/agent](#2-get-agent): Retrieve a saved agent by agentId.
+    - [/agent/create](#3-create-agent): Create and persist an agent.
+    - [/agent/update](#4-update-agent): Update an existing agent.
+    - [/agent/delete](#5-delete-agent): Delete an agent.
+    - [/version](#6-get-version): Retrieve the current version.
+    - [/initSession](#7-initialize-sessionagent-session): Initialize a SessionAgent session and return a sessionId.
+    - [/initSimple](#8-initialize-simpleagent-session): Initialize a SimpleAgent session.
+    - [/chat](#9-start-session-stream): Start a task and stream SSE events.
+    - [/chat/simple](#10-get-simpleagent-one-time-response): One-time response without SSE.
+    - [/callback](#11-tool-callback): Return tool results for function calls.
+    - [/streamCallback](#12-tool-stream-callback): Stream tool results for function calls.
+    - [/history](#13-retrieve-message-history): Retrieve the history of messages for a session.
+    - [/stop](#14-stop-session): Stop a session or task.
+    - [/clear](#15-clear-session-data): Clear session data for a session.
+    - [/opentool-list](#16-get-available-opentool-list): Retrieve the list of available OpenTools.
 - AgentMessage Explanation
-    - [Message Structure Based on `type`](#1-type-fields-message-structure-in-different-types)
-    - [Message Status Strings when `to` is `client`](#2-status-strings-in-message-when-to-is-client)
+    - [Message Structure Based on `type`](#1-type-fields-content-structure-in-different-types)
+    - [Message Status Strings when `to` is `client`](#2-status-strings-in-content-when-to-is-client)
 
 ## HTTP API
 
@@ -31,7 +32,201 @@
 https://api.example.com/v1
 ```
 
-### 1. Get Version
+### 1. List Agents
+
+**Request Method**: `GET`
+
+**Path**: `/agent/list`
+
+**Description**: List saved agents.
+
+#### Request Parameters
+
+None
+
+#### Response
+
+**Status Code**: `200 OK`
+
+**Response Body**: `array` of objects with the following fields:
+
+| Field        | Type     | Description                                                             |
+|--------------|----------|-------------------------------------------------------------------------|
+| `agentId`    | `string` | Agent ID                                                                 |
+| `name`       | `string` | Agent name                                                               |
+| `capability` | `object` | Agent capability, same schema as the `/initSession` request body fields. |
+
+#### Response Example
+
+```json
+[
+  {
+    "agentId": "671763aae989ec22357fea88",
+    "name": "Agent Example",
+    "capability": {
+      "llmConfig": {
+        "baseUrl": "https://api.openai.com/v1",
+        "apiKey": "sk-xxxxxxxxxx",
+        "model": "gpt-4o-mini"
+      },
+      "systemPrompt": "Roleplay as someone with specific abilities"
+    }
+  }
+]
+```
+
+### 2. Get Agent
+
+**Request Method**: `GET`
+
+**Path**: `/agent`
+
+**Description**: Retrieve a saved agent by agentId.
+
+#### Query Parameters
+
+| Field     | Type     | Description |
+|-----------|----------|-------------|
+| `agentId` | `string` | Agent ID    |
+
+#### Example Request
+
+```http request
+GET /agent?agentId=671763aae989ec22357fea88
+```
+
+#### Response
+
+**Status Code**: `200 OK`
+
+**Response Body**:
+
+| Field        | Type     | Description                                                             |
+|--------------|----------|-------------------------------------------------------------------------|
+| `name`       | `string` | Agent name                                                               |
+| `capability` | `object` | Agent capability, same schema as the `/initSession` request body fields. |
+
+#### Response Example
+
+```json
+{
+  "name": "Agent Example",
+  "capability": {
+    "llmConfig": {
+      "baseUrl": "https://api.openai.com/v1",
+      "apiKey": "sk-xxxxxxxxxx",
+      "model": "gpt-4o-mini"
+    },
+    "systemPrompt": "Roleplay as someone with specific abilities"
+  }
+}
+```
+
+### 3. Create Agent
+
+**Request Method**: `POST`
+
+**Path**: `/agent/create`
+
+**Description**: Create and persist an agent.
+
+#### Request Body
+
+| Field        | Type     | Description                                                             |
+|--------------|----------|-------------------------------------------------------------------------|
+| `name`       | `string` | Agent name                                                               |
+| `capability` | `object` | Agent capability, same schema as the `/initSession` request body fields. |
+
+#### Response
+
+**Status Code**: `200 OK`
+
+**Response Body**:
+
+| Field     | Type     | Description           |
+|-----------|----------|-----------------------|
+| `agentId` | `string` | Generated agent ID    |
+
+#### Response Example
+
+```json
+{
+  "agentId": "671763aae989ec22357fea88"
+}
+```
+
+### 4. Update Agent
+
+**Request Method**: `POST`
+
+**Path**: `/agent/update`
+
+**Description**: Update an existing agent.
+
+#### Query Parameters
+
+| Field     | Type     | Description |
+|-----------|----------|-------------|
+| `agentId` | `string` | Agent ID    |
+
+#### Request Body
+
+| Field        | Type     | Description                                                             |
+|--------------|----------|-------------------------------------------------------------------------|
+| `name`       | `string` | Agent name                                                               |
+| `capability` | `object` | Agent capability, same schema as the `/initSession` request body fields. |
+
+#### Response
+
+**Status Code**: `200 OK`
+
+**Response Body**:
+
+| Field     | Type     | Description           |
+|-----------|----------|-----------------------|
+| `agentId` | `string` | Updated agent ID      |
+
+#### Response Example
+
+```json
+{
+  "agentId": "671763aae989ec22357fea88"
+}
+```
+
+### 5. Delete Agent
+
+**Request Method**: `GET`
+
+**Path**: `/agent/delete`
+
+**Description**: Delete an agent.
+
+#### Query Parameters
+
+| Field     | Type     | Description |
+|-----------|----------|-------------|
+| `agentId` | `string` | Agent ID    |
+
+#### Response
+
+**Status Code**: `200 OK`
+
+**Response Body**:
+
+| Field     | Type     | Description        |
+|-----------|----------|--------------------|
+| `agentId` | `string` | Deleted agent ID   |
+
+#### Response Example
+
+```json
+{
+  "agentId": "671763aae989ec22357fea88"
+}
+```
+
+### 6. Get Version
 
 **Request Method**: `GET`
 
@@ -65,47 +260,57 @@ None
 }
 ```
 
-### 2. Initialize SessionAgent Session
+### 7. Initialize SessionAgent Session
 
 **Request Method**: `POST`
 
-**Endpoint**: `/init`
+**Path**: `/initSession`
 
-**Description**: Initialize a SessionAgent session and return a SessionId.
+**Description**: Initialize a SessionAgent session and return a sessionId. Provide either `agentId` or a request body with `CapabilityDto`.
 
-#### Request Parameters
+#### Query Parameters
 
-| Field                                     | Type     | Description                                                                                                                                                                                                                                                      |
-|-------------------------------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `llmConfig`                               | `object` | Configuration for the language model, containing the following fields:                                                                                                                                                                                           |
-| `llmConfig.baseUrl`                       | `string` | API endpoint of the language model provider, e.g., https://api.openai.com/v1                                                                                                                                                                                     |
-| `llmConfig.apiKey`                        | `string` | API Key of the language model provider, e.g., sk-xxxxxxxxxx                                                                                                                                                                                                      |
-| `llmConfig.model`                         | `string` | Name of the language model, e.g., gpt-3.5-turbo                                                                                                                                                                                                                  |
-| `llmConfig.temperature`                   | `number` | (Optional) Temperature value, default is 0                                                                                                                                                                                                                       |
-| `llmConfig.maxTokens`                     | `number` | (Optional) Maximum token count, default is 4096                                                                                                                                                                                                                  |
-| `llmConfig.topP`                          | `number` | (Optional) Top-p value for sampling, default is 1                                                                                                                                                                                                                |
-| `systemPrompt`                            | `string` | System prompt preset, e.g., role-playing instructions, abilities, or problem-solving tasks                                                                                                                                                                       |
-| `openSpecList`                            | `array`  | (Optional) List of specifications, each element being an `object`                                                                                                                                                                                                |
-| `openSpecList.openSpec`                   | `string` | JSON description of the spec, currently supports `openapi`, `openmodbus`, `openrpc`, `opentool`                                                                                                                                                                  |
-| `openSpecList.apiKey`                     | `object` | (Optional) API Key for third-party services                                                                                                                                                                                                                      |
-| `openSpecList.type`                       | `string` | Either `basic` or `bearer`                                                                                                                                                                                                                                       |
-| `openSpecList.protocol`                   | `string` | Currently supports `openapi`, `openmodbus`, `jsonrpcHttp`, `opentool`                                                                                                                                                                                            |
-| `openSpecList.openToolId`                 | `array`  | (Optional) Valid when `protocol` is set to `opentool`, specifies which opentools to use as specs. Each element in the array is a `string`.                                                                                                                       |
-| `sessionList`                             | `array`  | (Optional) List of sessions, each element being an `object`                                                                                                                                                                                                      |
-| `sessionList.id`                          | `string` | sessionId of a sub-agent                                                                                                                                                                                                                                         |
-| `sessionList.name`                        | `string` | (Optional) Sub Agent custom name. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.                                                                                                                                         |
-| `reflectPromptList`                       | `array`  | (Optional) List of ReflectPrompt, where each element in the array is an `object`. **if `openSpecList` is null, reflect LLM text, else reflect Function Calling**                                                                                                 |
-| `reflectPromptList.llmConfig`             | `object` | `ReflectAgent`'s `llmConfig`, used for requesting large models.                                                                                                                                                                                                  |
-| `reflectPromptList.llmConfig.baseUrl`     | `string` | The API endpoint of the large model provider, e.g., https://api.openai.com/v1                                                                                                                                                                                    |
-| `reflectPromptList.llmConfig.apiKey`      | `string` | The API key of the large model provider, e.g., sk-xxxxxxxxxx                                                                                                                                                                                                     |
-| `reflectPromptList.llmConfig.model`       | `string` | The name of the large model, e.g., gpt-4o-mini                                                                                                                                                                                                                   |
-| `reflectPromptList.llmConfig.temperature` | `number` | (Optional) Temperature value, defaults to 0.                                                                                                                                                                                                                     |
-| `reflectPromptList.llmConfig.maxTokens`   | `number` | (Optional) Maximum token count, defaults to 4096.                                                                                                                                                                                                                |
-| `reflectPromptList.llmConfig.topP`        | `number` | (Optional) Probability sampling `p` value, defaults to 1.                                                                                                                                                                                                        |
-| `reflectPromptList.prompt`                | `string` | System Prompt of `ReflectAgent`, used to describe the evaluation criteria for reflection scores.                                                                                                                                                                 |
-| `timeoutSeconds`                          | `number` | (Optional) Timeout duration, defaults to 3600 seconds.                                                                                                                                                                                                           |
-| `taskPipelineStrategy`                    | `enum`   | (Optional) Strategy for handling new task instructions within the same session. Supports: `parallel` (allows parallel execution), `serial` (queues tasks), or `reject` (rejects new tasks if one is already in progress). Defaults to `parallel`.                |
-| `toolPipelineStrategy`                    | `enum`   | (Optional) Strategy for handling tool execution when function calling returns an array. Supports: `parallel` (allows parallel execution), `serial` (queues execution), or `reject` (rejects execution if a task is already in progress). Defaults to `parallel`. |
+| Field     | Type     | Description                                                         |
+|-----------|----------|---------------------------------------------------------------------|
+| `agentId` | `string` | (Optional) Use a saved agent configuration for this session.        |
+
+#### Request Body (when `agentId` is not provided)
+
+| Field                                     | Type      | Description                                                                                                                                                                                                                                                      |
+|-------------------------------------------|-----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `llmConfig`                               | `object`  | Configuration for the language model, containing the following fields:                                                                                                                                                                                           |
+| `llmConfig.baseUrl`                       | `string`  | API endpoint of the language model provider, e.g., https://api.openai.com/v1                                                                                                                                                                                     |
+| `llmConfig.apiKey`                        | `string`  | API Key of the language model provider, e.g., sk-xxxxxxxxxx                                                                                                                                                                                                      |
+| `llmConfig.model`                         | `string`  | Name of the language model, e.g., gpt-3.5-turbo                                                                                                                                                                                                                  |
+| `llmConfig.temperature`                   | `number`  | (Optional) Temperature value, default is 0                                                                                                                                                                                                                       |
+| `llmConfig.maxTokens`                     | `number`  | (Optional) Maximum token count, default is 4096                                                                                                                                                                                                                  |
+| `llmConfig.topP`                          | `number`  | (Optional) Top-p value for sampling, default is 1                                                                                                                                                                                                                |
+| `llmConfig.supportsToolCalling`           | `boolean` | (Optional) Whether the model supports tool calling, default is true                                                                                                                                                                                              |
+| `llmConfig.supportsDeepThinking`          | `boolean` | (Optional) Whether the model supports deep thinking, default is false                                                                                                                                                                                            |
+| `systemPrompt`                            | `string`  | System prompt preset, e.g., role-playing instructions, abilities, or problem-solving tasks                                                                                                                                                                       |
+| `openSpecList`                            | `array`   | (Optional) List of specifications, each element being an `object`                                                                                                                                                                                                |
+| `openSpecList.openSpec`                   | `string`  | JSON description of the spec                                                                                                                                                                                                                                     |
+| `openSpecList.protocol`                   | `string`  | Supports `openapi`, `jsonrpcHttp`, `opentool`, `mcpStdio`, `mcpHttp`                                                                                                                                                                                              |
+| `openSpecList.serverUrl`                  | `string`  | (Optional) Override server URL for the spec                                                                                                                                                                                                                      |
+| `openSpecList.apiKey`                     | `object`  | (Optional) API Key for third-party services                                                                                                                                                                                                                      |
+| `openSpecList.apiKey.type`                | `string`  | Either `basic` or `bearer`                                                                                                                                                                                                                                       |
+| `openSpecList.apiKey.apiKey`              | `string`  | API Key value                                                                                                                                                                                                                                                    |
+| `callbackOpenTool`                        | `object`  | (Optional) Client callback tool definition                                                                                                                                                                                                                       |
+| `callbackOpenTool.opentool`               | `string`  | OpenTool JSON definition                                                                                                                                                                                                                                         |
+| `callbackOpenTool.timeout`                | `number`  | (Optional) Callback timeout in seconds                                                                                                                                                                                                                           |
+| `sessionList`                             | `array`   | (Optional) List of sessions, each element being an `object`                                                                                                                                                                                                      |
+| `sessionList.sessionId`                   | `string`  | sessionId of a sub-agent                                                                                                                                                                                                                                         |
+| `sessionList.name`                        | `string`  | (Optional) Sub Agent custom name. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.                                                                                                                                         |
+| `sessionList.description`                 | `string`  | (Optional) Sub Agent description                                                                                                                                                                                                                                 |
+| `reflectPromptList`                       | `array`   | (Optional) List of ReflectPrompt, where each element in the array is an `object`. **if `openSpecList` is null, reflect LLM text, else reflect Function Calling**                                                                                                 |
+| `reflectPromptList.llmConfig`             | `object`  | `ReflectAgent`'s `llmConfig`, used for requesting large models.                                                                                                                                                                                                  |
+| `reflectPromptList.prompt`                | `string`  | System Prompt of `ReflectAgent`, used to describe the evaluation criteria for reflection scores.                                                                                                                                                                 |
+| `timeoutSeconds`                          | `number`  | (Optional) Timeout duration, defaults to 3600 seconds.                                                                                                                                                                                                           |
+| `taskPipelineStrategy`                    | `enum`    | (Optional) Strategy for handling new task instructions within the same session. Supports: `parallel`, `serial`, or `reject`. Defaults to `parallel`.                                                                                                            |
+| `toolPipelineStrategy`                    | `enum`    | (Optional) Strategy for handling tool execution when function calling returns an array. Supports: `parallel`, `serial`, or `reject`.                                                                                                                             |
+| `auto`                                    | `boolean` | (Optional) Whether to auto-run tasks                                                                                                                                                                                                                             |
+| `llmConfigList`                           | `array`   | (Optional) List of `llmConfig` objects                                                                                                                                                                                                                            |
+| `enableThinking`                          | `boolean` | (Optional) Enable reasoning output                                                                                                                                                                                                                                |
 
 #### Request Example
 
@@ -122,7 +327,7 @@ None
   "systemPrompt": "Roleplay as someone with specific abilities to help solve certain problems",
   "openSpecList": [
     {
-      "openSpec": "<JSON description of the spec, supports openapi, openmodbus, openrpc>",
+      "openSpec": "<JSON description of the spec, supports openapi, jsonrpcHttp, opentool>",
       "apiKey": {
         "type": "bearer",
         "apiKey": "sk-xxxxxxxxxxxxxxxx"
@@ -131,16 +336,16 @@ None
     },
     {
       "openSpec": "<Another spec's JSON description, different types can be mixed>",
-      "protocol": "openmodbus"
+      "protocol": "jsonrpcHttp"
     }
   ],
   "sessionList": [
     {
-      "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
+      "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
       "name": "someFunc1"
     },
     {
-      "id": "a20245f2-e9f0-416c-9191-8ed3afeac46b",
+      "sessionId": "a20245f2-e9f0-416c-9191-8ed3afeac46b",
       "name": "some-func_2"
     }
   ],
@@ -154,38 +359,40 @@ None
 
 **Response Body**:
 
-| Field | Type     | Description                                             |
-|-------|----------|---------------------------------------------------------|
-| `id`  | `string` | Session ID, a unique identifier generated by the system |
+| Field       | Type     | Description                                             |
+|-------------|----------|---------------------------------------------------------|
+| `sessionId` | `string` | Session ID, a unique identifier generated by the system |
 
 #### Response Example
 
 ```json
 {
-  "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
+  "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
 }
 ```
 
-### 3. Initialize SimpleAgent Session
+### 8. Initialize SimpleAgent Session
 
 **Request Method**: `POST`
 
-**Endpoint**: `/init/simple`
+**Path**: `/initSimple`
 
-**Description**: Initialize a SimpleAgent session. SimpleAgent does not require WebSocket, and subsequent requests to [/chat/simple](#4-get-simpleagent-one-time-response) will directly respond with text messages from the LLM.
+**Description**: Initialize a SimpleAgent session. SimpleAgent does not require SSE streaming, and subsequent requests to [/chat/simple](#10-get-simpleagent-one-time-response) return a single response.
 
-#### Request Parameters
+#### Request Body
 
-| Field                   | Type     | Description                                                                                |
-|-------------------------|----------|--------------------------------------------------------------------------------------------|
-| `llmConfig`             | `object` | Configuration for the language model, containing the following fields:                     |
-| `llmConfig.baseUrl`     | `string` | API endpoint of the language model provider, e.g., https://api.openai.com/v1               |
-| `llmConfig.apiKey`      | `string` | API Key of the language model provider, e.g., sk-xxxxxxxxxx                                |
-| `llmConfig.model`       | `string` | Name of the language model, e.g., gpt-3.5-turbo                                            |
-| `llmConfig.temperature` | `number` | (Optional) Temperature value, default is 0                                                 |
-| `llmConfig.maxTokens`   | `number` | (Optional) Maximum token count, default is 4096                                            |
-| `llmConfig.topP`        | `number` | (Optional) Top-p value for sampling, default is 1                                          |
-| `systemPrompt`          | `string` | System prompt preset, e.g., role-playing instructions, abilities, or problem-solving tasks |
+| Field                             | Type      | Description                                                                                |
+|-----------------------------------|-----------|--------------------------------------------------------------------------------------------|
+| `llmConfig`                       | `object`  | Configuration for the language model, containing the following fields:                     |
+| `llmConfig.baseUrl`               | `string`  | API endpoint of the language model provider, e.g., https://api.openai.com/v1               |
+| `llmConfig.apiKey`                | `string`  | API Key of the language model provider, e.g., sk-xxxxxxxxxx                                |
+| `llmConfig.model`                 | `string`  | Name of the language model, e.g., gpt-3.5-turbo                                            |
+| `llmConfig.temperature`           | `number`  | (Optional) Temperature value, default is 0                                                 |
+| `llmConfig.maxTokens`             | `number`  | (Optional) Maximum token count, default is 4096                                            |
+| `llmConfig.topP`                  | `number`  | (Optional) Top-p value for sampling, default is 1                                          |
+| `llmConfig.supportsToolCalling`   | `boolean` | (Optional) Whether the model supports tool calling, default is true                        |
+| `llmConfig.supportsDeepThinking`  | `boolean` | (Optional) Whether the model supports deep thinking, default is false                      |
+| `systemPrompt`                    | `string`  | System prompt preset, e.g., role-playing instructions, abilities, or problem-solving tasks |
 
 #### Request Example
 
@@ -209,54 +416,97 @@ None
 
 **Response Body**:
 
-| Field | Type     | Description                                             |
-|-------|----------|---------------------------------------------------------|
-| `id`  | `string` | Session ID, a unique identifier generated by the system |
+| Field       | Type     | Description                                             |
+|-------------|----------|---------------------------------------------------------|
+| `sessionId` | `string` | Session ID, a unique identifier generated by the system |
 
 #### Response Example
 
 ```json
 {
-    "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
+    "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
 }
 ```
 
-
-### 4. Get SimpleAgent One-time Response
+### 9. Start Session Stream
 
 **Request Method**: `POST`
 
-**Path**: `/chat/simple`
+**Path**: `/chat`
 
-**Description**: Obtain a one-time response from a large model by sending a request-response, without subscribing to WebSocket messages.
+**Description**: Submit a user task and stream Agent messages via SSE.
 
-#### Path Parameters
+#### Query Parameters
 
-| Field Name | Type   | Description                                              |
-|------------|--------|----------------------------------------------------------|
-| `id`       | string | Session ID used to trigger the corresponding SimpleAgent |
+| Field       | Type     | Description                                              |
+|-------------|----------|----------------------------------------------------------|
+| `sessionId` | `string` | Session ID used to start the corresponding SessionAgent. |
 
-#### Path Example
+#### Request Body
 
-```http request
-POST /chat/simple?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
-```
-
-#### Request Parameters
-
-| Field Name            | Type   | Description                                                                                                                                                                                                                                                               |
-|-----------------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `taskId`              | string | (Optional) Used to identify which task the AgentMessage belongs to. If not set, the system will generate it automatically.                                                                                                                                                |
-| `contentList`         | array  | List of message contents. Each element in the array is an `object`.                                                                                                                                                                                                       |
-| `contentList.type`    | string | Message type, can be `text` or `imageUrl`.                                                                                                                                                                                                                                |
-| `contentList.message` | string | Message content, e.g., "Give me a random number"; <br/>If the message type is imageUrl, the message string can be:<br/>1. Image link: "https://example.com/path/to/image.png" (publicly accessible)<br/>2. Base64 format: "data:image/jpeg;base64,{base64 encoded image}" |
+| Field             | Type      | Description                                                                                                                                                                                                 |
+|-------------------|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `content`         | `array`   | List of message contents. Each element in the array is an `object`.                                                                                                                                         |
+| `content.type`    | `string`  | Message type, can be `text` or `imageUrl`.                                                                                                                                                                  |
+| `content.message` | `string`  | Message content, e.g., "Give me a random number"; <br/>If the message type is imageUrl, the message string can be:<br/>1. Image link (publicly accessible)<br/>2. Base64 format: "data:image/jpeg;base64,{base64 encoded image}" |
+| `isChunk`         | `boolean` | (Optional) When true, the server emits `chunk` events for streamed assistant output.                                                                                                                        |
 
 #### Request Example
 
 ```json
 {
-  "taskId": "25afe7d5-998b-41cf-aebe-34950bd91f84",
-  "contentList": [
+  "content": [
+    {
+      "type": "text",
+      "message": "Give me a random number"
+    }
+  ],
+  "isChunk": true
+}
+```
+
+#### Response Stream
+
+- `Content-Type: text/event-stream`
+- Event types: `message`, `chunk`, `functionCall`
+- `message` and `functionCall` events carry `AgentMessageDto` JSON
+- `chunk` events carry `AgentMessageChunkDto` JSON
+- See [AgentMessage Explanation](#agentmessage-explanation) for payload structures.
+
+### 10. Get SimpleAgent One-time Response
+
+**Request Method**: `POST`
+
+**Path**: `/chat/simple`
+
+**Description**: Obtain a one-time response from a large model by sending a request-response.
+
+#### Query Parameters
+
+| Field       | Type   | Description                                              |
+|-------------|--------|----------------------------------------------------------|
+| `sessionId` | string | Session ID used to trigger the corresponding SimpleAgent |
+
+#### Path Example
+
+```http request
+POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
+```
+
+#### Request Body
+
+| Field             | Type      | Description                                                                                                                                                                                                                                                               |
+|-------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `content`         | `array`   | List of message contents. Each element in the array is an `object`.                                                                                                                                                                                                       |
+| `content.type`    | `string`  | Message type, can be `text` or `imageUrl`.                                                                                                                                                                                                                                |
+| `content.message` | `string`  | Message content, e.g., "Give me a random number"; <br/>If the message type is imageUrl, the message string can be:<br/>1. Image link (publicly accessible)<br/>2. Base64 format: "data:image/jpeg;base64,{base64 encoded image}" |
+| `isChunk`         | `boolean` | (Optional) When true, the server emits `chunk` events for streamed assistant output.                                                                                                                                                                                      |
+
+#### Request Example
+
+```json
+{
+  "content": [
     {
       "type": "text",
       "message": "Give me a random number"
@@ -275,15 +525,15 @@ POST /chat/simple?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 |-------------------------------------------|--------|-----------------------------------------------------------------------------------|
 | `sessionId`                               | string | Session ID, a unique identifier generated by the system                           |
 | `taskId`                                  | string | Task ID, identifies the task                                                      |
-| `from`                                    | string | Message source, fixed as `llm`                                                    |
+| `role`                                    | string | Message source role                                                               |
 | `to`                                      | string | Message target, fixed as `agent`                                                  |
 | `type`                                    | string | Message type, fixed as `text`                                                     |
-| `message`                                 | string | The returned message content                                                      |
+| `content`                                 | string | The returned message content                                                      |
 | `completions`                             | object | Detailed information about the model completion, containing the following fields: |
-| `completions.tokenUsage`                  | object | Token usage information                                                           |
-| `completions.tokenUsage.promptTokens`     | number | Number of prompt tokens                                                           |
-| `completions.tokenUsage.completionTokens` | number | Number of completion tokens                                                       |
-| `completions.tokenUsage.totalTokens`      | number | Total number of tokens                                                            |
+| `completions.usage`                  | object | Token usage information                                                           |
+| `completions.usage.promptTokens`     | number | Number of prompt tokens                                                           |
+| `completions.usage.completionTokens` | number | Number of completion tokens                                                       |
+| `completions.usage.totalTokens`      | number | Total number of tokens                                                            |
 | `completions.id`                          | string | Message ID returned by the model                                                  |
 | `completions.model`                       | string | Model name, e.g., gpt-3.5-turbo                                                   |
 | `createTime`                              | string | Message creation time in the format yyyy-MM-ddTHH:mm:ss.SSSZ                      |
@@ -294,12 +544,12 @@ POST /chat/simple?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 {
   "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
   "taskId": "0b127f1d-4667-4a52-bbcb-0b636f9a471a",
-  "from": "llm",
+  "role": "llm",
   "to": "agent",
   "type": "text",
-  "message": "message info",
+  "content": "message info",
   "completions": {
-    "tokenUsage": {
+    "usage": {
       "promptTokens": 100,
       "completionTokens": 522,
       "totalTokens": 622
@@ -311,7 +561,85 @@ POST /chat/simple?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 }
 ```
 
-### 5. Retrieve Message History
+### 11. Tool Callback
+
+**Request Method**: `POST`
+
+**Path**: `/callback`
+
+**Description**: Submit tool results for a function call in a session.
+
+#### Query Parameters
+
+| Field       | Type     | Description                  |
+|-------------|----------|------------------------------|
+| `sessionId` | `string` | Session ID for the callback  |
+
+#### Request Body
+
+| Field     | Type                         | Description                                      |
+|-----------|------------------------------|--------------------------------------------------|
+| `id`      | `string`                     | Function call ID to match the original request   |
+| `result`  | Map\[`string`, `dynamic`\]   | Tool execution result payload                    |
+
+#### Response
+
+**Status Code**: `200 OK`
+
+**Response Body**:
+
+| Field       | Type     | Description       |
+|-------------|----------|-------------------|
+| `sessionId` | `string` | Session ID        |
+
+#### Response Example
+
+```json
+{
+  "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
+}
+```
+
+### 12. Tool Stream Callback
+
+**Request Method**: `POST`
+
+**Path**: `/streamCallback`
+
+**Description**: Stream tool results for a function call in a session.
+
+#### Query Parameters
+
+| Field       | Type     | Description                                  |
+|-------------|----------|----------------------------------------------|
+| `sessionId` | `string` | Session ID for the stream callback           |
+
+#### Request Body
+
+| Field         | Type      | Description                                              |
+|---------------|-----------|----------------------------------------------------------|
+| `event`       | `string`  | Stream event name (e.g., `data`, `done`, `error`)         |
+| `toolReturn`  | `object`  | Tool return payload containing `id` and `result` fields  |
+
+#### Response
+
+**Status Code**: `200 OK`
+
+**Response Body**:
+
+| Field       | Type     | Description       |
+|-------------|----------|-------------------|
+| `sessionId` | `string` | Session ID        |
+
+#### Response Example
+
+```json
+{
+  "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
+}
+```
+
+### 13. Retrieve Message History
 
 **Request Method**: `GET`
 
@@ -319,16 +647,16 @@ POST /chat/simple?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 
 **Description**: Retrieve the history of messages for a specific session. This API does not support SimpleAgent.
 
-#### Path Parameters
+#### Query Parameters
 
-| Field Name | Type   | Description                                                |
-|------------|--------|------------------------------------------------------------|
-| `id`       | string | Session ID used to read the history of the current session |
+| Field       | Type   | Description                                                |
+|-------------|--------|------------------------------------------------------------|
+| `sessionId` | string | Session ID used to read the history of the current session |
 
 #### Path Example
 
 ```http request
-GET /history?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
+GET /history?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 ```
 
 #### Response
@@ -341,15 +669,15 @@ GET /history?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 |-------------------------------------------|--------|-------------------------------------------------------------------------------------------------------|
 | `sessionId`                               | string | Session ID used to identify the session                                                               |
 | `taskId`                                  | string | Task ID identifying the task                                                                          |
-| `from`                                    | string | Message source, possible values: `system`, `user`, `agent`, `llm`, `tool`                             |
+| `role`                                    | string | Message source, possible values: `system`, `user`, `agent`, `llm`, `tool`                             |
 | `to`                                      | string | Message target, possible values: `user`, `agent`, `llm`, `tool`, `client`                             |
-| `type`                                    | string | Message type, possible values: `text`, `imageUrl`, `functionCallList`, `toolReturn`, or `contentList` |
-| `message`                                 | any    | Message content, its type depends on the `type` field                                                 |
+| `type`                                    | string | Message type, possible values: `text`, `imageUrl`, `contentList`, `functionCall`, `toolCalls`, `toolReturn`, `reflection`, `taskStatus` |
+| `content`                                 | any    | Message content, its type depends on the `type` field                                                 |
 | `completions`                             | object | Detailed information about the model completion, containing the following fields:                     |
-| `completions.tokenUsage`                  | object | Token usage information                                                                               |
-| `completions.tokenUsage.promptTokens`     | number | Number of prompt tokens                                                                               |
-| `completions.tokenUsage.completionTokens` | number | Number of completion tokens                                                                           |
-| `completions.tokenUsage.totalTokens`      | number | Total number of tokens                                                                                |
+| `completions.usage`                  | object | Token usage information                                                                               |
+| `completions.usage.promptTokens`     | number | Number of prompt tokens                                                                               |
+| `completions.usage.completionTokens` | number | Number of completion tokens                                                                           |
+| `completions.usage.totalTokens`      | number | Total number of tokens                                                                                |
 | `completions.id`                          | string | Message ID returned by the model                                                                      |
 | `completions.model`                       | string | Model name, e.g., gpt-3.5-turbo                                                                       |
 | `createTime`                              | string | Message creation time in the format yyyy-MM-ddTHH:mm:ss.SSSZ                                          |
@@ -361,12 +689,12 @@ GET /history?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
   {
     "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
     "taskId": "0b127f1d-4667-4a52-bbcb-0b636f9a471a",
-    "from": "system",
+    "role": "system",
     "to": "user",
     "type": "text",
-    "message": "This is an example message",
+    "content": "This is an example message",
     "completions": {
-      "tokenUsage": {
+      "usage": {
         "promptTokens": 100,
         "completionTokens": 522,
         "totalTokens": 622
@@ -379,7 +707,7 @@ GET /history?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 ]
 ```
 
-### 6. Stop Session
+### 14. Stop Session
 
 **Request Method**: `GET`
 
@@ -387,17 +715,17 @@ GET /history?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 
 **Description**: Stops the specified session by sessionId. This API does not support SimpleAgent.
 
-#### Path Parameters
+#### Query Parameters
 
-| Field Name | Type     | Description                                                                                                         |
-|------------|----------|---------------------------------------------------------------------------------------------------------------------|
-| `id`       | `string` | Session ID to identify the session to stop                                                                          |
-| `taskId`   | `string` | (Optional) Task ID to identify the task to stop. If not provided, all tasks of the current session will be stopped. |
+| Field       | Type     | Description                                                                                                         |
+|-------------|----------|---------------------------------------------------------------------------------------------------------------------|
+| `sessionId` | `string` | Session ID to identify the session to stop                                                                          |
+| `taskId`    | `string` | (Optional) Task ID to identify the task to stop. If not provided, all tasks of the current session will be stopped. |
 
 #### Example Request
 
 ```http request
-GET /stop?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
+GET /stop?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 ```
 
 #### Response
@@ -406,19 +734,20 @@ GET /stop?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 
 **Response Body**:
 
-| Field Name | Type     | Description                                  |
-|------------|----------|----------------------------------------------|
-| `id`       | `string` | Session ID to confirm the stopped session    |
+| Field       | Type     | Description                                  |
+|-------------|----------|----------------------------------------------|
+| `sessionId` | `string` | Session ID to confirm the stopped session    |
+| `taskId`    | `string` | (Optional) Task ID if a specific task was stopped |
 
 #### Example Response
 
 ```json
 {
-    "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
+    "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
 }
 ```
 
-### 7. Clear Session Data
+### 15. Clear Session Data
 
 **Request Method**: `GET`
 
@@ -426,16 +755,16 @@ GET /stop?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 
 **Description**: Clear the session data, returning the corresponding sessionId. This API does not support SimpleAgent.
 
-#### Path Parameters
+#### Query Parameters
 
-| Field Name | Type     | Description                                  |
-|------------|----------|----------------------------------------------|
-| `id`       | `string` | Session ID to identify the session to clear  |
+| Field       | Type     | Description                                  |
+|-------------|----------|----------------------------------------------|
+| `sessionId` | `string` | Session ID to identify the session to clear  |
 
 #### Example Request
 
 ```http request
-GET /clear?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
+GET /clear?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 ```
 
 #### Response
@@ -444,19 +773,19 @@ GET /clear?id=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 
 **Response Body**:
 
-| Field Name | Type     | Description                                  |
-|------------|----------|----------------------------------------------|
-| `id`       | `string` | Session ID to confirm the cleared session    |
+| Field       | Type     | Description                                  |
+|-------------|----------|----------------------------------------------|
+| `sessionId` | `string` | Session ID to confirm the cleared session    |
 
 #### Example Response
 
 ```json
 {
-    "id": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
+    "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30"
 }
 ```
 
-### 8. Get Available OpenTool List
+### 16. Get Available OpenTool List
 
 **Request Method**: `GET`
 
@@ -476,7 +805,7 @@ None
 
 | Field Name    | Type     | Description                                                                                                      |
 |---------------|----------|------------------------------------------------------------------------------------------------------------------|
-| `openToolId`  | `string` | The ID of the callable OpenTool, used in `2. Initialize SessionAgent Session` `/init` `openSpecList.openToolId`. |
+| `openToolId`  | `string` | The ID of the callable OpenTool, used in `/initSession` with an `opentool` spec.                                  |
 | `description` | `string` | Description of the OpenTool.                                                                                     |
 
 #### Response Example
@@ -490,130 +819,29 @@ None
   ]
 ```
 
-## WebSocket API
-
-### Endpoint
-
-```http request
-ws://127.0.0.1:9527/api/chat?id=<sessionId>
-```
-
-### Client Messages
-
-### 1. Keep Connection
-
-**Description**: The client sends a keep-alive request to the server to maintain the WebSocket channel.
-
-**Message Format**: Plain text `ping`
-
-```text
-"ping"
-```
-
-### 2. User Message
-
-**Description**: The client sends a user message request to the Agent service.
-
-**Message Format**:
-
-| Field Name            | Type     | Description                                                                                                                                                                                                                                                                                       |
-|-----------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `taskId`              | `string` | Optional, used to identify which task the AgentMessage belongs to. If not set, the system generates it automatically; no more than 36 characters.                                                                                                                                                 |
-| `contentList`         | `array`  | An array of user messages, where each element is of `object` type.                                                                                                                                                                                                                                |
-| `contentList.type`    | `string` | The message type, possible values include: `text`, `imageUrl`.                                                                                                                                                                                                                                    |
-| `contentList.message` | `string` | Message content, e.g., "Give me a random number"; <br/> If the message type is `imageUrl`, the message's String can be: <br/> 1. Image URL: "https://example.com/path/to/image.png", and ensure it's publicly accessible <br/> 2. Base64 format: "data:image/jpeg;base64,{Base64 encoded image}". |
-
-**Message Example**:
-
-```json
-{
-  "taskId": "25afe7d5-998b-41cf-aebe-34950bd91f84",
-  "contentList": [
-    {
-      "type": "text",
-      "message": "Run a specific feature for me"
-    }
-  ]
-}
-```
-
-### Server Messages
-
-### 1. Keep Connection Response
-
-**Description**: The server sends a response to the client to maintain the WebSocket channel.
-
-**Message Format**: Plain text `pong`
-
-```text
-"pong"
-```
-
-### 2. Agent Message
-
-**Description**: The Agent system continuously pushes messages generated in the current session to the client.
-
-**Message Format**:
-
-| Field Name                                | Type     | Description                                                                                                                                                                 |
-|-------------------------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `sessionId`                               | `string` | Session ID, used to identify the corresponding session.                                                                                                                     |
-| `taskId`                                  | `string` | Task ID, identifies the task.                                                                                                                                               |
-| `from`                                    | `string` | Message source, possible values include: `system`, `user`, `agent`, `llm`, `tool`.                                                                                          |
-| `to`                                      | `string` | Message target, possible values include: `user`, `agent`, `llm`, `tool`, `client`.                                                                                          |
-| `type`                                    | `string` | Message type, possible values include: `text`, `imageUrl`, `functionCallList`, `toolReturn`, `contentList`.                                                                 |
-| `message`                                 | `any`    | Message content, the specific type should be parsed based on the `type` field. See [Message Structure Based on `type`](#1-type-fields-message-structure-in-different-types) |
-| `completions`                             | `object` | Detailed information about model completions, containing the following fields:                                                                                              |
-| `completions.tokenUsage`                  | `object` | Token usage information.                                                                                                                                                    |
-| `completions.tokenUsage.promptTokens`     | `number` | Number of prompt tokens.                                                                                                                                                    |
-| `completions.tokenUsage.completionTokens` | `number` | Number of completion tokens.                                                                                                                                                |
-| `completions.tokenUsage.totalTokens`      | `number` | Total number of tokens.                                                                                                                                                     |
-| `completions.id`                          | `string` | The ID of the message returned by the large model.                                                                                                                          |
-| `completions.model`                       | `string` | Model name, e.g., gpt-3.5-turbo.                                                                                                                                            |
-| `createTime`                              | `string` | Message creation time in the format yyyy-MM-ddTHH:mm:ss.SSSZ.                                                                                                               |
-
-**Message Example**:
-
-```json
-{
-  "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
-  "taskId": "0b127f1d-4667-4a52-bbcb-0b636f9a471a",
-  "from": "agent",
-  "to": "llm",
-  "type": "text",
-  "message": "<Generic type, needs to be parsed according to type>",
-  "completions": {
-    "tokenUsage": {
-      "promptTokens": 100,
-      "completionTokens": 522,
-      "totalTokens": 622
-    },
-    "id": "chatcmpl-9bgYkOjpdtLV0o0JugSmnNzGrRFMG",
-    "model": "gpt-3.5-turbo"
-  },
-  "createTime": "2023-06-18T15:45:30.000+0800"
-}
-```
-
 ## AgentMessage Explanation
 
-### 1. `type` field's `message` structure in different types
+### 1. `type` field's `content` structure in different types
 
-| `type` or Element Field                                | Data Type of `message` or Element Field | Description                                                                                                                                                                                                                                                                                       |
+| `type` or Element Field                                | Data Type of `content` or Element Field | Description                                                                                                                                                                                                                                                                                       |
 |--------------------------------------------------------|-----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | 1. `text`                                              | `string`                                | Plain text.                                                                                                                                                                                                                                                                                       |
 | 2. `imageUrl`                                          | `string`                                | Plain text, can be either an image URL or base64 format.                                                                                                                                                                                                                                          |
-| 3. `functionCallList`                                  | `array`                                 | Content returned by the large model's `function calling`, each element is of `object` type.                                                                                                                                                                                                       |
-| `functionCallList.id`                                  | `string`                                | The `function calling` ID returned by the large model.                                                                                                                                                                                                                                            |
-| `functionCallList.name`                                | `string`                                | The name of the `function`.                                                                                                                                                                                                                                                                       |
-| `functionCallList.parameters`                          | Map\[`string`, `dynamic`\]              | Parameter map returned by the large model.                                                                                                                                                                                                                                                        |
-| 4. `toolReturn`                                        | `object`                                | Result returned by the tool.                                                                                                                                                                                                                                                                      |
-| `toolReturn.id`                                        | `string`                                | Corresponds to `functionCallList.id`.                                                                                                                                                                                                                                                             |
+| 3. `functionCall`                                      | `object`                                | Single function call returned by the model.                                                                                                                                                                                                                                                       |
+| `functionCall.id`                                      | `string`                                | The function call ID returned by the model.                                                                                                                                                                                                                                                       |
+| `functionCall.name`                                    | `string`                                | The name of the `function`.                                                                                                                                                                                                                                                                       |
+| `functionCall.arguments`                               | Map\[`string`, `dynamic`\]              | Argument map returned by the model.                                                                                                                                                                                                                                                               |
+| 4. `toolCalls`                                         | `array`                                 | Array of function calls returned by the model.                                                                                                                                                                                                                                                    |
+| `toolCalls.id`                                         | `string`                                | The function call ID returned by the model.                                                                                                                                                                                                                                                       |
+| `toolCalls.name`                                       | `string`                                | The name of the `function`.                                                                                                                                                                                                                                                                       |
+| `toolCalls.arguments`                                  | Map\[`string`, `dynamic`\]              | Argument map returned by the model.                                                                                                                                                                                                                                                               |
+| 5. `toolReturn`                                        | `object`                                | Result returned by the tool.                                                                                                                                                                                                                                                                      |
+| `toolReturn.id`                                        | `string`                                | Corresponds to `functionCall.id`.                                                                                                                                                                                                                                                                 |
 | `toolReturn.result`                                    | Map\[`string`, `dynamic`\]              | Result returned by the tool.                                                                                                                                                                                                                                                                      |
-| 5. `contentList`                                       | `array`                                 | User's message array, where each element is of `object` type.                                                                                                                                                                                                                                     |
+| 6. `contentList`                                       | `array`                                 | User's message array, where each element is of `object` type.                                                                                                                                                                                                                                     |
 | `contentList.type`                                     | `string`                                | Possible types are `text`, `imageUrl`.                                                                                                                                                                                                                                                            |
 | `contentList.message`                                  | `string`                                | Message content, e.g., "Give me a random number"; <br/> If the message type is `imageUrl`, the message's String can be: <br/> 1. Image URL: "https://example.com/path/to/image.png", and ensure it's publicly accessible <br/> 2. Base64 format: "data:image/jpeg;base64,{Base64 encoded image}". |
-| 6. `reflection`                                        | `object`                                | Reflection result.                                                                                                                                                                                                                                                                                |
+| 7. `reflection`                                        | `object`                                | Reflection result.                                                                                                                                                                                                                                                                                |
 | `reflection.isPass`                                    | `boolean`                               | Indicates whether the reflection passed.                                                                                                                                                                                                                                                          |
 | `reflection.messageScore`                              | `object`                                | The original content and score of the current reflection.                                                                                                                                                                                                                                         |
 | `reflection.messageScore.contentList`                  | `array`                                 | Same as point 5, records the user's original messages.                                                                                                                                                                                                                                            |
@@ -625,7 +853,7 @@ ws://127.0.0.1:9527/api/chat?id=<sessionId>
 | `reflection.passScore`                                 | `int`                                   | Passing score, defaults to 8.                                                                                                                                                                                                                                                                     |
 | `reflection.count`                                     | `int`                                   | The current iteration count of reflection.                                                                                                                                                                                                                                                        |
 | `reflection.maxCount`                                  | `int`                                   | The maximum allowed iteration count for reflection, defaults to 10.                                                                                                                                                                                                                               |
-| 7. `taskStatus`                                        | `object`                                | Array of user messages, each element is an `object`.                                                                                                                                                                                                                                              |
+| 8. `taskStatus`                                        | `object`                                | Task status payload.                                                                                                                                                                                                                                                                              |
 | `taskStatus.status`                                    | `string`                                | Possible types: `start`, `stop`, `done`, `exception`.                                                                                                                                                                                                                                             |
 | `taskStatus.taskId`                                    | `string`                                | Current Task ID                                                                                                                                                                                                                                                                                   |
 | `taskStatus.description`                               | Map\[`string`, `dynamic`\]              | Description of the message, generally provided when the status is `exception`.                                                                                                                                                                                                                    |
@@ -650,14 +878,14 @@ ws://127.0.0.1:9527/api/chat?id=<sessionId>
 "data:image/jpeg;base64,{Base64 encoded image}"
 ```
 
-**Example of `functionCallList` type message**
+**Example of `toolCalls` type message**
 
 ```json
 [
     {
       "id":"call_z5FK2dAfU8TXzn61IJXzRl5I",
       "name":"SomeFunction",
-      "parameters": {
+      "arguments": {
         "operation":"result"
       }
     }
@@ -691,7 +919,7 @@ ws://127.0.0.1:9527/api/chat?id=<sessionId>
 ]
 ```
 
-### 2. Status Strings in `message` when `to` is `client`
+### 2. Status Strings in `content` when `to` is `client`
 
 in `taskStatus.status`:
 

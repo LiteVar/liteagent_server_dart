@@ -523,16 +523,25 @@ class AgentController {
 
     try {
       final sessionDto = SessionDto.fromJson(queryParameters);
-      final event = queryParameters['event'];
-      if (event == null || event.isEmpty) {
-        return Response.badRequest(body: "Missing query param: event");
+      if (data is! Map<String, dynamic>) {
+        return Response.badRequest(body: "Invalid body: expected object");
+      }
+      final event = data['event'];
+      if (event is! String || event.isEmpty) {
+        return Response.badRequest(body: "Missing body field: event");
+      }
+      final toolReturnJson = data['toolReturn'];
+      if (toolReturnJson is! Map) {
+        return Response.badRequest(body: "Missing body field: toolReturn");
       }
 
-      final toolReturn = ToolReturn.fromJson(data);
+      final toolReturn = ToolReturn.fromJson(
+        Map<String, dynamic>.from(toolReturnJson),
+      );
       logger.log(
         LogModule.http,
         "Request streamCallback",
-        detail: "event: $event, data: ${jsonEncode(data)}",
+        detail: "event: $event, data: ${jsonEncode(toolReturnJson)}",
         level: Level.FINEST,
       );
 

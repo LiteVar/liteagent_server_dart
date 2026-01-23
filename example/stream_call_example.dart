@@ -304,7 +304,7 @@ Future<void> _streamCallback({
 }) async {
   await dio.post(
     '/streamCallback',
-    queryParameters: {"sessionId": sessionId, "event": event},
-    data: toolReturn.toJson(),
+    queryParameters: {"sessionId": sessionId},
+    data: {"event": event, "toolReturn": toolReturn.toJson()},
   );
 }
