@@ -47,13 +47,21 @@ class AgentController {
     return Response.ok(jsonEncode(versionDto.toJson()), headers: jsonHeaders);
   }
 
-  Future<Response> addPresetOpenSpec(Request request) async {
+  Future<Response> setPresetOpenSpecList(Request request) async {
     final payload = await request.readAsString();
     final data = jsonDecode(payload);
 
     try {
-      PresetOpenSpecDto presetOpenSpec = PresetOpenSpecDto.fromJson(data);
-      agentService.addPresetOpenSpec(presetOpenSpec);
+      List<PresetOpenSpecDto> presetOpenSpecList;
+      if (data is List) {
+        presetOpenSpecList =
+            data.map((item) => PresetOpenSpecDto.fromJson(item)).toList();
+      } else if (data is Map<String, dynamic>) {
+        presetOpenSpecList = [PresetOpenSpecDto.fromJson(data)];
+      } else {
+        throw const FormatException("Invalid presetOpenSpec payload");
+      }
+      agentService.setPresetOpenSpecList(presetOpenSpecList);
       return Response.ok("{}");
     } on FormatException catch (e) {
       logger.log(

@@ -64,6 +64,14 @@ A storage management tool that knows how to add, delete, modify, and query my te
 WebSocket connection closed
 ```
 
+## 持久化
+
+- 本服务使用 SQLite（Drift）持久化代理数据。
+- 数据库文件路径来自 `bin/config.json` 的 `server.dbPath`，并相对于可执行目录解析：
+  - 源码运行：`${PROJECT_ROOT}/bin/<dbPath>`
+  - 编译二进制：`<binary_dir>/<dbPath>`
+- 运行时会话状态在内存中，重启会丢失。
+
 ## 构建运行
 1. 命令行在项目根目录运行如下命令：
     ```shell

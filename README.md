@@ -65,6 +65,14 @@ A storage management tool that knows how to add, delete, modify, and query my te
 WebSocket connection closed
 ```
 
+## Persistence
+
+- This server uses SQLite (via Drift) for agent storage.
+- The database file path is `bin/config.json` → `server.dbPath`, and it is resolved under the executable directory:
+  - Running from source: `${PROJECT_ROOT}/bin/<dbPath>`
+  - Running compiled binary: `<binary_dir>/<dbPath>`
+- Runtime session state is in-memory and will be lost on restart.
+
 ## Build and Run
 1. Build in shell script:
     ```shell
