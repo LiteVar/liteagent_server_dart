@@ -12,16 +12,17 @@
   - [/agent/update](#4-更新agent)：更新Agent信息。
   - [/agent/delete](#5-删除agent)：删除Agent信息。
   - [/version](#6-获取版本)：获取当前服务器版本。
-  - [/initSession](#7-初始化agent会话)：初始化SessionAgent会话，返回SessionId。
-  - [/initSimple](#8-初始化simpleagent会话)：初始化SimpleAgent会话，返回SessionId。
-  - [/chat](#9-提交用户消息订阅会话执行过程)：提交用户消息，订阅会话执行过程。
-  - [/chat/simple](#10-获取simpleagent一次性响应)：发送一次请求获取SimpleAgent返回。
-  - [/callback](#11-响应functioncall结果)：客户端接收到FunctionCall要求后，调用此接口返回结果。
-  - [/streamCallback](#12-响应functioncall流式结果)：客户端以流式方式返回FunctionCall结果。
-  - [/history](#13-获取历史消息)：取某个会话的历史消息列表。
-  - [/stop](#14-停止会话)：通过指定 sessionId 停止对应的会话操作。
-  - [/clear](#15-清除会话数据)：清除会话数据，返回对应的 sessionId。
-  - [/opentool-list](#16-获取opentool列表)：获取可用的OpenTool列表。
+  - [/presetOpenSpecList](#7-设置预置openspec列表)：设置预置 OpenSpec 列表。
+  - [/initSession](#8-初始化agent会话)：初始化SessionAgent会话，返回SessionId。
+  - [/initSimple](#9-初始化simpleagent会话)：初始化SimpleAgent会话，返回SessionId。
+  - [/chat](#10-提交用户消息订阅会话执行过程)：提交用户消息，订阅会话执行过程。
+  - [/chat/simple](#11-获取simpleagent一次性响应)：发送一次请求获取SimpleAgent返回。
+  - [/callback](#12-响应functioncall结果)：客户端接收到FunctionCall要求后，调用此接口返回结果。
+  - [/streamCallback](#13-响应functioncall流式结果)：客户端以流式方式返回FunctionCall结果。
+  - [/history](#14-获取历史消息)：取某个会话的历史消息列表。
+  - [/stop](#15-停止会话)：通过指定 sessionId 停止对应的会话操作。
+  - [/clear](#16-清除会话数据)：清除会话数据，返回对应的 sessionId。
+  - [/opentool-list](#17-获取opentool列表)：获取可用的OpenTool列表。
 - AgentMessage说明
   - [`type`在不同类型下的`content`结构](#1-type在不同类型下的content结构)
   - [`to`为`client`时`content`的几个状态字符串](#2-to为client时content的几个状态字符串)
@@ -574,7 +575,47 @@ GET /agent/delete?agentId=671763aae989ec22357fea88
   }
 ```
 
-### 7. 初始化Agent会话
+### 7. 设置预置OpenSpec列表
+
+**请求方法**: `POST`
+
+**路径**: `/presetOpenSpecList`
+
+**功能说明**: 设置服务端全局的预置 OpenSpec 列表。该列表会在后续 `initSession` / `initSimple` 时生效：每个 `systemPrompt` 会追加到会话系统提示词中；每个 `openSpec` 会作为工具加载。
+
+#### 请求体
+
+**请求体**: `array` 或单个 `object`，每个元素字段如下：
+
+| 字段名          | 类型     | 说明                                                                 |
+|-----------------|----------|----------------------------------------------------------------------|
+| `systemPrompt`  | `string` | 必填。要追加的系统提示词片段。                                         |
+| `openSpec`      | `object` | （可选）OpenSpec 定义。结构同 `/initSession` 的 `openSpecList` 元素。 |
+
+#### 请求示例
+
+```json
+[
+  {
+    "systemPrompt": "请使用简洁要点回复。"
+  },
+  {
+    "systemPrompt": "需要时可调用天气工具。",
+    "openSpec": {
+      "openSpec": "<OpenAPI JSON 字符串>",
+      "protocol": "openapi"
+    }
+  }
+]
+```
+
+#### 响应
+
+**状态码**: `200 OK`
+
+**响应体**: `{}`
+
+### 8. 初始化Agent会话
 
 **请求方法**: `POST`
 
@@ -616,7 +657,7 @@ POST /initSession?agentId=671763aae989ec22357fea88
 }
 ```
 
-### 8. 初始化SimpleAgent会话
+### 9. 初始化SimpleAgent会话
 
 **请求方法**: `POST`
 
@@ -673,7 +714,7 @@ POST /initSession?agentId=671763aae989ec22357fea88
 }
 ```
 
-### 9. 提交用户消息，订阅会话执行过程
+### 10. 提交用户消息，订阅会话执行过程
 
 **请求方法**: `POST`
 
@@ -962,7 +1003,7 @@ POST /chat?sessionId=1901883204734947328
   }
   ```
 
-### 10. 获取SimpleAgent一次性响应
+### 11. 获取SimpleAgent一次性响应
 
 **请求方法**: `POST`
 
@@ -1038,7 +1079,7 @@ POST /chat/simple?sessionId=1901883204734947328
 }
 ```
 
-### 11. 响应FunctionCall结果
+### 12. 响应FunctionCall结果
 
 **请求方法**: `POST`
 
@@ -1081,7 +1122,7 @@ POST /chat/simple?sessionId=1901883204734947328
 |-------------|----------|------|
 | `sessionId` | `string` | 会话ID |
 
-### 12. 响应FunctionCall流式结果
+### 13. 响应FunctionCall流式结果
 
 **请求方法**: `POST`
 
@@ -1126,7 +1167,7 @@ POST /chat/simple?sessionId=1901883204734947328
 |-------------|----------|------|
 | `sessionId` | `string` | 会话ID |
 
-### 13. 获取历史消息
+### 14. 获取历史消息
 
 **请求方法**: `GET`
 
@@ -1194,7 +1235,7 @@ GET /history?sessionId=1901883204734947328
 ]
 ```
 
-### 14. 停止会话
+### 15. 停止会话
 
 **请求方法**: `GET`
 
@@ -1241,7 +1282,7 @@ GET /stop?sessionId=1901883204734947328&taskId=1901883415867822080
 }
 ```
 
-### 15. 清除会话数据
+### 16. 清除会话数据
 
 **请求方法**: `GET`
 
@@ -1279,7 +1320,7 @@ GET /clear?sessionId=1901883204734947328
 }
 ```
 
-### 16. 获取OpenTool列表
+### 17. 获取OpenTool列表
 
 **请求方法**: `GET`
 

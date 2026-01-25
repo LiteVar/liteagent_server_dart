@@ -20,6 +20,9 @@ Future<void> main() async {
     // headers: {"Authorization": "Bearer <KEY>"}
   ));
 
+  // Optional: set server-wide preset OpenSpec list.
+  await setPresetOpenSpecList(dio);
+
   String systemPrompt = "You play the role of a tool caller. You can help me decide which tool to call to complete the task according to my requirements. You can only call one tool at a time. \n\nYou support the following tools:\n\n 1. Translation\n 2. Add, delete, modify and query tools";
   String prompt = "Find the text with ID 0 and translate it into Chinese.";
 
@@ -78,6 +81,22 @@ LLMConfigDto _buildLLMConfigDto() {
   DotEnv env = DotEnv();
   env.load(['example/.env']);
   return LLMConfigDto(baseUrl: env["baseUrl"]!, apiKey: env["apiKey"]!, model: "gpt-3.5-turbo");
+}
+
+Future<void> setPresetOpenSpecList(Dio dio) async {
+  try {
+    final presetList = [
+      PresetOpenSpecDto(
+        systemPrompt: "Respond with concise bullet points by default.",
+      ),
+    ];
+    await dio.post(
+      '/presetOpenSpecList',
+      data: presetList.map((preset) => preset.toJson()).toList(),
+    );
+  } catch (e) {
+    print("[setPresetOpenSpecList] " + e.toString());
+  }
 }
 
 Future<SessionDto?> _buildTextAgent(Dio dio) async {

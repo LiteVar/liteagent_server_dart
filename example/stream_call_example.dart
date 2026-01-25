@@ -42,6 +42,9 @@ Future<void> main() async {
     ),
   );
 
+  // Optional: set server-wide preset OpenSpec list.
+  await setPresetOpenSpecList(dio);
+
   final mockDriver = await _buildMockDriver();
   final callbackOpenTool = await _loadMockOpenToolJson();
 
@@ -106,6 +109,22 @@ LLMConfigDto _buildLLMConfigDto() {
 
 String _buildSystemPrompt() {
   return 'You are a tools caller who can call tools to help me manage my storage.';
+}
+
+Future<void> setPresetOpenSpecList(Dio dio) async {
+  try {
+    final presetList = [
+      PresetOpenSpecDto(
+        systemPrompt: "Respond with concise bullet points by default.",
+      ),
+    ];
+    await dio.post(
+      '/presetOpenSpecList',
+      data: presetList.map((preset) => preset.toJson()).toList(),
+    );
+  } catch (e) {
+    print("[setPresetOpenSpecList] $e");
+  }
 }
 
 Future<MockDriver> _buildMockDriver() async {

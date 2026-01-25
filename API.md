@@ -10,16 +10,17 @@
     - [/agent/update](#4-update-agent): Update an existing agent.
     - [/agent/delete](#5-delete-agent): Delete an agent.
     - [/version](#6-get-version): Retrieve the current version.
-    - [/initSession](#7-initialize-sessionagent-session): Initialize a SessionAgent session and return a sessionId.
-    - [/initSimple](#8-initialize-simpleagent-session): Initialize a SimpleAgent session.
-    - [/chat](#9-start-session-stream): Start a task and stream SSE events.
-    - [/chat/simple](#10-get-simpleagent-one-time-response): One-time response without SSE.
-    - [/callback](#11-tool-callback): Return tool results for function calls.
-    - [/streamCallback](#12-tool-stream-callback): Stream tool results for function calls.
-    - [/history](#13-retrieve-message-history): Retrieve the history of messages for a session.
-    - [/stop](#14-stop-session): Stop a session or task.
-    - [/clear](#15-clear-session-data): Clear session data for a session.
-    - [/opentool-list](#16-get-available-opentool-list): Retrieve the list of available OpenTools.
+    - [/presetOpenSpecList](#7-set-preset-openspec-list): Set the preset OpenSpec list.
+    - [/initSession](#8-initialize-sessionagent-session): Initialize a SessionAgent session and return a sessionId.
+    - [/initSimple](#9-initialize-simpleagent-session): Initialize a SimpleAgent session.
+    - [/chat](#10-start-session-stream): Start a task and stream SSE events.
+    - [/chat/simple](#11-get-simpleagent-one-time-response): One-time response without SSE.
+    - [/callback](#12-tool-callback): Return tool results for function calls.
+    - [/streamCallback](#13-tool-stream-callback): Stream tool results for function calls.
+    - [/history](#14-retrieve-message-history): Retrieve the history of messages for a session.
+    - [/stop](#15-stop-session): Stop a session or task.
+    - [/clear](#16-clear-session-data): Clear session data for a session.
+    - [/opentool-list](#17-get-available-opentool-list): Retrieve the list of available OpenTools.
 - AgentMessage Explanation
     - [Message Structure Based on `type`](#1-type-fields-content-structure-in-different-types)
     - [Message Status Strings when `to` is `client`](#2-status-strings-in-content-when-to-is-client)
@@ -260,7 +261,47 @@ None
 }
 ```
 
-### 7. Initialize SessionAgent Session
+### 7. Set Preset OpenSpec List
+
+**Request Method**: `POST`
+
+**Path**: `/presetOpenSpecList`
+
+**Description**: Set the server-wide preset OpenSpec list. Presets apply to subsequent `initSession` and `initSimple` calls: each `systemPrompt` is appended to the session system prompt, and each `openSpec` is loaded as tools.
+
+#### Request Body
+
+**Body**: `array` of objects (or a single object), each with:
+
+| Field         | Type     | Description                                                                 |
+|---------------|----------|-----------------------------------------------------------------------------|
+| `systemPrompt`| `string` | Required. System prompt fragment to append.                                 |
+| `openSpec`    | `object` | (Optional) OpenSpec definition. Same schema as `/initSession` `openSpecList` items. |
+
+#### Request Example
+
+```json
+[
+  {
+    "systemPrompt": "Always respond in concise bullets."
+  },
+  {
+    "systemPrompt": "You can call the Weather API when needed.",
+    "openSpec": {
+      "openSpec": "<OpenAPI JSON string>",
+      "protocol": "openapi"
+    }
+  }
+]
+```
+
+#### Response
+
+**Status Code**: `200 OK`
+
+**Response Body**: `{}`
+
+### 8. Initialize SessionAgent Session
 
 **Request Method**: `POST`
 
@@ -371,13 +412,13 @@ None
 }
 ```
 
-### 8. Initialize SimpleAgent Session
+### 9. Initialize SimpleAgent Session
 
 **Request Method**: `POST`
 
 **Path**: `/initSimple`
 
-**Description**: Initialize a SimpleAgent session. SimpleAgent does not require SSE streaming, and subsequent requests to [/chat/simple](#10-get-simpleagent-one-time-response) return a single response.
+**Description**: Initialize a SimpleAgent session. SimpleAgent does not require SSE streaming, and subsequent requests to [/chat/simple](#11-get-simpleagent-one-time-response) return a single response.
 
 #### Request Body
 
@@ -428,7 +469,7 @@ None
 }
 ```
 
-### 9. Start Session Stream
+### 10. Start Session Stream
 
 **Request Method**: `POST`
 
@@ -473,7 +514,7 @@ None
 - `chunk` events carry `AgentMessageChunkDto` JSON
 - See [AgentMessage Explanation](#agentmessage-explanation) for payload structures.
 
-### 10. Get SimpleAgent One-time Response
+### 11. Get SimpleAgent One-time Response
 
 **Request Method**: `POST`
 
@@ -561,7 +602,7 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 }
 ```
 
-### 11. Tool Callback
+### 12. Tool Callback
 
 **Request Method**: `POST`
 
@@ -600,7 +641,7 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 }
 ```
 
-### 12. Tool Stream Callback
+### 13. Tool Stream Callback
 
 **Request Method**: `POST`
 
@@ -639,7 +680,7 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 }
 ```
 
-### 13. Retrieve Message History
+### 14. Retrieve Message History
 
 **Request Method**: `GET`
 
@@ -707,7 +748,7 @@ GET /history?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 ]
 ```
 
-### 14. Stop Session
+### 15. Stop Session
 
 **Request Method**: `GET`
 
@@ -747,7 +788,7 @@ GET /stop?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 }
 ```
 
-### 15. Clear Session Data
+### 16. Clear Session Data
 
 **Request Method**: `GET`
 
@@ -785,7 +826,7 @@ GET /clear?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 }
 ```
 
-### 16. Get Available OpenTool List
+### 17. Get Available OpenTool List
 
 **Request Method**: `GET`
 

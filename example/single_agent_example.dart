@@ -23,6 +23,9 @@ Future<void> main() async {
     // headers: {"Authorization": "Bearer <KEY>"}
   ));
 
+  // Optional: set server-wide preset OpenSpec list.
+  await setPresetOpenSpecList(dio);
+
   CapabilityDto capabilityDto = CapabilityDto(
     llmConfig: _buildLLMConfigDto(),
     systemPrompt: _buildSystemPrompt(),
@@ -68,6 +71,22 @@ Future<void> sleep(int seconds) async {
   for (int i = seconds; i > 0; i--) {
     print(i);
     await Future.delayed(Duration(seconds: 1));
+  }
+}
+
+Future<void> setPresetOpenSpecList(Dio dio) async {
+  try {
+    final presetList = [
+      PresetOpenSpecDto(
+        systemPrompt: "Respond with concise bullet points by default.",
+      ),
+    ];
+    await dio.post(
+      '/presetOpenSpecList',
+      data: presetList.map((preset) => preset.toJson()).toList(),
+    );
+  } catch (e) {
+    print("[setPresetOpenSpecList] " + e.toString());
   }
 }
 
