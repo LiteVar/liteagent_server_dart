@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:liteagent_core_dart/liteagent_core.dart';
 import 'package:liteagent_core_dart/liteagent_service.dart';
 import 'package:logging/logging.dart';
-import 'package:opentool_dart/opentool_client.dart';
+import 'package:opentool_dart/opentool_client.dart' show ToolReturn;
 import 'package:shelf/shelf.dart';
 import '../dto.dart';
 import '../config.dart';
@@ -14,7 +14,6 @@ import 'agent_message_listener.dart';
 class AgentController {
   final AgentService agentService;
   final AgentManageService agentManageService;
-  final Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = {};
   final AgentMessageListener agentMessageListener = AgentMessageListener();
   final Map<String, String> jsonHeaders = {
     HttpHeaders.contentTypeHeader: 'application/json',
@@ -28,13 +27,7 @@ class AgentController {
     'Cache-Control': 'no-store',
   };
 
-  AgentController(
-      this.agentService,
-      this.agentManageService, {
-        Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = const {},
-      }) {
-    this.openToolDriverInfoMap.addAll(openToolDriverInfoMap);
-  }
+  AgentController(this.agentService, this.agentManageService);
 
   Future<Response> getVersion(Request request) async {
     logger.log(LogModule.http, "Request getVersion");
@@ -113,16 +106,9 @@ class AgentController {
         );
       }
 
-      Map<String, OpenToolDriver>? openToolDriverMap = {};
-
-      openToolDriverInfoMap.forEach((openToolDto, openToolDriver) {
-        openToolDriverMap[openToolDto.openToolId] = openToolDriver;
-      });
-
       SessionDto sessionDto = await agentService.initSession(
         capabilityDto,
         agentId: agentId,
-        opentoolDriverMap: openToolDriverMap,
       );
 
       logger.log(
@@ -489,19 +475,6 @@ class AgentController {
       AgentMessageChunkDto agentMessageChunkDto,
       ) {
     agentMessageListener.listenChunk(sessionId, taskId, agentMessageChunkDto);
-  }
-
-  Future<Response> getOpenToolList(Request request) async {
-    logger.log(LogModule.http, "Request getOpenToolList");
-    List<Map<String, dynamic>> openToolDtoJsonList = openToolDriverInfoMap.keys
-        .map((openToolDto) => openToolDto.toJson())
-        .toList();
-    logger.log(
-      LogModule.http,
-      "Response getOpenToolList",
-      detail: jsonEncode(openToolDtoJsonList),
-    );
-    return Response.ok(jsonEncode(openToolDtoJsonList), headers: jsonHeaders);
   }
 
   Future<Response> callback(Request request) async {

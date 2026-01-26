@@ -20,7 +20,8 @@
     - [/history](#14-retrieve-message-history): Retrieve the history of messages for a session.
     - [/stop](#15-stop-session): Stop a session or task.
     - [/clear](#16-clear-session-data): Clear session data for a session.
-    - [/opentool-list](#17-get-available-opentool-list): Retrieve the list of available OpenTools.
+    - [/session/list](#17-list-sessions): List sessions for an agent.
+    - [/session/subscribe](#18-subscribe-session-events): Subscribe to session events via SSE.
 - AgentMessage Explanation
     - [Message Structure Based on `type`](#1-type-fields-content-structure-in-different-types)
     - [Message Status Strings when `to` is `client`](#2-status-strings-in-content-when-to-is-client)
@@ -826,39 +827,66 @@ GET /clear?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 }
 ```
 
-### 17. Get Available OpenTool List
+### 17. List Sessions
 
 **Request Method**: `GET`
 
-**Path**: `/opentool-list`
+**Path**: `/session/list`
 
-**Description**: Retrieve the list of currently supported OpenTools.
+**Description**: List sessions for a specific agent.
 
-#### Request Parameters
+#### Query Parameters
 
-None
+| Field     | Type     | Description                    |
+|-----------|----------|--------------------------------|
+| `agentId` | `string` | Agent ID to filter sessions    |
 
 #### Response
 
 **Status Code**: `200 OK`
 
-**Response Body**: Type `array`, where each element is an `object` with the following fields:
+**Response Body**: An `array` of objects with the following fields:
 
-| Field Name    | Type     | Description                                                                                                      |
-|---------------|----------|------------------------------------------------------------------------------------------------------------------|
-| `openToolId`  | `string` | The ID of the callable OpenTool, used in `/initSession` with an `opentool` spec.                                  |
-| `description` | `string` | Description of the OpenTool.                                                                                     |
+| Field        | Type     | Description                                   |
+|--------------|----------|-----------------------------------------------|
+| `sessionId`  | `string` | Session ID                                     |
+| `agentId`    | `string` | (Optional) Agent ID for the session            |
+| `createTime` | `string` | Session create time in ISO 8601 format         |
+| `topic`      | `string` | (Optional) Session topic                       |
 
 #### Response Example
 
 ```json
-  [
-    {
-      "openToolId": "mock-tool",
-      "description": "A Mock CRUD Sample Tool"
-    }
-  ]
+[
+  {
+    "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
+    "agentId": "671763aae989ec22357fea88",
+    "createTime": "2024-06-24T06:48:05.862057Z",
+    "topic": "storage assistant"
+  }
+]
 ```
+
+### 18. Subscribe Session Events
+
+**Request Method**: `GET`
+
+**Path**: `/session/subscribe`
+
+**Description**: Subscribe to SSE events for an existing session without starting a new task.
+
+#### Query Parameters
+
+| Field       | Type     | Description                  |
+|-------------|----------|------------------------------|
+| `sessionId` | `string` | Session ID to subscribe to   |
+
+#### Response Stream
+
+- `Content-Type: text/event-stream`
+- Event types: `message`, `chunk`
+- `message` events carry `AgentMessageDto` JSON
+- `chunk` events carry `AgentMessageChunkDto` JSON
 
 ## AgentMessage Explanation
 

@@ -22,7 +22,8 @@
   - [/history](#14-获取历史消息)：取某个会话的历史消息列表。
   - [/stop](#15-停止会话)：通过指定 sessionId 停止对应的会话操作。
   - [/clear](#16-清除会话数据)：清除会话数据，返回对应的 sessionId。
-  - [/opentool-list](#17-获取opentool列表)：获取可用的OpenTool列表。
+  - [/session/list](#17-获取会话列表)：根据 agentId 获取会话列表。
+  - [/session/subscribe](#18-订阅会话事件)：订阅指定会话的 SSE 事件。
 - AgentMessage说明
   - [`type`在不同类型下的`content`结构](#1-type在不同类型下的content结构)
   - [`to`为`client`时`content`的几个状态字符串](#2-to为client时content的几个状态字符串)
@@ -1320,39 +1321,72 @@ GET /clear?sessionId=1901883204734947328
 }
 ```
 
-### 17. 获取OpenTool列表
+### 17. 获取会话列表
 
 **请求方法**: `GET`
 
-**路径**: `/opentool-list`
+**路径**: `/session/list`
 
-**功能说明**: 获取可用的OpenTool列表，可用于`/initSession`配置opentool规范。
+**功能说明**: 根据 agentId 获取会话列表。
 
-#### 请求参数
+#### 路径参数
 
-无
+| 字段名       | 类型       | 说明                     |
+|-------------|----------|--------------------------|
+| `agentId`   | `string` | Agent ID，用于筛选会话列表 |
+
+#### 路径示例
+
+```http request
+GET /session/list?agentId=671763aae989ec22357fea88
+```
 
 #### 响应
 
 **状态码**: `200 OK`
 
-**响应体**: `array`类型，对应的`object`为：
+**响应体**: `array` 类型，对应的 `object` 为：
 
-| 字段名         | 类型       | 说明              |
-|-------------|----------|-----------------|
-| `openToolId`  | `string` | OpenTool的ID     |
-| `description` | `string` | OpenTool描述     |
+| 字段名        | 类型       | 说明                               |
+|-------------|----------|----------------------------------|
+| `sessionId` | `string` | 会话 ID                            |
+| `agentId`   | `string` | （可选）Agent ID                   |
+| `createTime`| `string` | 会话创建时间，ISO 8601 格式         |
+| `topic`     | `string` | （可选）会话主题                    |
 
 #### 响应示例
 
 ```json
 [
   {
-    "openToolId": "mock-tool",
-    "description": "A Mock CRUD Sample Tool"
+    "sessionId": "1901883204734947328",
+    "agentId": "671763aae989ec22357fea88",
+    "createTime": "2024-06-24T06:48:05.862057Z",
+    "topic": "storage assistant"
   }
 ]
 ```
+
+### 18. 订阅会话事件
+
+**请求方法**: `GET`
+
+**路径**: `/session/subscribe`
+
+**功能说明**: 订阅指定会话的 SSE 事件，不会触发新的任务执行。
+
+#### 路径参数
+
+| 字段名       | 类型       | 说明                   |
+|-------------|----------|------------------------|
+| `sessionId` | `string` | 会话 ID，用于订阅事件    |
+
+#### 响应流
+
+- `Content-Type: text/event-stream`
+- 事件类型：`message`、`chunk`
+- `message` 事件携带 `AgentMessageDto` JSON
+- `chunk` 事件携带 `AgentMessageChunkDto` JSON
 
 ## AgentMessage说明
 

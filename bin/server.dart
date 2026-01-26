@@ -5,16 +5,7 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_router/shelf_router.dart';
 
-// List<ToolDriver> globalToolDriverList = [
-//   /// add GlobalToolDriver here, for all agent sessions
-// ];
-
-final AgentService agentService = AgentService();//globalToolDriverList: globalToolDriverList);
-
-// Map<OpenToolDto, OpenToolDriver> openToolDriverInfoMap = {
-//   /// add openToolDriverMap here, for opentool spec usage
-//   OpenToolDto(openToolId: "mock-tool", description: "A Mock CRUD Sample Tools"): MockDriver()
-// };
+final AgentService agentService = AgentService();
 
 void main(List<String> args) async {
   String dbPath = config.server.dbPath??"agent.db";
@@ -22,7 +13,7 @@ void main(List<String> args) async {
   String dbFullPath = '$exeDir${Platform.pathSeparator}$dbPath';
   AgentManageService agentManageService = AgentManageServiceByDB(AgentDatabaseFactory.getInstance(File(dbFullPath)));
   
-  final AgentController agentController = AgentController(agentService, agentManageService);//, openToolDriverInfoMap: openToolDriverInfoMap);
+  final AgentController agentController = AgentController(agentService, agentManageService);
   final AgentManageController agentManageController = AgentManageController(agentManageService);
   
   apiRoutes(agentController, agentManageController);
