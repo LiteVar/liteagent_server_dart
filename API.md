@@ -492,6 +492,7 @@ None
 | `content.type`    | `string`  | Message type, can be `text` or `imageUrl`.                                                                                                                                                                  |
 | `content.message` | `string`  | Message content, e.g., "Give me a random number"; <br/>If the message type is imageUrl, the message string can be:<br/>1. Image link (publicly accessible)<br/>2. Base64 format: "data:image/jpeg;base64,{base64 encoded image}" |
 | `isChunk`         | `boolean` | (Optional) When true, the server emits `chunk` events for streamed assistant output.                                                                                                                        |
+| `extraSystemPrompt` | `string` | (Optional) Extra system prompt appended to the agent's base system prompt for this session/task.                                                                                                           |
 
 #### Request Example
 
@@ -503,7 +504,8 @@ None
       "message": "Give me a random number"
     }
   ],
-  "isChunk": true
+  "isChunk": true,
+  "extraSystemPrompt": "Respond with a single integer only."
 }
 ```
 
@@ -543,6 +545,7 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 | `content.type`    | `string`  | Message type, can be `text` or `imageUrl`.                                                                                                                                                                                                                                |
 | `content.message` | `string`  | Message content, e.g., "Give me a random number"; <br/>If the message type is imageUrl, the message string can be:<br/>1. Image link (publicly accessible)<br/>2. Base64 format: "data:image/jpeg;base64,{base64 encoded image}" |
 | `isChunk`         | `boolean` | (Optional) When true, the server emits `chunk` events for streamed assistant output.                                                                                                                                                                                      |
+| `extraSystemPrompt` | `string` | (Optional) Extra system prompt appended to the agent's base system prompt for this session/task.                                                                                                                                                                           |
 
 #### Request Example
 
@@ -553,7 +556,8 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
       "type": "text",
       "message": "Give me a random number"
     }
-  ]
+  ],
+  "extraSystemPrompt": "Respond with a single integer only."
 }
 ```
 

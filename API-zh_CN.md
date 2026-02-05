@@ -743,6 +743,7 @@ POST /chat?sessionId=1901883204734947328
 | `content.type`    | `string`  | 消息类型，可选为 `text` `imageUrl`                                                                                                                                                      |
 | `content.message` | `string`  | 消息内容，例如："给我一个随机数"; <br/>如果消息类型为imageUrl，message的String可选为：<br/>1. 图片链接："https://example.com/path/to/image.png" ，且确保公网可访问<br/>2. base64格式："data:image/jpeg;base64,{图片的base64编码}" |
 | `isChunk`         | `boolean` | （可选）是否启用分片输出，默认为`false`                                                                                                                                                           |
+| `extraSystemPrompt` | `string` | （可选）追加到 Agent 基础 system prompt 的额外系统提示词（当前会话/任务生效）。                                                                                                             |
 
 #### 请求示例
 
@@ -751,7 +752,8 @@ POST /chat?sessionId=1901883204734947328
   "content": [
     { "type": "text", "message":"你是谁？" }
   ],
-  "isChunk": true
+  "isChunk": true,
+  "extraSystemPrompt": "只回复一个整数即可。"
 }
 ```
 
@@ -1032,6 +1034,7 @@ POST /chat/simple?sessionId=1901883204734947328
 | `content.type`    | `string`  | 消息类型，可选为 `text` `imageUrl`                                                                                                                                                      |
 | `content.message` | `string`  | 消息内容，例如："给我一个随机数"; <br/>如果消息类型为imageUrl，message的String可选为：<br/>1. 图片链接且确保公网可访问<br/>2. base64格式："data:image/jpeg;base64,{图片的base64编码}" |
 | `isChunk`         | `boolean` | （可选）是否启用分片返回（对SimpleAgent一般不使用）                                                                                                                                                |
+| `extraSystemPrompt` | `string` | （可选）追加到 Agent 基础 system prompt 的额外系统提示词（当前会话/任务生效）。                                                                                                             |
 
 #### 请求示例
 
@@ -1039,7 +1042,8 @@ POST /chat/simple?sessionId=1901883204734947328
 {
   "content": [
     { "type": "text", "message":"你是谁？" }
-  ]
+  ],
+  "extraSystemPrompt": "只回复一个整数即可。"
 }
 ```
 
