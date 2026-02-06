@@ -47,8 +47,9 @@ class AgentController {
     try {
       List<PresetOpenSpecDto> presetOpenSpecList;
       if (data is List) {
-        presetOpenSpecList =
-            data.map((item) => PresetOpenSpecDto.fromJson(item)).toList();
+        presetOpenSpecList = data
+            .map((item) => PresetOpenSpecDto.fromJson(item))
+            .toList();
       } else if (data is Map<String, dynamic>) {
         presetOpenSpecList = [PresetOpenSpecDto.fromJson(data)];
       } else {
@@ -98,8 +99,8 @@ class AgentController {
           LogModule.http,
           "Request initSession",
           detail:
-          "baseUrl: ${capabilityDto.llmConfig.baseUrl}, " +
-              "model: ${capabilityDto.llmConfig.model}, " +
+              "baseUrl: ${capabilityDto.llmConfig?.baseUrl}, " +
+              "model: ${capabilityDto.llmConfig?.model}, " +
               "systemMessageLength: ${capabilityDto.systemPrompt.length}," +
               "openSpecListLength: ${capabilityDto.openSpecList == null ? "null" : capabilityDto.openSpecList!.length}," +
               "sessionListLength: ${capabilityDto.sessionList == null ? "null" : capabilityDto.sessionList!.length}",
@@ -158,7 +159,7 @@ class AgentController {
 
     try {
       final SimpleCapabilityDto simpleCapabilityDto =
-      SimpleCapabilityDto.fromJson(data);
+          SimpleCapabilityDto.fromJson(data);
       logger.log(
         LogModule.http,
         "Request initSimple",
@@ -169,8 +170,8 @@ class AgentController {
         LogModule.http,
         "Request initSimple",
         detail:
-        "baseUrl: ${simpleCapabilityDto.llmConfig.baseUrl}, " +
-            "model: ${simpleCapabilityDto.llmConfig.model}, " +
+            "baseUrl: ${simpleCapabilityDto.llmConfig?.baseUrl}, " +
+            "model: ${simpleCapabilityDto.llmConfig?.model}, " +
             "systemMessageLength: ${simpleCapabilityDto.systemPrompt.length}",
       );
 
@@ -213,9 +214,9 @@ class AgentController {
       UserTaskDto userTaskDto = UserTaskDto.fromJson(data);
 
       StreamController<List<int>> streamController =
-      StreamController<List<int>>.broadcast();
+          StreamController<List<int>>.broadcast();
       AgentMessageSubscriber agentMessageSubscriber =
-      AgentMessageSubscriberBySSE(streamController);
+          AgentMessageSubscriberBySSE(streamController);
 
       void Function(String taskId) getTaskId = (String taskId) async {
         this.agentMessageListener.subscribe(
@@ -237,7 +238,7 @@ class AgentController {
         LogModule.http,
         "Response startStream",
         detail:
-        jsonEncode(sessionDto.toJson()) +
+            jsonEncode(sessionDto.toJson()) +
             " & " +
             jsonEncode(userTaskDto.toJson()),
       );
@@ -462,18 +463,18 @@ class AgentController {
   }
 
   void _listen(
-      String sessionId,
-      String taskId,
-      AgentMessageDto agentMessageDto,
-      ) {
+    String sessionId,
+    String taskId,
+    AgentMessageDto agentMessageDto,
+  ) {
     agentMessageListener.listen(sessionId, taskId, agentMessageDto);
   }
 
   void _listenChunk(
-      String sessionId,
-      String taskId,
-      AgentMessageChunkDto agentMessageChunkDto,
-      ) {
+    String sessionId,
+    String taskId,
+    AgentMessageChunkDto agentMessageChunkDto,
+  ) {
     agentMessageListener.listenChunk(sessionId, taskId, agentMessageChunkDto);
   }
 
@@ -622,7 +623,9 @@ class AgentController {
     }
 
     try {
-      List<SessionInfoDto> sessionList = agentService.getSessionsByAgentId(agentId);
+      List<SessionInfoDto> sessionList = agentService.getSessionsByAgentId(
+        agentId,
+      );
 
       logger.log(
         LogModule.http,
@@ -678,10 +681,11 @@ class AgentController {
       }
 
       StreamController<List<int>> streamController =
-      StreamController<List<int>>.broadcast();
+          StreamController<List<int>>.broadcast();
 
-      AgentMessageSubscriber subscriber =
-      AgentMessageSubscriberBySSE(streamController);
+      AgentMessageSubscriber subscriber = AgentMessageSubscriberBySSE(
+        streamController,
+      );
 
       agentMessageListener.subscribeSession(sessionId, subscriber);
 
@@ -697,7 +701,8 @@ class AgentController {
       logger.log(
         LogModule.http,
         "Response subscribeSession: SSE stream started",
-        detail: "sessionId: $sessionId, subscriberCount: ${agentMessageListener.getSessionSubscriberCount(sessionId)}",
+        detail:
+            "sessionId: $sessionId, subscriberCount: ${agentMessageListener.getSessionSubscriberCount(sessionId)}",
       );
 
       return Response.ok(
