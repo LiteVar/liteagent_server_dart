@@ -7,7 +7,7 @@ void main() async {
 
   final server = McpServer(
     Implementation(name: 'Mock CRUD Server', version: '1.0.0'),
-    options: ServerOptions(
+    options: McpServerOptions(
       capabilities: ServerCapabilities(tools: ServerCapabilitiesTools()),
     ),
   );

@@ -327,8 +327,8 @@ None
 | `llmConfig.temperature`                   | `number`  | (Optional) Temperature value, default is 0                                                                                                                                                                                                                       |
 | `llmConfig.maxTokens`                     | `number`  | (Optional) Maximum token count, default is 4096                                                                                                                                                                                                                  |
 | `llmConfig.topP`                          | `number`  | (Optional) Top-p value for sampling, default is 1                                                                                                                                                                                                                |
-| `llmConfig.supportsToolCalling`           | `boolean` | (Optional) Whether the model supports tool calling, default is true                                                                                                                                                                                              |
-| `llmConfig.supportsDeepThinking`          | `boolean` | (Optional) Whether the model supports deep thinking, default is false                                                                                                                                                                                            |
+| `llmConfig.supportsToolCall`           | `boolean` | (Optional) Whether the model supports tool calling, default is true                                                                                                                                                                                              |
+| `llmConfig.supportsReasoning`          | `boolean` | (Optional) Whether the model supports deep thinking, default is false                                                                                                                                                                                            |
 | `systemPrompt`                            | `string`  | System prompt preset, e.g., role-playing instructions, abilities, or problem-solving tasks                                                                                                                                                                       |
 | `openSpecList`                            | `array`   | (Optional) List of specifications, each element being an `object`                                                                                                                                                                                                |
 | `openSpecList.openSpec`                   | `string`  | JSON description of the spec                                                                                                                                                                                                                                     |
@@ -432,8 +432,8 @@ None
 | `llmConfig.temperature`           | `number`  | (Optional) Temperature value, default is 0                                                 |
 | `llmConfig.maxTokens`             | `number`  | (Optional) Maximum token count, default is 4096                                            |
 | `llmConfig.topP`                  | `number`  | (Optional) Top-p value for sampling, default is 1                                          |
-| `llmConfig.supportsToolCalling`   | `boolean` | (Optional) Whether the model supports tool calling, default is true                        |
-| `llmConfig.supportsDeepThinking`  | `boolean` | (Optional) Whether the model supports deep thinking, default is false                      |
+| `llmConfig.supportsToolCall`   | `boolean` | (Optional) Whether the model supports tool calling, default is true                        |
+| `llmConfig.supportsReasoning`  | `boolean` | (Optional) Whether the model supports deep thinking, default is false                      |
 | `systemPrompt`                    | `string`  | System prompt preset, e.g., role-playing instructions, abilities, or problem-solving tasks |
 
 #### Request Example
@@ -580,8 +580,12 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 | `completions.usage.promptTokens`     | number | Number of prompt tokens                                                           |
 | `completions.usage.completionTokens` | number | Number of completion tokens                                                       |
 | `completions.usage.totalTokens`      | number | Total number of tokens                                                            |
+| `completions.usage.contextUsageRatio`| number | Context usage ratio (0~1). Computed from `contextWindowSize`; may be `null` when not configured |
 | `completions.id`                          | string | Message ID returned by the model                                                  |
 | `completions.model`                       | string | Model name, e.g., gpt-3.5-turbo                                                   |
+| `completions.limits`                      | object | (Optional) Completion limits from model config |
+| `completions.limits.maxTokens`            | number | Max completion tokens configured for the model |
+| `completions.limits.contextWindowSize`    | number | (Optional) Context window size used for ratio calculation |
 | `createTime`                              | string | Message creation time in the format yyyy-MM-ddTHH:mm:ss.SSSZ                      |
 
 #### Response Example
@@ -598,10 +602,15 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
     "usage": {
       "promptTokens": 100,
       "completionTokens": 522,
-      "totalTokens": 622
+      "totalTokens": 622,
+      "contextUsageRatio": 0.15
     },
     "id": "chatcmpl-9bgYkOjpdtLV0o0JugSmnNzGrRFMG",
-    "model": "gpt-3.5-turbo"
+    "model": "gpt-3.5-turbo",
+    "limits": {
+      "maxTokens": 4096,
+      "contextWindowSize": 128000
+    }
   },
   "createTime": "2023-06-18T15:45:30.000+0800"
 }
@@ -724,8 +733,12 @@ GET /history?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 | `completions.usage.promptTokens`     | number | Number of prompt tokens                                                                               |
 | `completions.usage.completionTokens` | number | Number of completion tokens                                                                           |
 | `completions.usage.totalTokens`      | number | Total number of tokens                                                                                |
+| `completions.usage.contextUsageRatio`| number | Context usage ratio (0~1). Computed from `contextWindowSize`; may be `null` when not configured      |
 | `completions.id`                          | string | Message ID returned by the model                                                                      |
 | `completions.model`                       | string | Model name, e.g., gpt-3.5-turbo                                                                       |
+| `completions.limits`                      | object | (Optional) Completion limits from model config |
+| `completions.limits.maxTokens`            | number | Max completion tokens configured for the model |
+| `completions.limits.contextWindowSize`    | number | (Optional) Context window size used for ratio calculation |
 | `createTime`                              | string | Message creation time in the format yyyy-MM-ddTHH:mm:ss.SSSZ                                          |
 
 #### Response Example
@@ -743,10 +756,15 @@ GET /history?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
       "usage": {
         "promptTokens": 100,
         "completionTokens": 522,
-        "totalTokens": 622
+        "totalTokens": 622,
+        "contextUsageRatio": 0.15
       },
       "id": "chatcmpl-9bgYkOjpdtLV0o0JugSmnNzGrRFMG",
-      "model": "gpt-3.5-turbo"
+      "model": "gpt-3.5-turbo",
+      "limits": {
+        "maxTokens": 4096,
+        "contextWindowSize": 128000
+      }
     },
     "createTime": "2023-06-18T15:45:30.000+0800"
   }

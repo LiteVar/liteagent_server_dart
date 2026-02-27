@@ -124,14 +124,18 @@ class AgentMessageSubscriberBySSE implements AgentMessageSubscriber {
 
   @override
   void addChunk(AgentMessageChunkDto agentMessageChunkDto) {
-    // print(agentMessageChunkDto.toJson());
-    _pushData(SSEEventType.CHUNK, jsonEncode(agentMessageChunkDto.toJson()));
+    if(!streamController.isClosed) {
+      // print(agentMessageChunkDto.toJson());
+      _pushData(SSEEventType.CHUNK, jsonEncode(agentMessageChunkDto.toJson()));
+    }
   }
 
   @override
   void addRemoteFunctionCall(AgentMessageDto agentMessageDto) {
-    // print(agentMessageDto.toJson());
-    _pushData(SSEEventType.FUNCTION_CALL, jsonEncode(agentMessageDto.toJson()));
+    if(!streamController.isClosed) {
+      // print(agentMessageDto.toJson());
+      _pushData(SSEEventType.FUNCTION_CALL, jsonEncode(agentMessageDto.toJson()));
+    }
   }
 
   void _pushData(String eventType, String dataString) {
@@ -142,6 +146,8 @@ class AgentMessageSubscriberBySSE implements AgentMessageSubscriber {
 
   @override
   void close() {
-    streamController.close();
+    if(!streamController.isClosed) {
+      streamController.close();
+    }
   }
 }

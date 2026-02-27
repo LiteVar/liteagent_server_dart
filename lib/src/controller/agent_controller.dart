@@ -214,7 +214,7 @@ class AgentController {
       UserTaskDto userTaskDto = UserTaskDto.fromJson(data);
 
       StreamController<List<int>> streamController =
-          StreamController<List<int>>.broadcast();
+          StreamController<List<int>>();
       AgentMessageSubscriber agentMessageSubscriber =
           AgentMessageSubscriberBySSE(streamController);
 
@@ -681,7 +681,7 @@ class AgentController {
       }
 
       StreamController<List<int>> streamController =
-          StreamController<List<int>>.broadcast();
+          StreamController<List<int>>();
 
       AgentMessageSubscriber subscriber = AgentMessageSubscriberBySSE(
         streamController,

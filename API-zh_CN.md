@@ -65,8 +65,8 @@ https://api.example.com/v1
 | `capability.llmConfig.temperature`                   | `number` | （可选）温度值，默认为 0                                                                                                      |
 | `capability.llmConfig.maxTokens`                     | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
 | `capability.llmConfig.topP`                          | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
-| `capability.llmConfig.supportsToolCalling`           | `boolean` | （可选）模型是否支持工具调用，默认为true                                                                                       |
-| `capability.llmConfig.supportsDeepThinking`          | `boolean` | （可选）模型是否支持深度思考，默认为false                                                                                      |
+| `capability.llmConfig.supportsToolCall`           | `boolean` | （可选）模型是否支持工具调用，默认为true                                                                                       |
+| `capability.llmConfig.supportsReasoning`          | `boolean` | （可选）模型是否支持深度思考，默认为false                                                                                      |
 | `capability.systemPrompt`                            | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题                                                                            |
 | `capability.openSpecList`                            | `array`  | （可选）Spec 列表，数组中每个元素为 `object`                                                                                      |
 | `capability.openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`                                              |
@@ -184,8 +184,8 @@ GET /agent?agentId=671763aae989ec22357fea88
 | `capability.llmConfig.temperature`                   | `number` | （可选）温度值，默认为 0                                                                                                      |
 | `capability.llmConfig.maxTokens`                     | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
 | `capability.llmConfig.topP`                          | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
-| `capability.llmConfig.supportsToolCalling`           | `boolean` | （可选）模型是否支持工具调用，默认为true                                                                                       |
-| `capability.llmConfig.supportsDeepThinking`          | `boolean` | （可选）模型是否支持深度思考，默认为false                                                                                      |
+| `capability.llmConfig.supportsToolCall`           | `boolean` | （可选）模型是否支持工具调用，默认为true                                                                                       |
+| `capability.llmConfig.supportsReasoning`          | `boolean` | （可选）模型是否支持深度思考，默认为false                                                                                      |
 | `capability.systemPrompt`                            | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题                                                                            |
 | `capability.openSpecList`                            | `array`  | （可选）Spec 列表，数组中每个元素为 `object`                                                                                      |
 | `capability.openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`                                              |
@@ -283,8 +283,8 @@ GET /agent?agentId=671763aae989ec22357fea88
 | `capability.llmConfig.temperature`                   | `number` | （可选）温度值，默认为 0                                                                                                      |
 | `capability.llmConfig.maxTokens`                     | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
 | `capability.llmConfig.topP`                          | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
-| `capability.llmConfig.supportsToolCalling`           | `boolean` | （可选）模型是否支持工具调用，默认为true                                                                                       |
-| `capability.llmConfig.supportsDeepThinking`          | `boolean` | （可选）模型是否支持深度思考，默认为false                                                                                      |
+| `capability.llmConfig.supportsToolCall`           | `boolean` | （可选）模型是否支持工具调用，默认为true                                                                                       |
+| `capability.llmConfig.supportsReasoning`          | `boolean` | （可选）模型是否支持深度思考，默认为false                                                                                      |
 | `capability.systemPrompt`                            | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题                                                                            |
 | `capability.openSpecList`                            | `array`  | （可选）Spec 列表，数组中每个元素为 `object`                                                                                      |
 | `capability.openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`                                              |
@@ -412,8 +412,8 @@ GET /agent/update?agentId=671763aae989ec22357fea88
 | `capability.llmConfig.temperature`                   | `number` | （可选）温度值，默认为 0                                                                                                      |
 | `capability.llmConfig.maxTokens`                     | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
 | `capability.llmConfig.topP`                          | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
-| `capability.llmConfig.supportsToolCalling`           | `boolean` | （可选）模型是否支持工具调用，默认为true                                                                                       |
-| `capability.llmConfig.supportsDeepThinking`          | `boolean` | （可选）模型是否支持深度思考，默认为false                                                                                      |
+| `capability.llmConfig.supportsToolCall`           | `boolean` | （可选）模型是否支持工具调用，默认为true                                                                                       |
+| `capability.llmConfig.supportsReasoning`          | `boolean` | （可选）模型是否支持深度思考，默认为false                                                                                      |
 | `capability.systemPrompt`                            | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题                                                                            |
 | `capability.openSpecList`                            | `array`  | （可选）Spec 列表，数组中每个元素为 `object`                                                                                      |
 | `capability.openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`                                              |
@@ -677,8 +677,8 @@ POST /initSession?agentId=671763aae989ec22357fea88
 | `llmConfig.temperature`          | `number` | （可选）温度值，默认为 0                                               |
 | `llmConfig.maxTokens`            | `number` | （可选）最大 token 数，默认为 4096                                     |
 | `llmConfig.topP`                 | `number` | （可选）概率抽样的 p 值，默认为 1                                         |
-| `llmConfig.supportsToolCalling`  | `boolean`| （可选）模型是否支持工具调用，默认为 true                                   |
-| `llmConfig.supportsDeepThinking` | `boolean`| （可选）模型是否支持深度思考，默认为 false                                  |
+| `llmConfig.supportsToolCall`  | `boolean`| （可选）模型是否支持工具调用，默认为 true                                   |
+| `llmConfig.supportsReasoning` | `boolean`| （可选）模型是否支持深度思考，默认为 false                                  |
 | `systemPrompt`                   | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题         |
 
 #### 请求示例
@@ -778,8 +778,12 @@ POST /chat?sessionId=1901883204734947328
 | `completions.usage.promptTokens`     | `number`  | 提示符 token 数                                                                                       |
 | `completions.usage.completionTokens` | `number`  | 生成 token 数                                                                                        |
 | `completions.usage.totalTokens`      | `number`  | 总 token 数                                                                                         |
+| `completions.usage.contextUsageRatio` | `number` | 上下文占用比例（0~1），基于 `contextWindowSize` 计算；未配置时可能为 `null` |
 | `completions.id`                     | `string`  | 大模型返回的消息 ID                                                                                       |
 | `completions.model`                  | `string`  | 大模型名称，例如 gpt-4o-mini                                                                              |
+| `completions.limits`                      | `object` | （可选）模型返回的限制信息（来自配置） |
+| `completions.limits.maxTokens`            | `number` | 模型配置的最大输出 token 数 |
+| `completions.limits.contextWindowSize`    | `number` | （可选）上下文窗口大小，用于计算上下文占用比例 |
 | `createTime`                         | `string`  | 消息创建时间，格式为 yyyy-MM-ddTHH:mm:ss.SSSZ                                                               |
 
 #### `event`为`message`的`data`示例
@@ -814,10 +818,15 @@ POST /chat?sessionId=1901883204734947328
       "usage": {
         "promptTokens": 199,
         "completionTokens": 12,
-        "totalTokens": 211
+        "totalTokens": 211,
+        "contextUsageRatio": 0.15
       },
       "id": "chatcmpl-9bgYkOjpdtLV0o0JugSmnNzGrRFMG",
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "limits": {
+        "maxTokens": 4096,
+        "contextWindowSize": 128000
+      }
     },
     "createTime": "2023-06-18T15:45:30.000+0800"
   }
@@ -882,10 +891,15 @@ POST /chat?sessionId=1901883204734947328
       "usage": {
         "promptTokens": 199,
         "completionTokens": 12,
-        "totalTokens": 211
+        "totalTokens": 211,
+        "contextUsageRatio": 0.15
       },
       "id": "chatcmpl-9bgYkOjpdtLV0o0JugSmnNzGrRFMG",
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "limits": {
+        "maxTokens": 4096,
+        "contextWindowSize": 128000
+      }
     },
     "createTime": "2023-06-18T15:45:30.000+0800"
   }
@@ -907,10 +921,15 @@ POST /chat?sessionId=1901883204734947328
       "usage": {
         "promptTokens": 199,
         "completionTokens": 12,
-        "totalTokens": 211
+        "totalTokens": 211,
+        "contextUsageRatio": 0.15
       },
       "id": "chatcmpl-9bgYkOjpdtLV0o0JugSmnNzGrRFMG",
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "limits": {
+        "maxTokens": 4096,
+        "contextWindowSize": 128000
+      }
     },
     "createTime": "2023-06-18T15:45:30.000+0800"
   }
@@ -931,8 +950,12 @@ POST /chat?sessionId=1901883204734947328
 | `completions.usage.promptTokens`     | `number` | 提示符 token 数                         |
 | `completions.usage.completionTokens` | `number` | 生成 token 数                          |
 | `completions.usage.totalTokens`      | `number` | 总 token 数                           |
+| `completions.usage.contextUsageRatio` | `number` | 上下文占用比例（0~1），基于 `contextWindowSize` 计算；未配置时可能为 `null` |
 | `completions.id`                     | `string` | 大模型返回的消息 ID                         |
 | `completions.model`                  | `string` | 大模型名称，例如 gpt-4o-mini                |
+| `completions.limits`                      | `object` | （可选）模型返回的限制信息（来自配置） |
+| `completions.limits.maxTokens`            | `number` | 模型配置的最大输出 token 数 |
+| `completions.limits.contextWindowSize`    | `number` | （可选）上下文窗口大小，用于计算上下文占用比例 |
 | `createTime`                         | `string` | 消息创建时间，格式为 yyyy-MM-ddTHH:mm:ss.SSSZ |
 
 #### `data`为`chunk`示例：
@@ -978,10 +1001,15 @@ POST /chat?sessionId=1901883204734947328
       "usage": {
         "promptTokens": 199,
         "completionTokens": 12,
-        "totalTokens": 211
+        "totalTokens": 211,
+        "contextUsageRatio": 0.15
       },
       "id": "chatcmpl-9bgYkOjpdtLV0o0JugSmnNzGrRFMG",
-      "model": "gpt-4o-mini"
+      "model": "gpt-4o-mini",
+      "limits": {
+        "maxTokens": 4096,
+        "contextWindowSize": 128000
+      }
     },
     "createTime": "2023-06-18T15:45:30.000+0800"
   }
@@ -1066,8 +1094,12 @@ POST /chat/simple?sessionId=1901883204734947328
 | `completions.usage.promptTokens`     | `number` | 提示符 token 数                                                                                       |
 | `completions.usage.completionTokens` | `number` | 生成 token 数                                                                                        |
 | `completions.usage.totalTokens`      | `number` | 总 token 数                                                                                         |
+| `completions.usage.contextUsageRatio` | `number` | 上下文占用比例（0~1），基于 `contextWindowSize` 计算；未配置时可能为 `null` |
 | `completions.id`                     | `string` | 大模型返回的消息 ID                                                                                       |
 | `completions.model`                  | `string` | 大模型名称，例如 gpt-4o-mini                                                                              |
+| `completions.limits`                      | `object` | （可选）模型返回的限制信息（来自配置） |
+| `completions.limits.maxTokens`            | `number` | 模型配置的最大输出 token 数 |
+| `completions.limits.contextWindowSize`    | `number` | （可选）上下文窗口大小，用于计算上下文占用比例 |
 | `createTime`                         | `string` | 消息创建时间，格式为 yyyy-MM-ddTHH:mm:ss.SSSZ                                                               |
 
 #### 响应示例
@@ -1211,8 +1243,12 @@ GET /history?sessionId=1901883204734947328
 | `completions.usage.promptTokens`     | `number` | 提示符 token 数                                                                                      |
 | `completions.usage.completionTokens` | `number` | 生成 token 数                                                                                       |
 | `completions.usage.totalTokens`      | `number` | 总 token 数                                                                                        |
+| `completions.usage.contextUsageRatio` | `number` | 上下文占用比例（0~1），基于 `contextWindowSize` 计算；未配置时可能为 `null` |
 | `completions.id`                     | `string` | 大模型返回的消息 ID                                                                                      |
 | `completions.model`                  | `string` | 大模型名称，例如 gpt-3.5-turbo                                                                           |
+| `completions.limits`                      | `object` | （可选）模型返回的限制信息（来自配置） |
+| `completions.limits.maxTokens`            | `number` | 模型配置的最大输出 token 数 |
+| `completions.limits.contextWindowSize`    | `number` | （可选）上下文窗口大小，用于计算上下文占用比例 |
 | `createTime`                         | `string` | 消息创建时间，格式为 yyyy-MM-ddTHH:mm:ss.SSSZ                                                              |
 
 #### 响应示例
@@ -1230,10 +1266,15 @@ GET /history?sessionId=1901883204734947328
       "usage": {
         "promptTokens": 100,
         "completionTokens": 522,
-        "totalTokens": 622
+        "totalTokens": 622,
+        "contextUsageRatio": 0.15
       },
       "id": "chatcmpl-9bgYkOjpdtLV0o0JugSmnNzGrRFMG",
-      "model": "gpt-3.5-turbo"
+      "model": "gpt-3.5-turbo",
+      "limits": {
+        "maxTokens": 4096,
+        "contextWindowSize": 128000
+      }
     },
     "createTime": "2023-06-18T15:45:30.000+0800"
   }
