@@ -21,8 +21,9 @@ class AgentLogger {
   AgentLogger._internal() {
     _logger = Logger('LiteAgentCoreServerLogger');
     Logger.root.level = _level;
-    _logFile = File(
-        '${Directory.current.path}${Platform.pathSeparator}log${Platform.pathSeparator}agent.log');
+    final logDir = Platform.environment['LOG_DIR'] ?? 
+        '${Directory.current.path}${Platform.pathSeparator}log';
+    _logFile = File('$logDir${Platform.pathSeparator}agent.log');
     _logFile.createSync(recursive: true);
 
     Logger.root.onRecord.listen((record) {
