@@ -91,14 +91,36 @@ class AgentMessageListener {
   }
 
   void _listenClientFunctionCall(String sessionId, String taskId, AgentMessageDto agentMessageDto) {
-    if (agentMessageSubscriberList.containsKey(sessionId)) {
-      final taskId = agentMessageDto.taskId;
-      if (agentMessageSubscriberList[sessionId]!.containsKey(taskId)) {
-        final subscriber = agentMessageSubscriberList[sessionId]![taskId]!;
-        // FunctionCall functionCall = agentMessageDto.content as FunctionCall;
-        subscriber.addRemoteFunctionCall(agentMessageDto);
+    bool deliveredToTaskSubscriber = false;
+    final subscribersByTaskId = agentMessageSubscriberList[sessionId];
+    final candidateTaskIds = <String>{
+      if (agentMessageDto.parentTaskId != null &&
+          agentMessageDto.parentTaskId!.isNotEmpty)
+        agentMessageDto.parentTaskId!,
+      if (agentMessageDto.taskId.isNotEmpty) agentMessageDto.taskId,
+      if (taskId.isNotEmpty) taskId,
+    };
+
+    if (subscribersByTaskId != null) {
+      for (final candidateTaskId in candidateTaskIds) {
+        final subscriber = subscribersByTaskId[candidateTaskId];
+        if (subscriber != null) {
+          subscriber.addRemoteFunctionCall(agentMessageDto);
+          deliveredToTaskSubscriber = true;
+          break;
+        }
       }
     }
+
+    logger.log(
+      LogModule.sse,
+      "Route functionCall",
+      detail:
+          "sessionId: $sessionId, parentTaskId: ${agentMessageDto.parentTaskId}, taskId: ${agentMessageDto.taskId}, subscribedTaskIds: ${candidateTaskIds.join(',')}, taskSubscriberDelivered: $deliveredToTaskSubscriber, sessionSubscriberCount: ${getSessionSubscriberCount(sessionId)}",
+      level: Level.FINEST,
+    );
+
+    _broadcastToSessionSubscribers(sessionId, agentMessageDto);
   }
 }
 
