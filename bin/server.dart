@@ -8,23 +8,48 @@ import 'package:shelf_router/shelf_router.dart';
 final AgentService agentService = AgentService();
 
 void main(List<String> args) async {
-  String dbPath = config.server.dbPath??"agent.db";
-  String exeDir = Dir.executableDir();
-  String dbFullPath = '$exeDir${Platform.pathSeparator}$dbPath';
-  AgentManageService agentManageService = AgentManageServiceByDB(AgentDatabaseFactory.getInstance(File(dbFullPath)));
-  
-  final AgentController agentController = AgentController(agentService, agentManageService);
-  final AgentManageController agentManageController = AgentManageController(agentManageService);
-  
-  apiRoutes(agentController, agentManageController);
-  
-  final Router mainRouter = Router();
-  mainRouter.mount(config.server.apiPathPrefix, apiRouter);
-  Handler handler = const Pipeline()
-  //.addMiddleware(checkAuthorization("<ADD_YOUR_AUTHORIZATION_HERE>"))
-    .addMiddleware(logRequest())
-    .addHandler(mainRouter);
+  try {
+    stderr.writeln('[agent_server] Starting...');
+    stderr.writeln('[agent_server] CWD: ${Directory.current.path}');
+    stderr.writeln('[agent_server] Executable: ${Platform.resolvedExecutable}');
 
-  HttpServer server = await serve(handler, config.server.ip, config.server.port);
-  logger.log(LogModule.http, "Start Server", detail: "http://${server.address.host}:${server.port}${config.server.apiPathPrefix}");
+    String dbFullPath;
+    final envDbPath = Platform.environment['DB_PATH'];
+    if (envDbPath != null && envDbPath.isNotEmpty) {
+      dbFullPath = envDbPath;
+      stderr.writeln('[agent_server] DB path (from env): $dbFullPath');
+    } else {
+      String dbPath = config.server.dbPath ?? "agent.db";
+      String exeDir = Dir.executableDir();
+      dbFullPath = '$exeDir${Platform.pathSeparator}$dbPath';
+      stderr.writeln('[agent_server] DB path (from config): $dbFullPath');
+    }
+
+    final dbDir = File(dbFullPath).parent;
+    if (!dbDir.existsSync()) {
+      dbDir.createSync(recursive: true);
+      stderr.writeln('[agent_server] Created DB directory: ${dbDir.path}');
+    }
+
+    AgentManageService agentManageService = AgentManageServiceByDB(AgentDatabaseFactory.getInstance(File(dbFullPath)));
+    
+    final AgentController agentController = AgentController(agentService, agentManageService);
+    final AgentManageController agentManageController = AgentManageController(agentManageService);
+    
+    apiRoutes(agentController, agentManageController);
+    
+    final Router mainRouter = Router();
+    mainRouter.mount(config.server.apiPathPrefix, apiRouter);
+    Handler handler = const Pipeline()
+    //.addMiddleware(checkAuthorization("<ADD_YOUR_AUTHORIZATION_HERE>"))
+      .addMiddleware(logRequest())
+      .addHandler(mainRouter);
+
+    HttpServer server = await serve(handler, config.server.ip, config.server.port);
+    logger.log(LogModule.http, "Start Server", detail: "http://${server.address.host}:${server.port}${config.server.apiPathPrefix}");
+  } catch (e, stackTrace) {
+    stderr.writeln('[agent_server] FATAL: $e');
+    stderr.writeln('[agent_server] StackTrace: $stackTrace');
+    exit(1);
+  }
 }
