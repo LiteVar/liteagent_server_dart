@@ -139,15 +139,13 @@ class AgentMessageSubscriberBySSE implements AgentMessageSubscriber {
   @override
   void addMessage(AgentMessageDto agentMessageDto) {
     if(!streamController.isClosed) {
-      // print(agentMessageDto.toJson());
-      _pushData(SSEEventType.MESSAGE, jsonEncode(agentMessageDto.toJson()));
+      _pushData(SSEEventType.MESSAGE, jsonEncode(_sanitizeAgentMessage(agentMessageDto)));
     }
   }
 
   @override
   void addChunk(AgentMessageChunkDto agentMessageChunkDto) {
     if(!streamController.isClosed) {
-      // print(agentMessageChunkDto.toJson());
       _pushData(SSEEventType.CHUNK, jsonEncode(agentMessageChunkDto.toJson()));
     }
   }
@@ -155,9 +153,34 @@ class AgentMessageSubscriberBySSE implements AgentMessageSubscriber {
   @override
   void addRemoteFunctionCall(AgentMessageDto agentMessageDto) {
     if(!streamController.isClosed) {
-      // print(agentMessageDto.toJson());
-      _pushData(SSEEventType.FUNCTION_CALL, jsonEncode(agentMessageDto.toJson()));
+      _pushData(SSEEventType.FUNCTION_CALL, jsonEncode(_sanitizeAgentMessage(agentMessageDto)));
     }
+  }
+
+  static Map<String, dynamic> _sanitizeAgentMessage(AgentMessageDto dto) {
+    final json = dto.toJson();
+    final content = json['content'];
+    if (content is List) {
+      json['content'] = content.map((item) {
+        final Map<String, dynamic> map;
+        if (item is ContentDto) {
+          map = item.toJson();
+        } else if (item is Map<String, dynamic>) {
+          map = item;
+        } else {
+          return item;
+        }
+        if (map['type'] == AgentMessageType.IMAGE_URL &&
+            map['message'] is String &&
+            (map['message'] as String).contains(';base64,')) {
+          final msg = map['message'] as String;
+          final prefix = msg.substring(0, msg.indexOf(';base64,') + 8);
+          return {...map, 'message': '${prefix}...'};
+        }
+        return map;
+      }).toList();
+    }
+    return json;
   }
 
   void _pushData(String eventType, String dataString) {
