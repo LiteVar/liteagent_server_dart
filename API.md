@@ -330,6 +330,7 @@ None
 | `llmConfig.supportsToolCall`           | `boolean` | (Optional) Whether the model supports tool calling, default is true                                                                                                                                                                                              |
 | `llmConfig.supportsReasoning`          | `boolean` | (Optional) Whether the model supports deep thinking, default is false                                                                                                                                                                                            |
 | `systemPrompt`                            | `string`  | System prompt preset, e.g., role-playing instructions, abilities, or problem-solving tasks                                                                                                                                                                       |
+| `skills`                                  | `array`   | (Optional) Skill reference list. Each item is a `string`. Referenced skills should follow the Agent Skills specification: https://agentskills.io/specification                                                                                                  |
 | `openSpecList`                            | `array`   | (Optional) List of specifications, each element being an `object`                                                                                                                                                                                                |
 | `openSpecList.openSpec`                   | `string`  | JSON description of the spec                                                                                                                                                                                                                                     |
 | `openSpecList.protocol`                   | `string`  | Supports `openapi`, `jsonrpcHttp`, `opentool`, `mcpStdio`, `mcpHttp`                                                                                                                                                                                              |
@@ -354,6 +355,8 @@ None
 | `llmConfigList`                           | `array`   | (Optional) List of `llmConfig` objects                                                                                                                                                                                                                            |
 | `enableThinking`                          | `boolean` | (Optional) Enable reasoning output                                                                                                                                                                                                                                |
 
+`skills` follow the [Agent Skills Specification](https://agentskills.io/specification). In practice, each referenced skill should be a skill directory with a `SKILL.md` file containing YAML frontmatter plus Markdown instructions. The spec requires a lowercase-hyphenated `name` and a non-empty `description`.
+
 #### Request Example
 
 ```json
@@ -367,6 +370,10 @@ None
     "topP": 1
   },
   "systemPrompt": "Roleplay as someone with specific abilities to help solve certain problems",
+  "skills": [
+    "code-review",
+    "release-notes"
+  ],
   "openSpecList": [
     {
       "openSpec": "<JSON description of the spec, supports openapi, jsonrpcHttp, opentool>",
@@ -435,6 +442,9 @@ None
 | `llmConfig.supportsToolCall`   | `boolean` | (Optional) Whether the model supports tool calling, default is true                        |
 | `llmConfig.supportsReasoning`  | `boolean` | (Optional) Whether the model supports deep thinking, default is false                      |
 | `systemPrompt`                    | `string`  | System prompt preset, e.g., role-playing instructions, abilities, or problem-solving tasks |
+| `skills`                          | `array`   | (Optional) Skill reference list. Each item is a `string`. Referenced skills should follow the Agent Skills specification: https://agentskills.io/specification |
+
+`skills` use the same specification as `/initSession`: [Agent Skills Specification](https://agentskills.io/specification).
 
 #### Request Example
 
@@ -448,7 +458,10 @@ None
         "maxTokens": 4096,
         "topP": 1
     },
-    "systemPrompt": "Roleplay as someone with specific abilities to help solve certain problems"
+    "systemPrompt": "Roleplay as someone with specific abilities to help solve certain problems",
+    "skills": [
+        "code-review"
+    ]
 }
 ```
 

@@ -68,6 +68,7 @@ https://api.example.com/v1
 | `capability.llmConfig.supportsToolCall`           | `boolean` | （可选）模型是否支持工具调用，默认为true                                                                                       |
 | `capability.llmConfig.supportsReasoning`          | `boolean` | （可选）模型是否支持深度思考，默认为false                                                                                      |
 | `capability.systemPrompt`                            | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题                                                                            |
+| `capability.skills`                                  | `array`  | （可选）技能引用列表，数组中每个元素为 `string`。被引用的技能内容应遵循 Agent Skills 规范：https://agentskills.io/specification |
 | `capability.openSpecList`                            | `array`  | （可选）Spec 列表，数组中每个元素为 `object`                                                                                      |
 | `capability.openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`                                              |
 | `capability.openSpecList.apiKey`                     | `object` | （可选）第三方服务的 API Key                                                                                                 |
@@ -115,6 +116,10 @@ https://api.example.com/v1
         "topP": 1
       },
       "systemPrompt": "扮演某某角色，具有某某能力，需要帮助用户解决某某问题",
+      "skills": [
+        "code-review",
+        "release-notes"
+      ],
       "openSpecList": [
         {
           "openSpec": "<spec的json描述文本，目前支持的类型是openapi、jsonrpcHttp、opentool、mcpStdio、mcpHttp>",
@@ -187,6 +192,7 @@ GET /agent?agentId=671763aae989ec22357fea88
 | `capability.llmConfig.supportsToolCall`           | `boolean` | （可选）模型是否支持工具调用，默认为true                                                                                       |
 | `capability.llmConfig.supportsReasoning`          | `boolean` | （可选）模型是否支持深度思考，默认为false                                                                                      |
 | `capability.systemPrompt`                            | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题                                                                            |
+| `capability.skills`                                  | `array`  | （可选）技能引用列表，数组中每个元素为 `string`。被引用的技能内容应遵循 Agent Skills 规范：https://agentskills.io/specification |
 | `capability.openSpecList`                            | `array`  | （可选）Spec 列表，数组中每个元素为 `object`                                                                                      |
 | `capability.openSpecList.openSpec`                   | `string` | spec 的 JSON 描述文本，目前支持的类型是 `openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`                                              |
 | `capability.openSpecList.apiKey`                     | `object` | （可选）第三方服务的 API Key                                                                                                 |
@@ -232,6 +238,10 @@ GET /agent?agentId=671763aae989ec22357fea88
       "topP": 1
     },
     "systemPrompt": "扮演某某角色，具有某某能力，需要帮助用户解决某某问题",
+    "skills": [
+      "code-review",
+      "release-notes"
+    ],
     "openSpecList": [
       {
         "openSpec": "<spec的json描述文本，目前支持的类型是openapi、jsonrpcHttp、opentool、mcpStdio、mcpHttp>",
@@ -640,6 +650,8 @@ POST /initSession?agentId=671763aae989ec22357fea88
 
 当不传 `agentId` 时，请求体为 `CapabilityDto`，字段与创建Agent接口一致。
 
+其中 `skills` 字段遵循 [Agent Skills Specification](https://agentskills.io/specification)。实践上，每个 skill 应是一个包含 `SKILL.md` 的目录，`SKILL.md` 由 YAML frontmatter 和 Markdown 正文组成；其中 `name` 要求为小写加连字符格式，`description` 为必填且非空。
+
 #### 响应
 
 **状态码**: `200 OK`
@@ -680,6 +692,9 @@ POST /initSession?agentId=671763aae989ec22357fea88
 | `llmConfig.supportsToolCall`  | `boolean`| （可选）模型是否支持工具调用，默认为 true                                   |
 | `llmConfig.supportsReasoning` | `boolean`| （可选）模型是否支持深度思考，默认为 false                                  |
 | `systemPrompt`                   | `string` | 预置的系统提示词，例如扮演什么角色，具有什么能力，需要帮助用户解决哪一类的问题         |
+| `skills`                         | `array`  | （可选）技能引用列表，数组中每个元素为 `string`。被引用的技能内容应遵循 Agent Skills 规范：https://agentskills.io/specification |
+
+`skills` 与 `/initSession` 使用同一规范来源：[Agent Skills Specification](https://agentskills.io/specification)。
 
 #### 请求示例
 
@@ -693,7 +708,10 @@ POST /initSession?agentId=671763aae989ec22357fea88
     "maxTokens": 4096,
     "topP": 1
   },
-  "systemPrompt": "扮演某某角色，具有某某能力，需要帮助用户解决某某问题"
+  "systemPrompt": "扮演某某角色，具有某某能力，需要帮助用户解决哪一类的问题",
+  "skills": [
+    "code-review"
+  ]
 }
 ```
 
