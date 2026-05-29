@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:liteagent_core_dart/liteagent_core.dart';
 import 'package:liteagent_core_dart/liteagent_service.dart';
 import 'package:lzstring/lzstring.dart';
 import 'package:unique_id_dart/unique_id_dart.dart';
@@ -12,6 +13,7 @@ class AgentManageServiceByDB extends AgentManageService {
 
   @override
   Future<String> addAgent(AgentDto agentDto) async {
+    _normalizeAndValidateAgent(agentDto);
     String agentId = uniqueId();
     final now = DateTime.now();
     AgentDao agentDao = await _convertDao(
@@ -62,6 +64,7 @@ class AgentManageServiceByDB extends AgentManageService {
 
   @override
   Future<String?> updateAgent(String agentId, AgentDto agentDto) async {
+    _normalizeAndValidateAgent(agentDto);
     AgentDao? existingAgent = await agentDB.getAgentById(agentId);
     final createTime = existingAgent?.createTime ?? DateTime.now();
     final updateTime = DateTime.now();
@@ -84,6 +87,7 @@ class AgentManageServiceByDB extends AgentManageService {
   }
 
   AgentDto _compressAgent(AgentDto agentDto) {
+    _applyServerProviderDefaults(agentDto.capability);
     List<OpenSpecDto>? openSpecList;
     if (agentDto.capability.openSpecList != null) {
       openSpecList = agentDto.capability.openSpecList!.map((openSpecDto) {
@@ -156,10 +160,12 @@ class AgentManageServiceByDB extends AgentManageService {
       throw FormatException(
         "Agent: ${agentDao.name} capability string decompress error.",
       );
-    return AgentDto(
+    final agentDto = AgentDto(
       name: agentDao.name,
       capability: CapabilityDto.fromJson(jsonDecode(decompressedString)),
     );
+    _applyServerProviderDefaults(agentDto.capability);
+    return agentDto;
   }
 
   Future<AgentInfoDto> _convertInfoDto(AgentDao agentDao) async {
@@ -170,12 +176,66 @@ class AgentManageServiceByDB extends AgentManageService {
       throw FormatException(
         "Agent: ${agentDao.name} capability string decompress error.",
       );
+    final capability = CapabilityDto.fromJson(jsonDecode(decompressedString));
+    _applyServerProviderDefaults(capability);
     return AgentInfoDto(
       agentId: agentDao.agentId,
       name: agentDao.name,
-      capability: CapabilityDto.fromJson(jsonDecode(decompressedString)),
+      capability: capability,
       createTime: agentDao.createTime,
       updateTime: agentDao.updateTime,
+    );
+  }
+
+  void _normalizeAndValidateAgent(AgentDto agentDto) {
+    _normalizeAndValidateCapability(agentDto.capability);
+  }
+
+  void _normalizeAndValidateCapability(CapabilityDto capabilityDto) {
+    _normalizeAndValidateLLMConfig(capabilityDto.llmConfig);
+    for (final llmConfig
+        in capabilityDto.llmConfigList ?? const <LLMConfigDto>[]) {
+      _normalizeAndValidateLLMConfig(llmConfig);
+    }
+  }
+
+  void _normalizeAndValidateLLMConfig(LLMConfigDto? llmConfig) {
+    if (llmConfig == null) {
+      return;
+    }
+
+    final normalizedProvider = LLMProviderType.normalize(
+      llmConfig.provider ?? LLMProviderType.liteOneApi,
+    );
+    if (normalizedProvider != LLMProviderType.openai &&
+        normalizedProvider != LLMProviderType.liteOneApi) {
+      throw FormatException(
+        'Invalid llmConfig.provider: ${llmConfig.provider}',
+      );
+    }
+    if (llmConfig.providerOptions != null &&
+        llmConfig.providerOptions!.isNotEmpty) {
+      throw const FormatException('Invalid llmConfig.providerOptions');
+    }
+
+    llmConfig.provider = normalizedProvider;
+  }
+
+  void _applyServerProviderDefaults(CapabilityDto capabilityDto) {
+    _applyServerProviderDefaultToLLMConfig(capabilityDto.llmConfig);
+    for (final llmConfig
+        in capabilityDto.llmConfigList ?? const <LLMConfigDto>[]) {
+      _applyServerProviderDefaultToLLMConfig(llmConfig);
+    }
+  }
+
+  void _applyServerProviderDefaultToLLMConfig(LLMConfigDto? llmConfig) {
+    if (llmConfig == null) {
+      return;
+    }
+
+    llmConfig.provider = LLMProviderType.normalize(
+      llmConfig.provider ?? LLMProviderType.liteOneApi,
     );
   }
 }

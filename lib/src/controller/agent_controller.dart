@@ -85,10 +85,12 @@ class AgentController {
       if (agentId != null) {
         AgentDto? agentDto = await agentManageService.getAgent(agentId);
         if (agentDto == null) return Response.notFound("Agent not found");
+        _normalizeAndValidateCapability(agentDto.capability);
         capabilityDto = agentDto.capability;
       } else {
         final data = jsonDecode(payload);
         capabilityDto = CapabilityDto.fromJson(data);
+        _normalizeAndValidateCapability(capabilityDto);
         logger.log(
           LogModule.http,
           "Request initSession",
@@ -160,6 +162,7 @@ class AgentController {
     try {
       final SimpleCapabilityDto simpleCapabilityDto =
           SimpleCapabilityDto.fromJson(data);
+      _normalizeAndValidateSimpleCapability(simpleCapabilityDto);
       logger.log(
         LogModule.http,
         "Request initSimple",
@@ -719,5 +722,41 @@ class AgentController {
       );
       return Response.internalServerError(body: e.toString());
     }
+  }
+
+  void _normalizeAndValidateCapability(CapabilityDto capabilityDto) {
+    _normalizeAndValidateLLMConfig(capabilityDto.llmConfig);
+    for (final llmConfig
+        in capabilityDto.llmConfigList ?? const <LLMConfigDto>[]) {
+      _normalizeAndValidateLLMConfig(llmConfig);
+    }
+  }
+
+  void _normalizeAndValidateSimpleCapability(
+    SimpleCapabilityDto simpleCapabilityDto,
+  ) {
+    _normalizeAndValidateLLMConfig(simpleCapabilityDto.llmConfig);
+  }
+
+  void _normalizeAndValidateLLMConfig(LLMConfigDto? llmConfig) {
+    if (llmConfig == null) {
+      return;
+    }
+
+    final normalizedProvider = LLMProviderType.normalize(
+      llmConfig.provider ?? LLMProviderType.liteOneApi,
+    );
+    if (normalizedProvider != LLMProviderType.openai &&
+        normalizedProvider != LLMProviderType.liteOneApi) {
+      throw FormatException(
+        'Invalid llmConfig.provider: ${llmConfig.provider}',
+      );
+    }
+    if (llmConfig.providerOptions != null &&
+        llmConfig.providerOptions!.isNotEmpty) {
+      throw const FormatException('Invalid llmConfig.providerOptions');
+    }
+
+    llmConfig.provider = normalizedProvider;
   }
 }

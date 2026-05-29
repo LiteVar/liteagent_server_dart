@@ -59,9 +59,11 @@ https://api.example.com/v1
 | `name`                                               | `string` | Agent的名称                                                                                                           |
 | `capability`                                         | `object` | Agent配置，包含以下字段：                                                                                                    |
 | `capability.llmConfig`                               | `object` | 大模型配置，包含以下字段：                                                                                                      |
+| `capability.llmConfig.provider`                      | `string` | （可选）服务端使用的大模型 provider，仅支持 `openai` 和 `lite_oneapi`。不传时默认为 `lite_oneapi`。 |
 | `capability.llmConfig.baseUrl`                       | `string` | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                                                                         |
 | `capability.llmConfig.apiKey`                        | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                                                                                    |
 | `capability.llmConfig.model`                         | `string` | 大模型名称，例如：gpt-4o-mini                                                                                               |
+| `capability.llmConfig.adapter`                       | `string` | （可选）当 `provider=lite_oneapi` 时，用于指定请求应走哪一种上游协议/厂商适配器。可选值为 `openai`、`deepseek`、`glm`、`kimi`、`mimo`、`minimax`、`qwen`；不传时默认值为 `openai`。 |
 | `capability.llmConfig.temperature`                   | `number` | （可选）温度值，默认为 0                                                                                                      |
 | `capability.llmConfig.maxTokens`                     | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
 | `capability.llmConfig.topP`                          | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
@@ -183,9 +185,11 @@ GET /agent?agentId=671763aae989ec22357fea88
 | `name`                                               | `string` | Agent的名称                                                                                                           |
 | `capability`                                         | `object` | Agent配置，包含以下字段：                                                                                                    |
 | `capability.llmConfig`                               | `object` | 大模型配置，包含以下字段：                                                                                                      |
+| `capability.llmConfig.provider`                      | `string` | （可选）服务端使用的大模型 provider，仅支持 `openai` 和 `lite_oneapi`。不传时默认为 `lite_oneapi`。 |
 | `capability.llmConfig.baseUrl`                       | `string` | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                                                                         |
 | `capability.llmConfig.apiKey`                        | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                                                                                    |
 | `capability.llmConfig.model`                         | `string` | 大模型名称，例如：gpt-4o-mini                                                                                               |
+| `capability.llmConfig.adapter`                       | `string` | （可选）当 `provider=lite_oneapi` 时，用于指定请求应走哪一种上游协议/厂商适配器。可选值为 `openai`、`deepseek`、`glm`、`kimi`、`mimo`、`minimax`、`qwen`；不传时默认值为 `openai`。 |
 | `capability.llmConfig.temperature`                   | `number` | （可选）温度值，默认为 0                                                                                                      |
 | `capability.llmConfig.maxTokens`                     | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
 | `capability.llmConfig.topP`                          | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
@@ -287,9 +291,11 @@ GET /agent?agentId=671763aae989ec22357fea88
 | `name`                                               | `string` | Agent的名称                                                                                                           |
 | `capability`                                         | `object` | Agent配置，包含以下字段：                                                                                                    |
 | `capability.llmConfig`                               | `object` | 大模型配置，包含以下字段：                                                                                                      |
+| `capability.llmConfig.provider`                      | `string` | （可选）服务端使用的大模型 provider，仅支持 `openai` 和 `lite_oneapi`。不传时默认为 `lite_oneapi`。 |
 | `capability.llmConfig.baseUrl`                       | `string` | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                                                                         |
 | `capability.llmConfig.apiKey`                        | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                                                                                    |
 | `capability.llmConfig.model`                         | `string` | 大模型名称，例如：gpt-4o-mini                                                                                               |
+| `capability.llmConfig.adapter`                       | `string` | （可选）当 `provider=lite_oneapi` 时，用于指定请求应走哪一种上游协议/厂商适配器。可选值为 `openai`、`deepseek`、`glm`、`kimi`、`mimo`、`minimax`、`qwen`；不传时默认值为 `openai`。 |
 | `capability.llmConfig.temperature`                   | `number` | （可选）温度值，默认为 0                                                                                                      |
 | `capability.llmConfig.maxTokens`                     | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
 | `capability.llmConfig.topP`                          | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
@@ -333,9 +339,11 @@ GET /agent?agentId=671763aae989ec22357fea88
   "name": "Agent例子",
   "capability": {
     "llmConfig": {
-      "baseUrl": "https://api.openai.com/v1",
+      "provider": "lite_oneapi",
+      "baseUrl": "https://your-oneapi-server/v1",
       "apiKey": "sk-xxxxxxxxxx",
       "model": "gpt-4o-mini",
+      "adapter": "openai",
       "temperature": 0,
       "maxTokens": 4096,
       "topP": 1
@@ -416,9 +424,11 @@ GET /agent/update?agentId=671763aae989ec22357fea88
 | `name`                                               | `string` | Agent的名称                                                                                                           |
 | `capability`                                         | `object` | Agent配置，包含以下字段：                                                                                                    |
 | `capability.llmConfig`                               | `object` | 大模型配置，包含以下字段：                                                                                                      |
+| `capability.llmConfig.provider`                      | `string` | （可选）服务端使用的大模型 provider，仅支持 `openai` 和 `lite_oneapi`。不传时默认为 `lite_oneapi`。 |
 | `capability.llmConfig.baseUrl`                       | `string` | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                                                                         |
 | `capability.llmConfig.apiKey`                        | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                                                                                    |
 | `capability.llmConfig.model`                         | `string` | 大模型名称，例如：gpt-4o-mini                                                                                               |
+| `capability.llmConfig.adapter`                       | `string` | （可选）当 `provider=lite_oneapi` 时，用于指定请求应走哪一种上游协议/厂商适配器。可选值为 `openai`、`deepseek`、`glm`、`kimi`、`mimo`、`minimax`、`qwen`；不传时默认值为 `openai`。 |
 | `capability.llmConfig.temperature`                   | `number` | （可选）温度值，默认为 0                                                                                                      |
 | `capability.llmConfig.maxTokens`                     | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
 | `capability.llmConfig.topP`                          | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
@@ -462,9 +472,11 @@ GET /agent/update?agentId=671763aae989ec22357fea88
   "name": "Agent例子",
   "capability": {
     "llmConfig": {
-      "baseUrl": "https://api.openai.com/v1",
+      "provider": "lite_oneapi",
+      "baseUrl": "https://your-oneapi-server/v1",
       "apiKey": "sk-xxxxxxxxxx",
       "model": "gpt-4o-mini",
+      "adapter": "openai",
       "temperature": 0,
       "maxTokens": 4096,
       "topP": 1
@@ -683,9 +695,11 @@ POST /initSession?agentId=671763aae989ec22357fea88
 | 字段名                             | 类型       | 说明                                                                 |
 |----------------------------------|----------|--------------------------------------------------------------------|
 | `llmConfig`                      | `object` | 大模型配置，包含以下字段：                                                   |
+| `llmConfig.provider`             | `string` | （可选）服务端使用的大模型 provider，仅支持 `openai` 和 `lite_oneapi`。不传时默认为 `lite_oneapi`。 |
 | `llmConfig.baseUrl`              | `string` | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                      |
 | `llmConfig.apiKey`               | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                               |
 | `llmConfig.model`                | `string` | 大模型名称，例如：gpt-4o-mini                                          |
+| `llmConfig.adapter`              | `string` | （可选）当 `provider=lite_oneapi` 时，用于指定请求应走哪一种上游协议/厂商适配器。可选值为 `openai`、`deepseek`、`glm`、`kimi`、`mimo`、`minimax`、`qwen`；不传时默认值为 `openai`。 |
 | `llmConfig.temperature`          | `number` | （可选）温度值，默认为 0                                               |
 | `llmConfig.maxTokens`            | `number` | （可选）最大 token 数，默认为 4096                                     |
 | `llmConfig.topP`                 | `number` | （可选）概率抽样的 p 值，默认为 1                                         |
@@ -701,9 +715,11 @@ POST /initSession?agentId=671763aae989ec22357fea88
 ```json
 {
   "llmConfig": {
-    "baseUrl": "https://api.openai.com/v1",
+    "provider": "lite_oneapi",
+    "baseUrl": "https://your-oneapi-server/v1",
     "apiKey": "sk-xxxxxxxxxx",
     "model": "gpt-4o-mini",
+    "adapter": "openai",
     "temperature": 0,
     "maxTokens": 4096,
     "topP": 1

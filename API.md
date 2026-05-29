@@ -321,9 +321,11 @@ None
 | Field                                     | Type      | Description                                                                                                                                                                                                                                                      |
 |-------------------------------------------|-----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `llmConfig`                               | `object`  | Configuration for the language model, containing the following fields:                                                                                                                                                                                           |
+| `llmConfig.provider`                      | `string`  | (Optional) LLM provider used by the server. Supported values are `openai` and `lite_oneapi`. If omitted, `lite_oneapi` is used.                                                                                                                             |
 | `llmConfig.baseUrl`                       | `string`  | API endpoint of the language model provider, e.g., https://api.openai.com/v1                                                                                                                                                                                     |
 | `llmConfig.apiKey`                        | `string`  | API Key of the language model provider, e.g., sk-xxxxxxxxxx                                                                                                                                                                                                      |
 | `llmConfig.model`                         | `string`  | Name of the language model, e.g., gpt-3.5-turbo                                                                                                                                                                                                                  |
+| `llmConfig.adapter`                       | `string`  | (Optional) Adapter name used when `provider=lite_oneapi` to choose which upstream protocol/provider adapter handles the request. Supported values are `openai`, `deepseek`, `glm`, `kimi`, `mimo`, `minimax`, and `qwen`. If omitted, the default is `openai`. |
 | `llmConfig.temperature`                   | `number`  | (Optional) Temperature value, default is 0                                                                                                                                                                                                                       |
 | `llmConfig.maxTokens`                     | `number`  | (Optional) Maximum token count, default is 4096                                                                                                                                                                                                                  |
 | `llmConfig.topP`                          | `number`  | (Optional) Top-p value for sampling, default is 1                                                                                                                                                                                                                |
@@ -362,9 +364,11 @@ None
 ```json
 {
   "llmConfig": {
-    "baseUrl": "https://api.openai.com/v1",
+    "provider": "lite_oneapi",
+    "baseUrl": "https://your-oneapi-server/v1",
     "apiKey": "sk-xxxxxxxxxx",
     "model": "gpt-4o-mini",
+    "adapter": "openai",
     "temperature": 0,
     "maxTokens": 4096,
     "topP": 1
@@ -433,9 +437,11 @@ None
 | Field                             | Type      | Description                                                                                |
 |-----------------------------------|-----------|--------------------------------------------------------------------------------------------|
 | `llmConfig`                       | `object`  | Configuration for the language model, containing the following fields:                     |
+| `llmConfig.provider`              | `string`  | (Optional) LLM provider used by the server. Supported values are `openai` and `lite_oneapi`. If omitted, `lite_oneapi` is used. |
 | `llmConfig.baseUrl`               | `string`  | API endpoint of the language model provider, e.g., https://api.openai.com/v1               |
 | `llmConfig.apiKey`                | `string`  | API Key of the language model provider, e.g., sk-xxxxxxxxxx                                |
 | `llmConfig.model`                 | `string`  | Name of the language model, e.g., gpt-3.5-turbo                                            |
+| `llmConfig.adapter`               | `string`  | (Optional) Adapter name used when `provider=lite_oneapi` to choose which upstream protocol/provider adapter handles the request. Supported values are `openai`, `deepseek`, `glm`, `kimi`, `mimo`, `minimax`, and `qwen`. If omitted, the default is `openai`. |
 | `llmConfig.temperature`           | `number`  | (Optional) Temperature value, default is 0                                                 |
 | `llmConfig.maxTokens`             | `number`  | (Optional) Maximum token count, default is 4096                                            |
 | `llmConfig.topP`                  | `number`  | (Optional) Top-p value for sampling, default is 1                                          |
@@ -451,9 +457,11 @@ None
 ```json
 {
     "llmConfig": {
-        "baseUrl": "https://api.openai.com/v1",
+        "provider": "lite_oneapi",
+        "baseUrl": "https://your-oneapi-server/v1",
         "apiKey": "sk-xxxxxxxxxx",
         "model": "gpt-4o-mini",
+        "adapter": "openai",
         "temperature": 0,
         "maxTokens": 4096,
         "topP": 1
