@@ -16,21 +16,22 @@ class AgentLogger {
   }
 
   Logger? _logger;
-  late File _logFile;
+  late IOSink _logSink;
 
   AgentLogger._internal() {
     _logger = Logger('LiteAgentCoreServerLogger');
     Logger.root.level = _level;
     final logDir = Platform.environment['LOG_DIR'] ?? 
         '${Directory.current.path}${Platform.pathSeparator}log';
-    _logFile = File('$logDir${Platform.pathSeparator}agent.log');
-    _logFile.createSync(recursive: true);
+    final logFile = File('$logDir${Platform.pathSeparator}agent.log');
+    logFile.createSync(recursive: true);
+    _logSink = logFile.openWrite(mode: FileMode.append);
 
     Logger.root.onRecord.listen((record) {
       final message =
           '${record.level.name}: ${record.time}: PID $pid: ${record.message}';
       print(message);
-      _logFile.writeAsStringSync('$message\n', mode: FileMode.append);
+      _logSink.writeln(message);
     });
   }
 
