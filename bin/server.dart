@@ -5,8 +5,6 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_router/shelf_router.dart';
 
-final AgentService agentService = AgentService();
-
 void main(List<String> args) async {
   try {
     stderr.writeln('[agent_server] Starting...');
@@ -31,22 +29,46 @@ void main(List<String> args) async {
       stderr.writeln('[agent_server] Created DB directory: ${dbDir.path}');
     }
 
-    AgentManageService agentManageService = AgentManageServiceByDB(AgentDatabaseFactory.getInstance(File(dbFullPath)));
-    
-    final AgentController agentController = AgentController(agentService, agentManageService);
-    final AgentManageController agentManageController = AgentManageController(agentManageService);
-    
+    final database = AgentDatabaseFactory.getInstance(File(dbFullPath));
+    final messageManageService = SessionMessageManageServiceByDB(database);
+    final sessionManageService = SessionManageServiceByDB(database);
+    final agentService = AgentService(
+      messageManageServiceList: [messageManageService],
+    );
+    final agentManageService = AgentManageServiceByDB(database);
+    final sessionRuntimeService = SessionRuntimeService(
+      agentService: agentService,
+      sessionManageService: sessionManageService,
+      messageManageService: messageManageService,
+    );
+
+    final agentController = AgentController(
+      agentService,
+      agentManageService,
+      sessionRuntimeService,
+    );
+    final agentManageController = AgentManageController(agentManageService);
+
     apiRoutes(agentController, agentManageController);
-    
+
     final Router mainRouter = Router();
     mainRouter.mount(config.server.apiPathPrefix, apiRouter);
     Handler handler = const Pipeline()
-    //.addMiddleware(checkAuthorization("<ADD_YOUR_AUTHORIZATION_HERE>"))
-      .addMiddleware(logRequest())
-      .addHandler(mainRouter);
+        //.addMiddleware(checkAuthorization("<ADD_YOUR_AUTHORIZATION_HERE>"))
+        .addMiddleware(logRequest())
+        .addHandler(mainRouter);
 
-    HttpServer server = await serve(handler, config.server.ip, config.server.port);
-    logger.log(LogModule.http, "Start Server", detail: "http://${server.address.host}:${server.port}${config.server.apiPathPrefix}");
+    HttpServer server = await serve(
+      handler,
+      config.server.ip,
+      config.server.port,
+    );
+    logger.log(
+      LogModule.http,
+      "Start Server",
+      detail:
+          "http://${server.address.host}:${server.port}${config.server.apiPathPrefix}",
+    );
   } catch (e, stackTrace) {
     stderr.writeln('[agent_server] FATAL: $e');
     stderr.writeln('[agent_server] StackTrace: $stackTrace');

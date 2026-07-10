@@ -1244,18 +1244,26 @@ POST /chat/simple?sessionId=1901883204734947328
 
 **路径**: `/history`
 
-**功能说明**: 获取某个会话的历史消息列表。
+**功能说明**: 从持久化数据库获取某个会话的历史消息列表。即使 core 中的运行态 Session 已超时释放或 server 已重启，历史仍可查询。
 
 #### 路径参数
 
 | 字段名         | 类型       | 说明                     |
 |-------------|----------|------------------------|
 | `sessionId` | `string` | 会话 ID，读取对应Agent的当前会话历史 |
+| `page` | `int` | （可选）分页页码，从 1 开始；必须与 `pageSize` 同时传入 |
+| `pageSize` | `int` | （可选）每页条数；必须与 `page` 同时传入 |
 
 #### 路径示例
 
 ```http request
 GET /history?sessionId=1901883204734947328
+```
+
+分页示例：
+
+```http request
+GET /history?sessionId=1901883204734947328&page=1&pageSize=50
 ```
 
 #### 响应
@@ -1267,11 +1275,14 @@ GET /history?sessionId=1901883204734947328
 | 字段名                                  | 类型       | 说明                                                                                               |
 |--------------------------------------|----------|--------------------------------------------------------------------------------------------------|
 | `sessionId`                          | `string` | 会话 ID，用于标识对应会话                                                                                   |
+| `originalTaskId`                     | `string` | 原始任务 ID，用于关联子任务和工具调用                                                                          |
 | `taskId`                             | `string` | 任务 ID，识别该任务                                                                                      |
+| `parentTaskId`                       | `string` | （可选）父任务 ID                                                                                         |
 | `role`                               | `string` | 消息来源，可能的值包括：`developer`、`user`、`agent`、`assistant`、`reflection`、`tool`、`client`                  |
 | `to`                                 | `string` | 消息目标，可能的值与`role`一致                                                                               |
 | `type`                               | `string` | 消息类型，可能的值包括：`text`、`imageUrl`、`contentList`、`toolCalls`、`reflection`、`toolReturn`、`functionCall` |
 | `content`                            | `any`    | 消息内容，具体类型需根据 `type` 字段解析                                                                         |
+| `reasoningContent`                   | `string` | （可选）模型推理内容                                                                                         |
 | `completions`                        | `object` | 大模型完成的详细信息，包含以下字段：                                                                               |
 | `completions.usage`                  | `object` | Token 使用信息                                                                                       |
 | `completions.usage.promptTokens`     | `number` | 提示符 token 数                                                                                      |
@@ -1368,7 +1379,7 @@ GET /stop?sessionId=1901883204734947328&taskId=1901883415867822080
 
 **路径**: `/clear`
 
-**功能说明**: 清除会话数据，返回对应的 sessionId，不支持 SimpleAgent。
+**功能说明**: 清除 core 运行态会话、持久化 Session 和对应消息，返回 sessionId，不支持 SimpleAgent。清除后该 sessionId 无法再恢复。
 
 #### 路径参数
 
@@ -1406,7 +1417,7 @@ GET /clear?sessionId=1901883204734947328
 
 **路径**: `/session/list`
 
-**功能说明**: 根据 agentId 获取会话列表。
+**功能说明**: 从持久化数据库根据 agentId 获取会话列表。列表不会因 core 空闲超时或 server 重启而消失。
 
 #### 路径参数
 

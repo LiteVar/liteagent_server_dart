@@ -1,30 +1,30 @@
-# Specify the Dart SDK base image version using dart
-FROM dart:stable AS build
+# syntax=docker/dockerfile:1.7
+FROM ghcr.io/cirruslabs/flutter:stable AS build
 
-# Resolve app dependencies.
-WORKDIR /app
-COPY pubspec.* ./
+USER root
+WORKDIR /workspace
+
+# These named contexts preserve the local path dependency layout expected by
+# pubspec.yaml and liteagent_core_dart/pubspec.yaml.
+COPY --from=liteagent_core_dart . /workspace/liteagent_core_dart
+COPY --from=llamadart_openai . /workspace/llamadart_openai
+COPY . /workspace/liteagent_server_dart
+
+WORKDIR /workspace/liteagent_server_dart
 RUN dart pub get
+RUN dart build cli --target bin/server.dart --output build/cli
 
-# Copy app source code and AOT compile it.
-COPY . .
-# Ensure packages are still up-to-date if anything has changed
-RUN dart pub get --offline
-RUN dart compile exe bin/server.dart -o bin/server
+FROM debian:bookworm-slim
 
-# Build minimal serving image from AOT-compiled `/server` and required system
-FROM alpine:latest
-
-RUN apk add --no-cache libc6-compat
-RUN apk add--no-cache gcompat
-RUN apk add --no-cache ca-certificates
-RUN update-ca-certificates
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY --from=build /app/bin/config.json /app/config.json
-COPY --from=build /app/bin/server /app/server
+COPY --from=build /workspace/liteagent_server_dart/build/cli/bundle /app
+COPY --from=build /workspace/liteagent_server_dart/bin/config.json /app/bin/config.json
+COPY --from=build /workspace/liteagent_server_dart/bin/model_mapping.json /app/bin/model_mapping.json
 
-# Start server.
 EXPOSE 9527
-ENTRYPOINT ["/app/server"]
+ENTRYPOINT ["/app/bin/server"]

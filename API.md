@@ -721,18 +721,26 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 
 **Path**: `/history`
 
-**Description**: Retrieve the history of messages for a specific session. This API does not support SimpleAgent.
+**Description**: Retrieve persisted message history for a session. History remains available after core runtime eviction or a server restart. This API does not support SimpleAgent.
 
 #### Query Parameters
 
 | Field       | Type   | Description                                                |
 |-------------|--------|------------------------------------------------------------|
 | `sessionId` | string | Session ID used to read the history of the current session |
+| `page` | int | (Optional) 1-based page number; must be supplied with `pageSize` |
+| `pageSize` | int | (Optional) number of messages per page; must be supplied with `page` |
 
 #### Path Example
 
 ```http request
 GET /history?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
+```
+
+Paginated example:
+
+```http request
+GET /history?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30&page=1&pageSize=50
 ```
 
 #### Response
@@ -744,11 +752,14 @@ GET /history?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 | Field Name                                | Type   | Description                                                                                           |
 |-------------------------------------------|--------|-------------------------------------------------------------------------------------------------------|
 | `sessionId`                               | string | Session ID used to identify the session                                                               |
+| `originalTaskId`                          | string | Original task ID used to associate child tasks and tool calls                                          |
 | `taskId`                                  | string | Task ID identifying the task                                                                          |
+| `parentTaskId`                            | string | (Optional) parent task ID                                                                              |
 | `role`                                    | string | Message source, possible values: `system`, `user`, `agent`, `llm`, `tool`                             |
 | `to`                                      | string | Message target, possible values: `user`, `agent`, `llm`, `tool`, `client`                             |
 | `type`                                    | string | Message type, possible values: `text`, `imageUrl`, `contentList`, `functionCall`, `toolCalls`, `toolReturn`, `reflection`, `taskStatus` |
 | `content`                                 | any    | Message content, its type depends on the `type` field                                                 |
+| `reasoningContent`                        | string | (Optional) model reasoning content                                                                     |
 | `completions`                             | object | Detailed information about the model completion, containing the following fields:                     |
 | `completions.usage`                  | object | Token usage information                                                                               |
 | `completions.usage.promptTokens`     | number | Number of prompt tokens                                                                               |
@@ -838,7 +849,7 @@ GET /stop?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 
 **Path**: `/clear`
 
-**Description**: Clear the session data, returning the corresponding sessionId. This API does not support SimpleAgent.
+**Description**: Clear the core runtime session, persisted session, and its messages. The session ID cannot be restored afterward. This API does not support SimpleAgent.
 
 #### Query Parameters
 
@@ -876,7 +887,7 @@ GET /clear?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 
 **Path**: `/session/list`
 
-**Description**: List sessions for a specific agent.
+**Description**: List persisted sessions for an agent. Entries remain available after core idle eviction or a server restart.
 
 #### Query Parameters
 

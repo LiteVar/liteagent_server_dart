@@ -8,17 +8,19 @@ part 'config.g.dart';
 final Config config = initConfig();
 
 Config initConfig() {
-  String configFilePath = '${Directory.current.path}${Platform.pathSeparator}bin${Platform.pathSeparator}config.json';
+  String configFilePath =
+      '${Directory.current.path}${Platform.pathSeparator}bin${Platform.pathSeparator}config.json';
   String configJsonString = File(configFilePath).readAsStringSync();
   final Map<String, dynamic> configJson = jsonDecode(configJsonString);
   final Config config = Config.fromJson(configJson);
   String? versionFromPubspec = getVersionFromPubspec();
-  if(versionFromPubspec != null) config.version = versionFromPubspec;
+  if (versionFromPubspec != null) config.version = versionFromPubspec;
   return config;
 }
 
 String? getVersionFromPubspec() {
-  String pubspecFilePath = '${Directory.current.path}${Platform.pathSeparator}pubspec.yaml';
+  String pubspecFilePath =
+      '${Directory.current.path}${Platform.pathSeparator}pubspec.yaml';
   File pubspecFile = File(pubspecFilePath);
   if (!pubspecFile.existsSync()) return null;
 
@@ -45,7 +47,12 @@ class Server {
   late int port;
   late String? dbPath;
 
-  Server({this.ip = "127.0.0.1", this.apiPathPrefix = "/api", this.port = 9527, this.dbPath});
+  Server({
+    this.ip = "127.0.0.1",
+    this.apiPathPrefix = "/api",
+    this.port = 9527,
+    this.dbPath,
+  });
 
   factory Server.fromJson(Map<String, dynamic> json) => _$ServerFromJson(json);
 }

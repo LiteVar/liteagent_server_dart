@@ -20,16 +20,29 @@ import '../example/mock/driver/mock_driver.dart';
 /// - `dart run example/stream_call_example.dart`
 Future<void> main(List<String> args) async {
   final toolDrivers = await _buildMockToolDrivers();
-  final agentService = AgentService(globalToolDriverList: toolDrivers);
 
   final dbPath = config.server.dbPath ?? "agent.db";
   final exeDir = Dir.executableDir();
   final dbFullPath = '$exeDir${Platform.pathSeparator}$dbPath';
-  final agentManageService = AgentManageServiceByDB(
-    AgentDatabaseFactory.getInstance(File(dbFullPath)),
+  final database = AgentDatabaseFactory.getInstance(File(dbFullPath));
+  final messageManageService = SessionMessageManageServiceByDB(database);
+  final sessionManageService = SessionManageServiceByDB(database);
+  final agentService = AgentService(
+    globalToolDriverList: toolDrivers,
+    messageManageServiceList: [messageManageService],
+  );
+  final agentManageService = AgentManageServiceByDB(database);
+  final sessionRuntimeService = SessionRuntimeService(
+    agentService: agentService,
+    sessionManageService: sessionManageService,
+    messageManageService: messageManageService,
   );
 
-  final agentController = AgentController(agentService, agentManageService);
+  final agentController = AgentController(
+    agentService,
+    agentManageService,
+    sessionRuntimeService,
+  );
   final agentManageController = AgentManageController(agentManageService);
 
   apiRoutes(agentController, agentManageController);

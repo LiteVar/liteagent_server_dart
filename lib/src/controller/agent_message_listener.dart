@@ -6,11 +6,17 @@ import 'package:liteagent_server_dart/liteagent_server_dart.dart';
 import 'package:logging/logging.dart';
 
 class AgentMessageListener {
-  Map<String, Map<String, AgentMessageSubscriber>> agentMessageSubscriberList = {}; // sessionId & taskId -> subscriber, for Push messages to task
+  Map<String, Map<String, AgentMessageSubscriber>> agentMessageSubscriberList =
+      {}; // sessionId & taskId -> subscriber, for Push messages to task
 
-  Map<String, List<AgentMessageSubscriber>> sessionSubscribers = {}; // sessionId -> List<AgentMessageSubscriber>
+  Map<String, List<AgentMessageSubscriber>> sessionSubscribers =
+      {}; // sessionId -> List<AgentMessageSubscriber>
 
-  void subscribe(String sessionId, String taskId, AgentMessageSubscriber subscriber) {
+  void subscribe(
+    String sessionId,
+    String taskId,
+    AgentMessageSubscriber subscriber,
+  ) {
     if (!agentMessageSubscriberList.containsKey(sessionId)) {
       agentMessageSubscriberList[sessionId] = {};
     }
@@ -20,7 +26,8 @@ class AgentMessageListener {
   void unsubscribe(String sessionId, String taskId) {
     agentMessageSubscriberList[sessionId]?[taskId]?.close();
     agentMessageSubscriberList[sessionId]?.remove(taskId);
-    if(agentMessageSubscriberList.containsKey(sessionId) && agentMessageSubscriberList[sessionId]!.isEmpty) {
+    if (agentMessageSubscriberList.containsKey(sessionId) &&
+        agentMessageSubscriberList[sessionId]!.isEmpty) {
       agentMessageSubscriberList.remove(sessionId);
     }
   }
@@ -42,18 +49,30 @@ class AgentMessageListener {
     return sessionSubscribers[sessionId]?.length ?? 0;
   }
 
-  void listen(String originalSessionId, String taskId, AgentMessageDto agentMessageDto) {
-    if(agentMessageDto.type == AgentMessageType.FUNCTION_CALL) {
+  void listen(
+    String originalSessionId,
+    String taskId,
+    AgentMessageDto agentMessageDto,
+  ) {
+    if (agentMessageDto.type == AgentMessageType.FUNCTION_CALL) {
       _listenClientFunctionCall(originalSessionId, taskId, agentMessageDto);
     } else {
-      if (agentMessageSubscriberList.containsKey(originalSessionId) && agentMessageSubscriberList[originalSessionId]!.containsKey(taskId)) {
-        final subscriber = agentMessageSubscriberList[originalSessionId]![taskId]!;
+      if (agentMessageSubscriberList.containsKey(originalSessionId) &&
+          agentMessageSubscriberList[originalSessionId]!.containsKey(taskId)) {
+        final subscriber =
+            agentMessageSubscriberList[originalSessionId]![taskId]!;
         subscriber.addMessage(agentMessageDto);
       }
-      if (agentMessageSubscriberList.containsKey(originalSessionId) && agentMessageSubscriberList[originalSessionId]!.containsKey(agentMessageDto.taskId)) {
-        if(agentMessageDto.type == AgentMessageType.TASK_STATUS) {
-          TaskStatusDto taskStatusDto = agentMessageDto.content as TaskStatusDto;
-          if(taskStatusDto.status == TaskStatusType.DONE || taskStatusDto.status == TaskStatusType.STOP || taskStatusDto.status == TaskStatusType.EXCEPTION ) {
+      if (agentMessageSubscriberList.containsKey(originalSessionId) &&
+          agentMessageSubscriberList[originalSessionId]!.containsKey(
+            agentMessageDto.taskId,
+          )) {
+        if (agentMessageDto.type == AgentMessageType.TASK_STATUS) {
+          TaskStatusDto taskStatusDto =
+              agentMessageDto.content as TaskStatusDto;
+          if (taskStatusDto.status == TaskStatusType.DONE ||
+              taskStatusDto.status == TaskStatusType.STOP ||
+              taskStatusDto.status == TaskStatusType.EXCEPTION) {
             unsubscribe(originalSessionId, taskId);
           }
         }
@@ -63,16 +82,28 @@ class AgentMessageListener {
     }
   }
 
-  void listenChunk(String originalSessionId, String taskId, AgentMessageChunkDto agentMessageChunkDto) {
-    if (agentMessageSubscriberList.containsKey(originalSessionId) && agentMessageSubscriberList[originalSessionId]!.containsKey(taskId)) {
-        final subscriber = agentMessageSubscriberList[originalSessionId]![taskId]!;
-        subscriber.addChunk(agentMessageChunkDto);
+  void listenChunk(
+    String originalSessionId,
+    String taskId,
+    AgentMessageChunkDto agentMessageChunkDto,
+  ) {
+    if (agentMessageSubscriberList.containsKey(originalSessionId) &&
+        agentMessageSubscriberList[originalSessionId]!.containsKey(taskId)) {
+      final subscriber =
+          agentMessageSubscriberList[originalSessionId]![taskId]!;
+      subscriber.addChunk(agentMessageChunkDto);
     }
 
-    _broadcastChunkToSessionSubscribers(originalSessionId, agentMessageChunkDto);
+    _broadcastChunkToSessionSubscribers(
+      originalSessionId,
+      agentMessageChunkDto,
+    );
   }
 
-  void _broadcastToSessionSubscribers(String sessionId, AgentMessageDto agentMessageDto) {
+  void _broadcastToSessionSubscribers(
+    String sessionId,
+    AgentMessageDto agentMessageDto,
+  ) {
     final subscribers = sessionSubscribers[sessionId];
     if (subscribers != null && subscribers.isNotEmpty) {
       for (final subscriber in subscribers) {
@@ -81,7 +112,10 @@ class AgentMessageListener {
     }
   }
 
-  void _broadcastChunkToSessionSubscribers(String sessionId, AgentMessageChunkDto agentMessageChunkDto) {
+  void _broadcastChunkToSessionSubscribers(
+    String sessionId,
+    AgentMessageChunkDto agentMessageChunkDto,
+  ) {
     final subscribers = sessionSubscribers[sessionId];
     if (subscribers != null && subscribers.isNotEmpty) {
       for (final subscriber in subscribers) {
@@ -90,7 +124,11 @@ class AgentMessageListener {
     }
   }
 
-  void _listenClientFunctionCall(String sessionId, String taskId, AgentMessageDto agentMessageDto) {
+  void _listenClientFunctionCall(
+    String sessionId,
+    String taskId,
+    AgentMessageDto agentMessageDto,
+  ) {
     bool deliveredToTaskSubscriber = false;
     final subscribersByTaskId = agentMessageSubscriberList[sessionId];
     final candidateTaskIds = <String>{
@@ -138,22 +176,28 @@ class AgentMessageSubscriberBySSE implements AgentMessageSubscriber {
 
   @override
   void addMessage(AgentMessageDto agentMessageDto) {
-    if(!streamController.isClosed) {
-      _pushData(SSEEventType.MESSAGE, jsonEncode(_sanitizeAgentMessage(agentMessageDto)));
+    if (!streamController.isClosed) {
+      _pushData(
+        SSEEventType.MESSAGE,
+        jsonEncode(_sanitizeAgentMessage(agentMessageDto)),
+      );
     }
   }
 
   @override
   void addChunk(AgentMessageChunkDto agentMessageChunkDto) {
-    if(!streamController.isClosed) {
+    if (!streamController.isClosed) {
       _pushData(SSEEventType.CHUNK, jsonEncode(agentMessageChunkDto.toJson()));
     }
   }
 
   @override
   void addRemoteFunctionCall(AgentMessageDto agentMessageDto) {
-    if(!streamController.isClosed) {
-      _pushData(SSEEventType.FUNCTION_CALL, jsonEncode(_sanitizeAgentMessage(agentMessageDto)));
+    if (!streamController.isClosed) {
+      _pushData(
+        SSEEventType.FUNCTION_CALL,
+        jsonEncode(_sanitizeAgentMessage(agentMessageDto)),
+      );
     }
   }
 
@@ -191,7 +235,7 @@ class AgentMessageSubscriberBySSE implements AgentMessageSubscriber {
 
   @override
   void close() {
-    if(!streamController.isClosed) {
+    if (!streamController.isClosed) {
       streamController.close();
     }
   }

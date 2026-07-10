@@ -1,0 +1,87 @@
+{
+  "models": [
+    {
+      "names": [
+        "gpt-4",
+        "gpt-3.5",
+        "gpt-4o",
+        "gpt-4o-mini",
+        "tts-1",
+        "tts-1-hd",
+        "whisper-1",
+        "text-embeddings-3-small",
+        "text-embeddings-3-large",
+        "text-embeddings-ada-002"
+      ],
+      "adapter": "openai",
+      "baseUrl": "https://api.openai.com"
+    },
+    {
+      "names": [
+        "deepseek-v4-flash",
+        "deepseek-v4-pro",
+        "deepseek-chat",
+        "deepseek-reasoner"
+      ],
+      "adapter": "deepseek",
+      "baseUrl": "https://api.deepseek.com"
+    },
+    {
+      "names": [
+        "qwen-plus",
+        "qwen-flash",
+        "qwen3-max",
+        "qwen3.7-max",
+        "qwen3.6-plus",
+        "qwen3.5-plus",
+        "qwen3.6-flash",
+        "qwen3.5-flash",
+        "qwen3-coder-plus",
+        "qwen3-coder-flash",
+        "qwen3-coder-next",
+        "qwq-32b"
+      ],
+      "adapter": "qwen",
+      "baseUrl": "https://dashscope.aliyuncs.com"
+    },
+    {
+      "names": [
+        "MiniMax-M2.7",
+        "MiniMax-M2.7-highspeed",
+        "MiniMax-M2.5",
+        "MiniMax-M2.5-highspeed",
+        "MiniMax-M2.1",
+        "MiniMax-M2.1-highspeed",
+        "MiniMax-M2"
+      ],
+      "adapter": "minimax",
+      "baseUrl": "https://api.minimax.io/v1"
+    },
+    {
+      "names": [
+        "glm-5.1",
+        "GLM-5.1",
+        "glm-5.1-highspeed",
+        "GLM-5.1-HighSpeed"
+      ],
+      "adapter": "glm",
+      "baseUrl": "https://open.bigmodel.cn/api/paas/v4"
+    },
+    {
+      "names": ["kimi-k2.5", "kimi-k2.6"],
+      "adapter": "kimi",
+      "baseUrl": "https://api.moonshot.cn/v1"
+    },
+    {
+      "names": [
+        "mimo-v2.5-pro",
+        "mimo-v2.5",
+        "mimo-v2-flash",
+        "mimo-v2-pro",
+        "mimo-v2-omni"
+      ],
+      "adapter": "mimo",
+      "baseUrl": "https://api.xiaomimimo.com/v1"
+    }
+  ]
+}

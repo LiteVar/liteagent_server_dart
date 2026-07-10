@@ -9,11 +9,13 @@ import 'package:shelf/shelf.dart';
 import '../dto.dart';
 import '../config.dart';
 import '../util/logger.dart';
+import '../service/session_runtime_service.dart';
 import 'agent_message_listener.dart';
 
 class AgentController {
   final AgentService agentService;
   final AgentManageService agentManageService;
+  final SessionRuntimeService sessionRuntimeService;
   final AgentMessageListener agentMessageListener = AgentMessageListener();
   final Map<String, String> jsonHeaders = {
     HttpHeaders.contentTypeHeader: 'application/json',
@@ -27,7 +29,11 @@ class AgentController {
     'Cache-Control': 'no-store',
   };
 
-  AgentController(this.agentService, this.agentManageService);
+  AgentController(
+    this.agentService,
+    this.agentManageService,
+    this.sessionRuntimeService,
+  );
 
   Future<Response> getVersion(Request request) async {
     logger.log(LogModule.http, "Request getVersion");
@@ -113,6 +119,16 @@ class AgentController {
         capabilityDto,
         agentId: agentId,
       );
+      try {
+        await sessionRuntimeService.persistNewSession(
+          sessionId: sessionDto.sessionId,
+          capability: capabilityDto,
+          agentId: agentId,
+        );
+      } catch (_) {
+        await agentService.clearSession(sessionDto.sessionId);
+        rethrow;
+      }
 
       logger.log(
         LogModule.http,
@@ -215,6 +231,7 @@ class AgentController {
     try {
       final SessionDto sessionDto = SessionDto.fromJson(queryParameters);
       UserTaskDto userTaskDto = UserTaskDto.fromJson(data);
+      await sessionRuntimeService.resolveSession(sessionDto.sessionId);
 
       StreamController<List<int>> streamController =
           StreamController<List<int>>();
@@ -250,6 +267,10 @@ class AgentController {
         headers: streamHeaders,
         context: {'shelf.io.buffer_output': false},
       );
+    } on PersistedSessionNotFoundException catch (e) {
+      return Response.notFound(e.toString());
+    } on PersistedSessionExpiredException catch (e) {
+      return Response(410, body: e.toString());
     } on FormatException catch (e) {
       logger.log(
         LogModule.http,
@@ -329,24 +350,23 @@ class AgentController {
   }
 
   Future<Response> history(Request request) async {
-    final data = await request.url.queryParameters;
+    final data = request.url.queryParameters;
     logger.log(LogModule.http, "Request history", detail: jsonEncode(data));
     try {
       final SessionDto sessionDto = SessionDto.fromJson(data);
-
-      List<AgentMessageDto>? agentMessageDtoList = await agentService
-          .getCacheHistory(sessionDto.sessionId);
-      if (agentMessageDtoList == null) {
-        logger.log(
-          LogModule.http,
-          "Response history NotFoundException: ",
-          detail: "sessionId: ${sessionDto.sessionId} history not found",
-          level: Level.WARNING,
-        );
-        return Response.notFound(
-          "sessionId: ${sessionDto.sessionId} history not found",
+      final page = _optionalPositiveInt(data['page'], 'page');
+      final pageSize = _optionalPositiveInt(data['pageSize'], 'pageSize');
+      if ((page == null) != (pageSize == null)) {
+        throw const FormatException(
+          'page and pageSize must be provided together',
         );
       }
+
+      final agentMessageDtoList = await sessionRuntimeService.getHistory(
+        sessionDto.sessionId,
+        page: page,
+        pageSize: pageSize,
+      );
       logger.log(
         LogModule.http,
         "Response get history",
@@ -359,6 +379,8 @@ class AgentController {
         jsonEncode(agentMessageDtoJsonList),
         headers: jsonHeaders,
       );
+    } on PersistedSessionNotFoundException catch (e) {
+      return Response.notFound(e.toString());
     } on FormatException catch (e) {
       logger.log(
         LogModule.http,
@@ -431,21 +453,15 @@ class AgentController {
     try {
       final SessionDto sessionDto = SessionDto.fromJson(data);
 
-      await agentService.clearSession(sessionDto.sessionId);
+      await sessionRuntimeService.clearSession(sessionDto.sessionId);
       logger.log(
         LogModule.http,
         "Response clearSession",
         detail: jsonEncode(sessionDto.toJson()),
       );
       return Response.ok(jsonEncode(sessionDto.toJson()), headers: jsonHeaders);
-    } on AgentNotFoundException catch (e) {
-      logger.log(
-        LogModule.http,
-        "Response clearSession AgentNotFoundException: ${e.toJson()}",
-        detail: jsonEncode(e.toJson()),
-        level: Level.WARNING,
-      );
-      return Response.notFound(e);
+    } on PersistedSessionNotFoundException catch (e) {
+      return Response.notFound(e.toString());
     } on FormatException catch (e) {
       logger.log(
         LogModule.http,
@@ -626,9 +642,8 @@ class AgentController {
     }
 
     try {
-      List<SessionInfoDto> sessionList = agentService.getSessionsByAgentId(
-        agentId,
-      );
+      List<SessionInfoDto> sessionList = await sessionRuntimeService
+          .getSessionsByAgentId(agentId);
 
       logger.log(
         LogModule.http,
@@ -672,16 +687,7 @@ class AgentController {
     }
 
     try {
-      final sessionAgent = agentService.getSessionAgent(sessionId);
-      if (sessionAgent == null) {
-        logger.log(
-          LogModule.http,
-          "Response subscribeSession NotFound: session not found",
-          detail: "sessionId: $sessionId",
-          level: Level.WARNING,
-        );
-        return Response.notFound("Session not found: $sessionId");
-      }
+      await sessionRuntimeService.resolveSession(sessionId);
 
       StreamController<List<int>> streamController =
           StreamController<List<int>>();
@@ -713,6 +719,10 @@ class AgentController {
         headers: streamHeaders,
         context: {'shelf.io.buffer_output': false},
       );
+    } on PersistedSessionNotFoundException catch (e) {
+      return Response.notFound(e.toString());
+    } on PersistedSessionExpiredException catch (e) {
+      return Response(410, body: e.toString());
     } catch (e) {
       logger.log(
         LogModule.http,
@@ -730,6 +740,15 @@ class AgentController {
         in capabilityDto.llmConfigList ?? const <LLMConfigDto>[]) {
       _normalizeAndValidateLLMConfig(llmConfig);
     }
+  }
+
+  int? _optionalPositiveInt(String? value, String name) {
+    if (value == null) return null;
+    final parsed = int.tryParse(value);
+    if (parsed == null || parsed <= 0) {
+      throw FormatException('$name must be a positive integer');
+    }
+    return parsed;
   }
 
   void _normalizeAndValidateSimpleCapability(

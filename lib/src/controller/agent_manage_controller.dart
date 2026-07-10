@@ -17,8 +17,11 @@ class AgentManageController {
   Future<Response> listAgent(Request request) async {
     try {
       List<AgentInfoDto> agents = await agentManageService.getAgents();
-      return Response.ok(jsonEncode(agents.map((e) => e.toJson()).toList()), headers: jsonHeaders);
-    } catch(e) {
+      return Response.ok(
+        jsonEncode(agents.map((e) => e.toJson()).toList()),
+        headers: jsonHeaders,
+      );
+    } catch (e) {
       return Response.internalServerError(body: e.toString());
     }
   }
@@ -27,14 +30,18 @@ class AgentManageController {
     try {
       String? agentId = request.url.queryParameters['agentId'];
       if (agentId == null) {
-        return Response.notFound(AgentNotFoundException(agentId: "NULL").toJson());
+        return Response.notFound(
+          AgentNotFoundException(agentId: "NULL").toJson(),
+        );
       }
       AgentDto? agentDto = await agentManageService.getAgent(agentId);
       if (agentDto == null) {
-        return Response.notFound(AgentNotFoundException(agentId: agentId).toJson());
+        return Response.notFound(
+          AgentNotFoundException(agentId: agentId).toJson(),
+        );
       }
       return Response.ok(jsonEncode(agentDto.toJson()), headers: jsonHeaders);
-    } catch(e) {
+    } catch (e) {
       return Response.internalServerError(body: e.toString());
     }
   }
@@ -47,7 +54,10 @@ class AgentManageController {
       AgentDto agentDto = AgentDto.fromJson(data);
 
       String agentId = await agentManageService.addAgent(agentDto);
-      return Response.ok(jsonEncode(AgentIdDto(agentId: agentId).toJson()), headers: jsonHeaders);
+      return Response.ok(
+        jsonEncode(AgentIdDto(agentId: agentId).toJson()),
+        headers: jsonHeaders,
+      );
     } on FormatException catch (e) {
       return Response.badRequest(body: e.toString());
     } catch (e) {
@@ -66,11 +76,19 @@ class AgentManageController {
 
     try {
       AgentDto agentDto = AgentDto.fromJson(data);
-      String? agentIdUpdated = await agentManageService.updateAgent(agentId, agentDto);
+      String? agentIdUpdated = await agentManageService.updateAgent(
+        agentId,
+        agentDto,
+      );
       if (agentIdUpdated == null) {
-        return Response.notFound(AgentNotFoundException(agentId: agentId).toJson());
+        return Response.notFound(
+          AgentNotFoundException(agentId: agentId).toJson(),
+        );
       }
-      return Response.ok(jsonEncode(AgentIdDto(agentId: agentIdUpdated).toJson()), headers: jsonHeaders);
+      return Response.ok(
+        jsonEncode(AgentIdDto(agentId: agentIdUpdated).toJson()),
+        headers: jsonHeaders,
+      );
     } catch (e) {
       return Response.internalServerError(body: e.toString());
     }
@@ -84,10 +102,15 @@ class AgentManageController {
     try {
       String? agentIdDeleted = await agentManageService.removeAgent(agentId);
       if (agentIdDeleted == null) {
-        return Response.notFound(AgentNotFoundException(agentId: agentId).toJson());
+        return Response.notFound(
+          AgentNotFoundException(agentId: agentId).toJson(),
+        );
       }
-      return Response.ok(jsonEncode(AgentIdDto(agentId: agentIdDeleted).toJson()), headers: jsonHeaders);
-    }catch (e) {
+      return Response.ok(
+        jsonEncode(AgentIdDto(agentId: agentIdDeleted).toJson()),
+        headers: jsonHeaders,
+      );
+    } catch (e) {
       return Response.internalServerError(body: e.toString());
     }
   }

@@ -67,22 +67,59 @@ WebSocket connection closed
 
 ## Persistence
 
-- This server uses SQLite (via Drift) for agent storage.
-- The database file path is `bin/config.json` → `server.dbPath`, and it is resolved under the executable directory:
+- This server uses SQLite (via Drift) to persist agent definitions, session metadata, capability snapshots, and complete message history.
+- Core's `timeoutSeconds` only evicts the in-memory runtime session; it does not delete the persisted conversation. A later `/chat` or `/session/subscribe` request with the same session ID lazily restores completed-task context.
+- Incomplete tasks, partial tool calls, and stream chunks are not injected into restored context, although persisted events remain available as history.
+- `/history` and `/session/list` read directly from SQLite and do not depend on an in-memory core session.
+- `/clear` removes both runtime state and the persisted session/messages.
+- The database path uses `DB_PATH` when set; otherwise it uses `bin/config.json` → `server.dbPath`, resolved under the executable directory:
   - Running from source: `${PROJECT_ROOT}/bin/<dbPath>`
   - Running compiled binary: `<binary_dir>/<dbPath>`
-- Runtime session state is in-memory and will be lost on restart.
+- Database schema v2 automatically migrates existing agent and legacy message tables.
+
+Use the persistence example to verify conversation continuity across a server restart:
+
+```bash
+# Create a session and finish the first turn.
+dart run example/persistent_session_example.dart create
+
+# Restart the server without deleting agent.db, then continue the same session.
+dart run example/persistent_session_example.dart continue
+
+# Optional: inspect persisted history or remove the example session.
+dart run example/persistent_session_example.dart history
+dart run example/persistent_session_example.dart clear
+```
+
+The example reads `baseUrl` and `apiKey` from `example/.env`; `model` is optional. It stores the session ID in the Git-ignored `example/.persistent_session.json` and prints `PASS` when the continuation succeeds.
+
+For a deterministic test without an external model, start the local OpenAI mock in a separate terminal:
+
+```bash
+dart run example/mock/llm/mock_openai_server.dart 19529
+```
+
+Then override the LLM settings when creating the session:
+
+```bash
+dart run example/persistent_session_example.dart create \
+  --llm-base-url=http://127.0.0.1:19529/v1 \
+  --api-key=test-key \
+  --model=gpt-4o-mini
+```
+
+Restart the server and run `continue` normally. The mock returns the verification token only when the second request actually contains the first turn, directly validating restored-context injection.
 
 ## Build and Run
-1. Build in shell script:
+1. Build a CLI bundle including native assets:
     ```shell
-    dart compile exe bin/server.dart -o build/lite_agent_core_dart_server
+    dart build cli --target bin/server.dart --output build/cli
     ```
-2. Then the `lite_agent_core_dart_server` file will be in `build` folder
-3. Copy `config`(within `config.json`) folder to `lite_agent_core_dart_server` same folder
-4. Run in shell script:
+2. The output is under `build/cli/bundle`; keep its `bin/` and `lib/` directory layout together when deploying.
+3. Copy `bin/config.json` and `bin/model_mapping.json` to `build/cli/bundle/bin/`.
+4. Run:
     ```shell
-    ./lite_agent_core_dart_server
+    ./build/cli/bundle/bin/server
     ```
 5. Terminal will show:
     ```
@@ -91,15 +128,22 @@ WebSocket connection closed
 6. After server running, will create `log` folder and `agent.log` file in the folder, to record server running logs.
 
 ## Docker
-1. Build image, `cd`to project root directory, then run: 
+1. Pass both local path dependencies as named Docker build contexts:
    ```shell
-    docker build -t lite_agent_core_dart_server .
+    docker build \
+      --build-context liteagent_core_dart=../liteagent_core_dart \
+      --build-context llamadart_openai=../llamadart_openai \
+      -t lite_agent_core_dart_server .
    ```
 2. Run container:
    ```shell
    docker run -d -p 9527:9527 lite_agent_core_dart_server
    ```
-   - Or mount config and log folder to update config and get log info
+   - Mount database and log directories to retain persistent data:
    ```shell
-   docker run -d -p 9527:9527 -v ./log:/app/log -v ./config:/app/config  lite_agent_core_dart_server
+   docker run -d -p 9527:9527 \
+     -e DB_PATH=/data/agent.db \
+     -v ./data:/data \
+     -v ./log:/app/log \
+     lite_agent_core_dart_server
    ```

@@ -4,7 +4,7 @@ class Dir {
   static String? _executableDir;
 
   static executableDir() {
-    if(_executableDir == null) {
+    if (_executableDir == null) {
       String scriptPath;
       if (Platform.script.scheme == 'file') {
         scriptPath = "${Directory.current.path}${Platform.pathSeparator}bin";

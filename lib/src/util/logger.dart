@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:logging/logging.dart';
 import '../config.dart';
 
-enum LogModule { http, ws, sse }
+enum LogModule { http, ws, sse, db }
 
 AgentLogger logger = AgentLogger(config.log.level);
 
@@ -21,7 +21,8 @@ class AgentLogger {
   AgentLogger._internal() {
     _logger = Logger('LiteAgentCoreServerLogger');
     Logger.root.level = _level;
-    final logDir = Platform.environment['LOG_DIR'] ?? 
+    final logDir =
+        Platform.environment['LOG_DIR'] ??
         '${Directory.current.path}${Platform.pathSeparator}log';
     final logFile = File('$logDir${Platform.pathSeparator}agent.log');
     logFile.createSync(recursive: true);
@@ -35,7 +36,12 @@ class AgentLogger {
     });
   }
 
-  void log(LogModule module, String message, {String detail = "{}", Level level = Level.INFO}) {
+  void log(
+    LogModule module,
+    String message, {
+    String detail = "{}",
+    Level level = Level.INFO,
+  }) {
     _logger?.log(level, "[${module.name.toUpperCase()}] $message - $detail");
   }
 }

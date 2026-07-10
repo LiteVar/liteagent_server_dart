@@ -8,7 +8,8 @@ class VersionDto {
 
   VersionDto({required this.version});
 
-  factory VersionDto.fromJson(Map<String, dynamic> json) => _$VersionDtoFromJson(json);
+  factory VersionDto.fromJson(Map<String, dynamic> json) =>
+      _$VersionDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$VersionDtoToJson(this);
 }
@@ -20,7 +21,8 @@ class OpenToolDto {
 
   OpenToolDto({required this.openToolId, required this.description});
 
-  factory OpenToolDto.fromJson(Map<String, dynamic> json) => _$OpenToolDtoFromJson(json);
+  factory OpenToolDto.fromJson(Map<String, dynamic> json) =>
+      _$OpenToolDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$OpenToolDtoToJson(this);
 }
@@ -31,7 +33,8 @@ class TaskIdDto {
 
   TaskIdDto({required this.taskId});
 
-  factory TaskIdDto.fromJson(Map<String, dynamic> json) => _$TaskIdDtoFromJson(json);
+  factory TaskIdDto.fromJson(Map<String, dynamic> json) =>
+      _$TaskIdDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$TaskIdDtoToJson(this);
 }
