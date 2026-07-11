@@ -220,13 +220,27 @@ class AgentDatabase extends _$AgentDatabase {
     String sessionId, {
     int? page,
     int? pageSize,
-  }) {
+  }) => getMessagesBySessions([sessionId], page: page, pageSize: pageSize);
+
+  Future<List<SessionMessageDao>> getMessagesBySessions(
+    List<String> sessionIds, {
+    int? page,
+    int? pageSize,
+  }) async {
+    if (sessionIds.isEmpty) return const [];
     final query = select(sessionMessages)
-      ..where((table) => table.originSessionId.equals(sessionId))
-      ..orderBy([(table) => OrderingTerm.asc(table.id)]);
+      ..where((table) => table.originSessionId.isIn(sessionIds))
+      ..orderBy([
+        (table) => page != null && pageSize != null
+            ? OrderingTerm.desc(table.id)
+            : OrderingTerm.asc(table.id),
+      ]);
     if (page != null && pageSize != null) {
       query.limit(pageSize, offset: (page - 1) * pageSize);
     }
-    return query.get();
+    final rows = await query.get();
+    return page != null && pageSize != null
+        ? rows.reversed.toList(growable: false)
+        : rows;
   }
 }

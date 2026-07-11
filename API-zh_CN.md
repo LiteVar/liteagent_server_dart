@@ -805,7 +805,7 @@ POST /chat?sessionId=1901883204734947328
 | `taskId`                             | `string`  | 任务id                                                                                              |
 | `role`                               | `string`  | 角色，可选值包括： `developer`、`user`、`agent`、`assistant`、`reflection`、`tool`、`client`                     |
 | `to`                                 | `string`  | 消息发送的目标，可选值包括与`role`一致                                                                            |
-| `type`                               | `string`  | 消息类型，可能包含的值有:`text`、`imageUrl`、`contentList`、`toolCalls`、`reflection`、`toolReturn`、`functionCall` |
+| `type`                               | `string`  | 消息类型，可能包含的值有:`text`、`reasoning`、`imageUrl`、`contentList`、`toolCalls`、`reflection`、`toolReturn`、`functionCall` |
 | `content`                            | `dynamic` | 见以下示例定义，详情定义见 [`type`在不同类型下的`content`结构](#1-type在不同类型下的content结构)                                 |
 | `completions`                        | `object`  | （可选）大模型完成的详细信息，包含以下字段：                                                                            |
 | `completions.usage`                  | `object`  | token 使用信息                                                                                        |
@@ -1121,7 +1121,7 @@ POST /chat/simple?sessionId=1901883204734947328
 | `taskId`                             | `string` | 任务id                                                                                              |
 | `role`                               | `string` | 角色，可选值包括： `developer`、`user`、`agent`、`assistant`、`reflection`、`tool`、`client`                     |
 | `to`                                 | `string` | 消息发送的目标，可选值包括与`role`一致                                                                            |
-| `type`                               | `string` | 消息类型，可能包含的值有:`text`、`imageUrl`、`contentList`、`toolCalls`、`reflection`、`toolReturn`、`functionCall` |
+| `type`                               | `string` | 消息类型，可能包含的值有:`text`、`reasoning`、`imageUrl`、`contentList`、`toolCalls`、`reflection`、`toolReturn`、`functionCall` |
 | `content`                            | `dynamic` | 消息内容                                                                                             |
 | `completions`                        | `object` | （可选）大模型完成的详细信息，包含以下字段：                                                                            |
 | `completions.usage`                  | `object` | token 使用信息                                                                                        |
@@ -1280,7 +1280,7 @@ GET /history?sessionId=1901883204734947328&page=1&pageSize=50
 | `parentTaskId`                       | `string` | （可选）父任务 ID                                                                                         |
 | `role`                               | `string` | 消息来源，可能的值包括：`developer`、`user`、`agent`、`assistant`、`reflection`、`tool`、`client`                  |
 | `to`                                 | `string` | 消息目标，可能的值与`role`一致                                                                               |
-| `type`                               | `string` | 消息类型，可能的值包括：`text`、`imageUrl`、`contentList`、`toolCalls`、`reflection`、`toolReturn`、`functionCall` |
+| `type`                               | `string` | 消息类型，可能的值包括：`text`、`reasoning`、`imageUrl`、`contentList`、`toolCalls`、`reflection`、`toolReturn`、`functionCall` |
 | `content`                            | `any`    | 消息内容，具体类型需根据 `type` 字段解析                                                                         |
 | `reasoningContent`                   | `string` | （可选）模型推理内容                                                                                         |
 | `completions`                        | `object` | 大模型完成的详细信息，包含以下字段：                                                                               |
@@ -1482,11 +1482,12 @@ GET /session/list?agentId=671763aae989ec22357fea88
 
 ### 1. `type`在不同类型下的`content`结构
 
-- `type`为`text`或`imageUrl`
+- `type`为`text`、`reasoning`或`imageUrl`
 
 | `type`     | content数据类型 | 说明  |
 |------------|-------------|-----|
 | `text`     | `string`    | 纯文本 |
+| `reasoning` | `string`   | 在对应正文或工具调用消息之前发送的独立推理消息 |
 | `imageUrl` | `string`    | 纯文本 |
 
 - `type`为`functionCall`，类型为`object`，元素结构为：

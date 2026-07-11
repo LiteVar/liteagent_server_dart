@@ -123,6 +123,83 @@ void main() {
     },
   );
 
+  test('history aggregates child sessions and paginates from newest', () async {
+    await sessionManageService.addSession(
+      sessionId: 'child-session',
+      capability: CapabilityDto(systemPrompt: 'child'),
+    );
+    await sessionManageService.addSession(
+      sessionId: 'root-session',
+      capability: CapabilityDto(
+        systemPrompt: 'root',
+        sessionList: [
+          SessionNameDto(sessionId: 'child-session', name: 'worker'),
+        ],
+      ),
+    );
+
+    final messages = <({String originSessionId, String content})>[
+      (originSessionId: 'root-session', content: 'user request'),
+      (originSessionId: 'child-session', content: 'child reasoning'),
+      (originSessionId: 'child-session', content: 'child result'),
+      (originSessionId: 'root-session', content: 'final answer'),
+    ];
+    for (var index = 0; index < messages.length; index++) {
+      final item = messages[index];
+      await messageManageService.addMessage(
+        SessionAgentMessageDto(
+          sessionId: item.originSessionId,
+          agentMessageDto: AgentMessageDto(
+            sessionId: item.originSessionId,
+            originalTaskId: 'root-task',
+            taskId: 'task-$index',
+            role: AgentRoleType.AGENT,
+            to: SessionRoleType.CLIENT,
+            type: index == 1
+                ? AgentMessageType.REASONING
+                : AgentMessageType.TEXT,
+            content: item.content,
+            createTime: DateTime(2026, 7, 11, 10, 0, index),
+          ),
+        ),
+      );
+    }
+
+    final runtimeService = SessionRuntimeService(
+      agentService: AgentService(
+        messageManageServiceList: [messageManageService],
+      ),
+      sessionManageService: sessionManageService,
+      messageManageService: messageManageService,
+    );
+
+    final allHistory = await runtimeService.getHistory('root-session');
+    expect(allHistory.map((message) => message.content), [
+      'user request',
+      'child reasoning',
+      'child result',
+      'final answer',
+    ]);
+    final latestPage = await runtimeService.getHistory(
+      'root-session',
+      page: 1,
+      pageSize: 2,
+    );
+    expect(latestPage.map((message) => message.content), [
+      'child result',
+      'final answer',
+    ]);
+    final olderPage = await runtimeService.getHistory(
+      'root-session',
+      page: 2,
+      pageSize: 2,
+    );
+    expect(olderPage.map((message) => message.content), [
+      'user request',
+      'child reasoning',
+    ]);
+  });
+
   test(
     'normalizes an empty original task id from runtime stop events',
     () async {

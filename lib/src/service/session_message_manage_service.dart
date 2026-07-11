@@ -83,6 +83,20 @@ class SessionMessageManageServiceByDB extends SessionMessageManageService {
     return _convertList(rows);
   }
 
+  Future<List<SessionAgentMessageDto>> getMessagesBySessions(
+    List<String> sessionIds, {
+    int? page,
+    int? pageSize,
+  }) async {
+    await flush();
+    final rows = await agentDB.getMessagesBySessions(
+      sessionIds,
+      page: page,
+      pageSize: pageSize,
+    );
+    return _convertList(rows);
+  }
+
   Future<List<AgentMessage>> getCompletedContextMessages(
     String sessionId,
   ) async {

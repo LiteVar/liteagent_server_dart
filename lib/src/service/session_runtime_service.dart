@@ -109,14 +109,33 @@ class SessionRuntimeService {
     if (persistedSession == null) {
       throw PersistedSessionNotFoundException(sessionId);
     }
-    final messages = await messageManageService.getMessagesBySession(
-      sessionId,
+    final historySessionIds = await _collectHistorySessionIds(sessionId);
+    final messages = await messageManageService.getMessagesBySessions(
+      historySessionIds,
       page: page,
       pageSize: pageSize,
     );
     return messages
         .map((message) => message.agentMessageDto)
         .toList(growable: false);
+  }
+
+  Future<List<String>> _collectHistorySessionIds(String rootSessionId) async {
+    final visited = <String>{};
+    final pending = <String>[rootSessionId];
+    while (pending.isNotEmpty) {
+      final sessionId = pending.removeLast();
+      if (!visited.add(sessionId)) continue;
+      final session = await sessionManageService.getSession(sessionId);
+      if (session == null) continue;
+      for (final child
+          in session.capability.sessionList ?? const <SessionNameDto>[]) {
+        if (!visited.contains(child.sessionId)) {
+          pending.add(child.sessionId);
+        }
+      }
+    }
+    return visited.toList(growable: false);
   }
 
   Future<List<SessionInfoDto>> getSessionsByAgentId(String agentId) =>
