@@ -18,6 +18,8 @@
     - [/callback](#12-tool-callback): Return tool results for function calls.
     - [/streamCallback](#13-tool-stream-callback): Stream tool results for function calls.
     - [/history](#14-retrieve-message-history): Retrieve the history of messages for a session.
+    - [/history/summary](#141-retrieve-history-turn-summaries): Retrieve one lightweight summary per task turn.
+    - [/history/process](#142-retrieve-history-turn-process): Lazily retrieve process messages for one task turn.
     - [/stop](#15-stop-session): Stop a session or task.
     - [/clear](#16-clear-session-data): Clear session data for a session.
     - [/session/list](#17-list-sessions): List sessions for an agent.
@@ -799,6 +801,92 @@ GET /history?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30&page=1&pageSize=50
       }
     },
     "createTime": "2023-06-18T15:45:30.000+0800"
+  }
+]
+```
+
+### 14.1. Retrieve History Turn Summaries
+
+**Request Method**: `GET`
+
+**Path**: `/history/summary`
+
+Returns one summary per `originalTaskId`, ordered by task creation time descending. Pagination is by task turn, not by message. `page` defaults to `1`, `pageSize` defaults to `30`, and `pageSize` must not exceed `200`.
+
+```http request
+GET /history/summary?sessionId=root-session&page=1&pageSize=30
+```
+
+The query `sessionId` is the authoritative root-session boundary. A root user message must have the same `sessionId`, role `user`, and type `text` or `contentList`. The final answer is the latest root-session message addressed to `user` with either content type. Only root-session `taskStatus` messages determine terminal state: root `exception`/`error`/`failed` becomes `error`; root `stop` becomes `stopped`; a root final answer or root `done`/`complete`/`finished` becomes `done`; otherwise the task is `running`. Child-agent terminal or error messages never change the root status or error.
+
+```json
+[
+  {
+    "originalTaskId": "root-task-id",
+    "sessionId": "root-session",
+    "userMessage": {
+      "sessionId": "root-session",
+      "originalTaskId": "root-task-id",
+      "taskId": "root-task-id",
+      "role": "user",
+      "to": "agent",
+      "type": "text",
+      "content": "Summarize the report",
+      "createTime": "2026-07-12T10:00:00.000Z"
+    },
+    "finalMessage": {
+      "sessionId": "root-session",
+      "originalTaskId": "root-task-id",
+      "taskId": "root-task-id",
+      "role": "agent",
+      "to": "user",
+      "type": "text",
+      "content": "Here is the summary...",
+      "createTime": "2026-07-12T10:00:05.000Z"
+    },
+    "status": "done",
+    "error": null,
+    "createdAt": "2026-07-12T10:00:00.000Z",
+    "completedAt": "2026-07-12T10:00:05.000Z",
+    "durationMs": 5000,
+    "usage": {
+      "promptTokens": 120,
+      "completionTokens": 30,
+      "totalTokens": 150,
+      "contextUsageRatio": 0.12
+    },
+    "processMessageCount": 8
+  }
+]
+```
+
+`userMessage` and `finalMessage` retain the original `AgentMessageDto` JSON shape. Usage comes from the root final answer when present, otherwise from the latest root message with completion usage. `processMessageCount` excludes the selected root user and final messages.
+
+### 14.2. Retrieve History Turn Process
+
+**Request Method**: `GET`
+
+**Path**: `/history/process`
+
+Lazily returns process messages for one turn, including associated child-agent, tool-call, tool-return, reasoning, and task-status messages. The root user and final messages already present in the summary are excluded. Results use the unchanged `AgentMessageDto` JSON array, ordered by `createTime` ascending with persisted message ID as the stable tie-breaker.
+
+```http request
+GET /history/process?sessionId=root-session&originalTaskId=root-task-id&page=1&pageSize=50
+```
+
+`page` defaults to `1`, `pageSize` defaults to `50`, and `pageSize` must not exceed `200`. The task must contain at least one message whose actual `sessionId` is the queried root session and must be within that root session's configured session tree. A missing or foreign `originalTaskId` returns `200 OK` with `[]`; a missing root session returns `404`.
+
+```json
+[
+  {
+    "sessionId": "child-session",
+    "originalTaskId": "root-task-id",
+    "taskId": "child-task-id",
+    "role": "agent",
+    "to": "client",
+    "type": "taskStatus",
+    "content": {"status": "start", "taskId": "child-task-id"},
+    "createTime": "2026-07-12T10:00:01.000Z"
   }
 ]
 ```

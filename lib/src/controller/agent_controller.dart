@@ -400,6 +400,81 @@ class AgentController {
     }
   }
 
+  Future<Response> historySummary(Request request) async {
+    final data = request.url.queryParameters;
+    logger.log(
+      LogModule.http,
+      'Request history summary',
+      detail: jsonEncode(data),
+    );
+    try {
+      final sessionDto = SessionDto.fromJson(data);
+      final page = _optionalPositiveInt(data['page'], 'page') ?? 1;
+      final pageSize = _boundedPageSize(data['pageSize'], 30);
+      final summaries = await sessionRuntimeService.getHistorySummary(
+        sessionDto.sessionId,
+        page: page,
+        pageSize: pageSize,
+      );
+      return Response.ok(
+        jsonEncode(summaries.map((summary) => summary.toJson()).toList()),
+        headers: jsonHeaders,
+      );
+    } on PersistedSessionNotFoundException catch (e) {
+      return Response.notFound(e.toString());
+    } on FormatException catch (e) {
+      return Response.badRequest(body: e.toString());
+    } catch (e) {
+      logger.log(
+        LogModule.http,
+        'Response history summary Exception: $e',
+        detail: jsonEncode(data),
+        level: Level.WARNING,
+      );
+      return Response.internalServerError(body: e.toString());
+    }
+  }
+
+  Future<Response> historyProcess(Request request) async {
+    final data = request.url.queryParameters;
+    logger.log(
+      LogModule.http,
+      'Request history process',
+      detail: jsonEncode(data),
+    );
+    try {
+      final sessionDto = SessionDto.fromJson(data);
+      final originalTaskId = data['originalTaskId']?.trim();
+      if (originalTaskId == null || originalTaskId.isEmpty) {
+        throw const FormatException('originalTaskId is required');
+      }
+      final page = _optionalPositiveInt(data['page'], 'page') ?? 1;
+      final pageSize = _boundedPageSize(data['pageSize'], 50);
+      final messages = await sessionRuntimeService.getHistoryProcess(
+        sessionDto.sessionId,
+        originalTaskId,
+        page: page,
+        pageSize: pageSize,
+      );
+      return Response.ok(
+        jsonEncode(messages.map((message) => message.toJson()).toList()),
+        headers: jsonHeaders,
+      );
+    } on PersistedSessionNotFoundException catch (e) {
+      return Response.notFound(e.toString());
+    } on FormatException catch (e) {
+      return Response.badRequest(body: e.toString());
+    } catch (e) {
+      logger.log(
+        LogModule.http,
+        'Response history process Exception: $e',
+        detail: jsonEncode(data),
+        level: Level.WARNING,
+      );
+      return Response.internalServerError(body: e.toString());
+    }
+  }
+
   Future<Response> stopSession(Request request) async {
     final data = await request.url.queryParameters;
     logger.log(LogModule.http, "Request stopSession", detail: jsonEncode(data));
@@ -749,6 +824,14 @@ class AgentController {
       throw FormatException('$name must be a positive integer');
     }
     return parsed;
+  }
+
+  int _boundedPageSize(String? value, int defaultValue) {
+    final pageSize = _optionalPositiveInt(value, 'pageSize') ?? defaultValue;
+    if (pageSize > 200) {
+      throw const FormatException('pageSize must not exceed 200');
+    }
+    return pageSize;
   }
 
   void _normalizeAndValidateSimpleCapability(

@@ -9,6 +9,13 @@ import 'package:logging/logging.dart';
 import '../db/agent_database.dart';
 import '../util/logger.dart';
 
+class PersistedAgentMessage {
+  final int id;
+  final AgentMessageDto message;
+
+  const PersistedAgentMessage({required this.id, required this.message});
+}
+
 class SessionMessageManageServiceByDB extends SessionMessageManageService {
   final AgentDatabase agentDB;
   Future<void> _writeTail = Future<void>.value();
@@ -95,6 +102,75 @@ class SessionMessageManageServiceByDB extends SessionMessageManageService {
       pageSize: pageSize,
     );
     return _convertList(rows);
+  }
+
+  Future<List<HistoryTurnRecord>> getHistoryTurnPage(
+    String rootSessionId,
+    List<String> historySessionIds, {
+    required int page,
+    required int pageSize,
+  }) async {
+    await flush();
+    return agentDB.getHistoryTurnPage(
+      rootSessionId,
+      historySessionIds,
+      page: page,
+      pageSize: pageSize,
+    );
+  }
+
+  Future<List<PersistedAgentMessage>> getHistorySummaryCandidates(
+    String rootSessionId,
+    List<String> historySessionIds,
+    List<String> originalTaskIds,
+  ) async {
+    await flush();
+    final rows = await agentDB.getHistorySummaryCandidates(
+      rootSessionId,
+      historySessionIds,
+      originalTaskIds,
+    );
+    return rows
+        .map(
+          (row) => PersistedAgentMessage(
+            id: row.id,
+            message: _convert(row).agentMessageDto,
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  Future<bool> historyTaskBelongsToRoot(
+    String rootSessionId,
+    List<String> historySessionIds,
+    String originalTaskId,
+  ) async {
+    await flush();
+    return agentDB.historyTaskBelongsToRoot(
+      rootSessionId,
+      historySessionIds,
+      originalTaskId,
+    );
+  }
+
+  Future<List<AgentMessageDto>> getHistoryProcessMessages(
+    List<String> historySessionIds,
+    String originalTaskId, {
+    required int page,
+    required int pageSize,
+    Set<int> excludedMessageIds = const {},
+  }) async {
+    await flush();
+    final rows = await agentDB.getHistoryProcessMessages(
+      historySessionIds,
+      originalTaskId,
+      page: page,
+      pageSize: pageSize,
+      excludedMessageIds: excludedMessageIds,
+    );
+    return rows
+        .map((row) => _convert(row).agentMessageDto)
+        .toList(growable: false);
   }
 
   Future<List<AgentMessage>> getCompletedContextMessages(

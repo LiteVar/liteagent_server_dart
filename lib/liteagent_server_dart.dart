@@ -2,6 +2,7 @@ library;
 
 export 'src/config.dart';
 export 'src/dto.dart';
+export 'src/history_dto.dart';
 export 'src/middleware.dart';
 export 'src/router.dart';
 export 'src/controller/agent_controller.dart';

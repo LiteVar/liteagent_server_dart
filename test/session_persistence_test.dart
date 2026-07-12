@@ -305,7 +305,7 @@ void main() {
     expect(history, hasLength(1));
     expect(history.single.agentMessageDto.originalTaskId, 'legacy-task');
     expect(history.single.agentMessageDto.content, 'legacy answer');
-    expect(migratedDatabase.schemaVersion, 2);
+    expect(migratedDatabase.schemaVersion, 3);
     final migratedSession = await migratedDatabase.getSessionById(
       'legacy-session',
     );

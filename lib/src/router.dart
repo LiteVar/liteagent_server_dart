@@ -21,6 +21,8 @@ void apiRoutes(
   apiRouter.post('/initSimple', agentController.initSimple);
   apiRouter.post('/chat', agentController.startStream);
   apiRouter.post('/chat/simple', agentController.startSimple);
+  apiRouter.get('/history/summary', agentController.historySummary);
+  apiRouter.get('/history/process', agentController.historyProcess);
   apiRouter.get('/history', agentController.history);
   apiRouter.get('/stop', agentController.stopSession);
   apiRouter.get('/clear', agentController.clearSession);

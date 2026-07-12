@@ -47,12 +47,24 @@ class SessionMessages extends Table {
   DateTimeColumn get createTime => dateTime()();
 }
 
+class HistoryTurnRecord {
+  final String originalTaskId;
+  final DateTime createdAt;
+  final int messageCount;
+
+  const HistoryTurnRecord({
+    required this.originalTaskId,
+    required this.createdAt,
+    required this.messageCount,
+  });
+}
+
 @DriftDatabase(tables: [Agents, Sessions, SessionMessages])
 class AgentDatabase extends _$AgentDatabase {
   AgentDatabase(QueryExecutor e) : super(e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -121,8 +133,8 @@ class AgentDatabase extends _$AgentDatabase {
               FROM session_messages_legacy
             ''');
         await customStatement('DROP TABLE session_messages_legacy');
-        await _createIndexes();
       }
+      if (from < 3) await _createIndexes();
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -143,6 +155,10 @@ class AgentDatabase extends _$AgentDatabase {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS session_messages_task_idx '
       'ON session_messages (origin_session_id, original_task_id, id)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS session_messages_root_turn_idx '
+      'ON session_messages (session_id, original_task_id, create_time, id)',
     );
   }
 
@@ -242,5 +258,133 @@ class AgentDatabase extends _$AgentDatabase {
     return page != null && pageSize != null
         ? rows.reversed.toList(growable: false)
         : rows;
+  }
+
+  Future<List<HistoryTurnRecord>> getHistoryTurnPage(
+    String rootSessionId,
+    List<String> historySessionIds, {
+    required int page,
+    required int pageSize,
+  }) async {
+    if (historySessionIds.isEmpty) return const [];
+
+    final rootTurns = selectOnly(sessionMessages)
+      ..addColumns([
+        sessionMessages.originalTaskId,
+        sessionMessages.createTime.min(),
+        sessionMessages.id.min(),
+      ])
+      ..where(
+        sessionMessages.originSessionId.isIn(historySessionIds) &
+            sessionMessages.sessionId.equals(rootSessionId),
+      )
+      ..groupBy([sessionMessages.originalTaskId])
+      ..orderBy([
+        OrderingTerm.desc(sessionMessages.createTime.min()),
+        OrderingTerm.desc(sessionMessages.id.min()),
+        OrderingTerm.desc(sessionMessages.originalTaskId),
+      ])
+      ..limit(pageSize, offset: (page - 1) * pageSize);
+    final turnRows = await rootTurns.get();
+    if (turnRows.isEmpty) return const [];
+
+    final taskIds = turnRows
+        .map((row) => row.read(sessionMessages.originalTaskId)!)
+        .toList(growable: false);
+    final counts = selectOnly(sessionMessages)
+      ..addColumns([sessionMessages.originalTaskId, sessionMessages.id.count()])
+      ..where(
+        sessionMessages.originSessionId.isIn(historySessionIds) &
+            sessionMessages.originalTaskId.isIn(taskIds),
+      )
+      ..groupBy([sessionMessages.originalTaskId]);
+    final countRows = await counts.get();
+    final countByTask = {
+      for (final row in countRows)
+        row.read(sessionMessages.originalTaskId)!: row.read(
+          sessionMessages.id.count(),
+        )!,
+    };
+
+    return turnRows
+        .map(
+          (row) => HistoryTurnRecord(
+            originalTaskId: row.read(sessionMessages.originalTaskId)!,
+            createdAt: row.read(sessionMessages.createTime.min())!,
+            messageCount:
+                countByTask[row.read(sessionMessages.originalTaskId)!] ?? 0,
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  Future<List<SessionMessageDao>> getHistorySummaryCandidates(
+    String rootSessionId,
+    List<String> historySessionIds,
+    List<String> originalTaskIds,
+  ) {
+    if (historySessionIds.isEmpty || originalTaskIds.isEmpty) {
+      return Future.value(const []);
+    }
+    final isSummaryText = sessionMessages.type.isIn(['text', 'contentList']);
+    final query = select(sessionMessages)
+      ..where(
+        (table) =>
+            table.originSessionId.isIn(historySessionIds) &
+            table.sessionId.equals(rootSessionId) &
+            table.originalTaskId.isIn(originalTaskIds) &
+            ((table.role.equals('user') & isSummaryText) |
+                (table.to.equals('user') & isSummaryText) |
+                table.type.equals('taskStatus') |
+                table.completions.isNotNull()),
+      )
+      ..orderBy([
+        (table) => OrderingTerm.asc(table.createTime),
+        (table) => OrderingTerm.asc(table.id),
+      ]);
+    return query.get();
+  }
+
+  Future<bool> historyTaskBelongsToRoot(
+    String rootSessionId,
+    List<String> historySessionIds,
+    String originalTaskId,
+  ) async {
+    if (historySessionIds.isEmpty) return false;
+    final query = selectOnly(sessionMessages)
+      ..addColumns([sessionMessages.id])
+      ..where(
+        sessionMessages.originSessionId.isIn(historySessionIds) &
+            sessionMessages.sessionId.equals(rootSessionId) &
+            sessionMessages.originalTaskId.equals(originalTaskId),
+      )
+      ..limit(1);
+    return (await query.getSingleOrNull()) != null;
+  }
+
+  Future<List<SessionMessageDao>> getHistoryProcessMessages(
+    List<String> historySessionIds,
+    String originalTaskId, {
+    required int page,
+    required int pageSize,
+    Set<int> excludedMessageIds = const {},
+  }) async {
+    if (historySessionIds.isEmpty) return const [];
+    final query = select(sessionMessages)
+      ..where((table) {
+        var predicate =
+            table.originSessionId.isIn(historySessionIds) &
+            table.originalTaskId.equals(originalTaskId);
+        if (excludedMessageIds.isNotEmpty) {
+          predicate = predicate & table.id.isNotIn(excludedMessageIds);
+        }
+        return predicate;
+      })
+      ..orderBy([
+        (table) => OrderingTerm.asc(table.createTime),
+        (table) => OrderingTerm.asc(table.id),
+      ])
+      ..limit(pageSize, offset: (page - 1) * pageSize);
+    return query.get();
   }
 }

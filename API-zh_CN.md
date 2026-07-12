@@ -20,6 +20,8 @@
   - [/callback](#12-响应functioncall结果)：客户端接收到FunctionCall要求后，调用此接口返回结果。
   - [/streamCallback](#13-响应functioncall流式结果)：客户端以流式方式返回FunctionCall结果。
   - [/history](#14-获取历史消息)：取某个会话的历史消息列表。
+  - [/history/summary](#141-获取历史任务摘要)：按任务分页获取轻量摘要。
+  - [/history/process](#142-获取任务过程消息)：按需分页获取单个任务的过程消息。
   - [/stop](#15-停止会话)：通过指定 sessionId 停止对应的会话操作。
   - [/clear](#16-清除会话数据)：清除会话数据，返回对应的 sessionId。
   - [/session/list](#17-获取会话列表)：根据 agentId 获取会话列表。
@@ -1322,6 +1324,92 @@ GET /history?sessionId=1901883204734947328&page=1&pageSize=50
       }
     },
     "createTime": "2023-06-18T15:45:30.000+0800"
+  }
+]
+```
+
+### 14.1. 获取历史任务摘要
+
+**请求方法**：`GET`
+
+**路径**：`/history/summary`
+
+按 `originalTaskId` 聚合，每个任务返回一条摘要，并按任务创建时间倒序排列。分页单位是任务 turn，而不是单条消息。`page` 默认 `1`，`pageSize` 默认 `30`，且 `pageSize` 最大为 `200`。
+
+```http request
+GET /history/summary?sessionId=root-session&page=1&pageSize=30
+```
+
+查询参数 `sessionId` 是唯一可信的根会话边界。根用户消息必须具有相同 `sessionId`、`role=user`，且 `type` 为 `text` 或 `contentList`；最终回复取同一任务中时间最晚、发往 `user` 的根会话文本消息。终态只读取根会话的 `taskStatus`：根 `exception`/`error`/`failed` 为 `error`，根 `stop` 为 `stopped`，存在根最终回复或根 `done`/`complete`/`finished` 为 `done`，否则为 `running`。子 Agent 的完成或异常不会改变根任务状态和错误信息。
+
+```json
+[
+  {
+    "originalTaskId": "root-task-id",
+    "sessionId": "root-session",
+    "userMessage": {
+      "sessionId": "root-session",
+      "originalTaskId": "root-task-id",
+      "taskId": "root-task-id",
+      "role": "user",
+      "to": "agent",
+      "type": "text",
+      "content": "总结报告",
+      "createTime": "2026-07-12T10:00:00.000Z"
+    },
+    "finalMessage": {
+      "sessionId": "root-session",
+      "originalTaskId": "root-task-id",
+      "taskId": "root-task-id",
+      "role": "agent",
+      "to": "user",
+      "type": "text",
+      "content": "报告摘要如下……",
+      "createTime": "2026-07-12T10:00:05.000Z"
+    },
+    "status": "done",
+    "error": null,
+    "createdAt": "2026-07-12T10:00:00.000Z",
+    "completedAt": "2026-07-12T10:00:05.000Z",
+    "durationMs": 5000,
+    "usage": {
+      "promptTokens": 120,
+      "completionTokens": 30,
+      "totalTokens": 150,
+      "contextUsageRatio": 0.12
+    },
+    "processMessageCount": 8
+  }
+]
+```
+
+`userMessage` 和 `finalMessage` 保留原始 `AgentMessageDto` JSON 结构。usage 优先取根最终回复，没有时取该任务最后一条包含 usage 的根消息。`processMessageCount` 不包含摘要中选中的根 user/final 消息。
+
+### 14.2. 获取任务过程消息
+
+**请求方法**：`GET`
+
+**路径**：`/history/process`
+
+按需返回单个任务的过程消息，包括关联子 Agent、工具调用、`toolReturn`、`reasoning` 和 `taskStatus`。摘要已经携带的根 user/final 消息不会重复返回。响应继续使用未改变的 `AgentMessageDto` JSON 数组，按 `createTime` 正序排列；时间相同时使用持久化消息 ID 作为稳定排序条件。
+
+```http request
+GET /history/process?sessionId=root-session&originalTaskId=root-task-id&page=1&pageSize=50
+```
+
+`page` 默认 `1`，`pageSize` 默认 `50`，且 `pageSize` 最大为 `200`。指定任务必须在查询根会话配置的会话树内，并且至少存在一条实际 `sessionId` 等于该根会话的消息。任务不存在或属于其他根会话时返回 `200 OK` 和空数组 `[]`；根会话不存在时返回 `404`。
+
+```json
+[
+  {
+    "sessionId": "child-session",
+    "originalTaskId": "root-task-id",
+    "taskId": "child-task-id",
+    "role": "agent",
+    "to": "client",
+    "type": "taskStatus",
+    "content": {"status": "start", "taskId": "child-task-id"},
+    "createTime": "2026-07-12T10:00:01.000Z"
   }
 ]
 ```

@@ -1,5 +1,9 @@
+import 'dart:convert';
+
+import 'package:liteagent_core_dart/liteagent_core.dart';
 import 'package:liteagent_core_dart/liteagent_service.dart';
 
+import '../history_dto.dart';
 import 'session_manage_service.dart';
 import 'session_message_manage_service.dart';
 
@@ -120,6 +124,202 @@ class SessionRuntimeService {
         .toList(growable: false);
   }
 
+  Future<List<HistoryTurnSummaryDto>> getHistorySummary(
+    String sessionId, {
+    required int page,
+    required int pageSize,
+  }) async {
+    await _requirePersistedSession(sessionId);
+    final historySessionIds = await _collectHistorySessionIds(sessionId);
+    final turns = await messageManageService.getHistoryTurnPage(
+      sessionId,
+      historySessionIds,
+      page: page,
+      pageSize: pageSize,
+    );
+    if (turns.isEmpty) return const [];
+
+    final candidates = await messageManageService.getHistorySummaryCandidates(
+      sessionId,
+      historySessionIds,
+      turns.map((turn) => turn.originalTaskId).toList(growable: false),
+    );
+    final candidatesByTask = <String, List<PersistedAgentMessage>>{};
+    for (final candidate in candidates) {
+      candidatesByTask
+          .putIfAbsent(candidate.message.originalTaskId, () => [])
+          .add(candidate);
+    }
+
+    return turns
+        .map((turn) {
+          final selection = _selectSummary(
+            candidatesByTask[turn.originalTaskId] ?? const [],
+          );
+          final createdAt =
+              selection.user?.message.createTime ?? turn.createdAt;
+          final completedAt = selection.completedAt;
+          return HistoryTurnSummaryDto(
+            originalTaskId: turn.originalTaskId,
+            sessionId: sessionId,
+            userMessage: selection.user?.message,
+            finalMessage: selection.finalMessage?.message,
+            status: selection.status,
+            error: selection.error,
+            createdAt: createdAt,
+            completedAt: completedAt,
+            durationMs: completedAt == null
+                ? null
+                : completedAt.difference(createdAt).inMilliseconds,
+            usage: selection.usage,
+            processMessageCount:
+                turn.messageCount - selection.summaryMessageIds.length,
+          );
+        })
+        .toList(growable: false);
+  }
+
+  Future<List<AgentMessageDto>> getHistoryProcess(
+    String sessionId,
+    String originalTaskId, {
+    required int page,
+    required int pageSize,
+  }) async {
+    await _requirePersistedSession(sessionId);
+    final historySessionIds = await _collectHistorySessionIds(sessionId);
+    final belongs = await messageManageService.historyTaskBelongsToRoot(
+      sessionId,
+      historySessionIds,
+      originalTaskId,
+    );
+    if (!belongs) return const [];
+
+    final candidates = await messageManageService.getHistorySummaryCandidates(
+      sessionId,
+      historySessionIds,
+      [originalTaskId],
+    );
+    final selection = _selectSummary(candidates);
+    return messageManageService.getHistoryProcessMessages(
+      historySessionIds,
+      originalTaskId,
+      page: page,
+      pageSize: pageSize,
+      excludedMessageIds: selection.summaryMessageIds,
+    );
+  }
+
+  Future<void> _requirePersistedSession(String sessionId) async {
+    if (await sessionManageService.getSession(sessionId) == null) {
+      throw PersistedSessionNotFoundException(sessionId);
+    }
+  }
+
+  _HistorySummarySelection _selectSummary(
+    List<PersistedAgentMessage> candidates,
+  ) {
+    PersistedAgentMessage? user;
+    PersistedAgentMessage? finalMessage;
+    PersistedAgentMessage? errorStatus;
+    PersistedAgentMessage? stopStatus;
+    PersistedAgentMessage? doneStatus;
+    PersistedAgentMessage? lastUsage;
+
+    for (final candidate in candidates) {
+      final message = candidate.message;
+      final isSummaryContent =
+          message.type == AgentMessageType.TEXT ||
+          message.type == AgentMessageType.CONTENT_LIST;
+      if (user == null &&
+          message.role == SessionRoleType.USER &&
+          isSummaryContent) {
+        user = candidate;
+      }
+      if (message.to == SessionRoleType.USER && isSummaryContent) {
+        finalMessage = candidate;
+      }
+      if (message.completions?.usage != null) lastUsage = candidate;
+      if (message.type != AgentMessageType.TASK_STATUS) continue;
+      final status = _taskStatus(message.content)?.toLowerCase();
+      if (status == TaskStatusType.EXCEPTION ||
+          status == 'error' ||
+          status == 'failed') {
+        errorStatus = candidate;
+      } else if (status == TaskStatusType.STOP) {
+        stopStatus = candidate;
+      } else if (status == TaskStatusType.DONE ||
+          status == 'complete' ||
+          status == 'finished') {
+        doneStatus = candidate;
+      }
+    }
+
+    final String status;
+    final DateTime? completedAt;
+    String? error;
+    if (errorStatus != null) {
+      status = HistoryTurnStatus.error;
+      completedAt = errorStatus.message.createTime;
+      error = _taskError(errorStatus.message.content);
+    } else if (stopStatus != null) {
+      status = HistoryTurnStatus.stopped;
+      completedAt = stopStatus.message.createTime;
+    } else if (finalMessage != null || doneStatus != null) {
+      status = HistoryTurnStatus.done;
+      completedAt = _latestTime(
+        finalMessage?.message.createTime,
+        doneStatus?.message.createTime,
+      );
+    } else {
+      status = HistoryTurnStatus.running;
+      completedAt = null;
+    }
+
+    return _HistorySummarySelection(
+      user: user,
+      finalMessage: finalMessage,
+      status: status,
+      error: error,
+      completedAt: completedAt,
+      usage:
+          finalMessage?.message.completions?.usage ??
+          lastUsage?.message.completions?.usage,
+    );
+  }
+
+  String? _taskStatus(dynamic content) {
+    if (content is TaskStatusDto) return content.status;
+    if (content is TaskStatus) return content.status;
+    if (content is Map) return content['status']?.toString();
+    return null;
+  }
+
+  String? _taskError(dynamic content) {
+    dynamic description;
+    if (content is TaskStatusDto) {
+      description = content.description;
+    } else if (content is TaskStatus) {
+      description = content.description;
+    } else if (content is Map) {
+      description = content['description'];
+    }
+    if (description == null) return null;
+    if (description is String) return description;
+    if (description is Map) {
+      for (final key in const ['message', 'error', 'description']) {
+        final value = description[key];
+        if (value != null) return value.toString();
+      }
+    }
+    return jsonEncode(description);
+  }
+
+  DateTime? _latestTime(DateTime? first, DateTime? second) {
+    if (first == null) return second;
+    if (second == null) return first;
+    return first.isAfter(second) ? first : second;
+  }
+
   Future<List<String>> _collectHistorySessionIds(String rootSessionId) async {
     final visited = <String>{};
     final pending = <String>[rootSessionId];
@@ -152,4 +352,27 @@ class SessionRuntimeService {
     await messageManageService.flush();
     await sessionManageService.deleteSession(sessionId);
   }
+}
+
+class _HistorySummarySelection {
+  final PersistedAgentMessage? user;
+  final PersistedAgentMessage? finalMessage;
+  final String status;
+  final String? error;
+  final DateTime? completedAt;
+  final TokenUsageDto? usage;
+
+  const _HistorySummarySelection({
+    required this.user,
+    required this.finalMessage,
+    required this.status,
+    required this.error,
+    required this.completedAt,
+    required this.usage,
+  });
+
+  Set<int> get summaryMessageIds => {
+    if (user != null) user!.id,
+    if (finalMessage != null) finalMessage!.id,
+  };
 }
