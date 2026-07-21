@@ -1,12 +1,17 @@
+import 'dart:ffi';
 import 'dart:io';
 import 'package:liteagent_core_dart/liteagent_service.dart';
 import 'package:liteagent_server_dart/liteagent_server_dart.dart';
+import 'package:path/path.dart' as p;
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_router/shelf_router.dart';
+import 'package:sqlite3/open.dart';
 
 void main(List<String> args) async {
   try {
+    _configureSqliteLibrary();
+
     stderr.writeln('[agent_server] Starting...');
     stderr.writeln('[agent_server] CWD: ${Directory.current.path}');
     stderr.writeln('[agent_server] Executable: ${Platform.resolvedExecutable}');
@@ -73,5 +78,53 @@ void main(List<String> args) async {
     stderr.writeln('[agent_server] FATAL: $e');
     stderr.writeln('[agent_server] StackTrace: $stackTrace');
     exit(1);
+  }
+}
+
+void _configureSqliteLibrary() {
+  final exeDir = p.dirname(Platform.resolvedExecutable);
+
+  if (Platform.isWindows) {
+    open.overrideFor(OperatingSystem.windows, () {
+      final bundleLibPath = p.normalize(
+        p.join(exeDir, '..', 'lib', 'sqlite3.dll'),
+      );
+      if (File(bundleLibPath).existsSync()) {
+        return DynamicLibrary.open(bundleLibPath);
+      }
+      final sameDirPath = p.join(exeDir, 'sqlite3.dll');
+      if (File(sameDirPath).existsSync()) {
+        return DynamicLibrary.open(sameDirPath);
+      }
+      return DynamicLibrary.open('winsqlite3.dll');
+    });
+  } else if (Platform.isMacOS) {
+    open.overrideFor(OperatingSystem.macOS, () {
+      final bundleLibPath = p.normalize(
+        p.join(exeDir, '..', 'lib', 'libsqlite3.dylib'),
+      );
+      if (File(bundleLibPath).existsSync()) {
+        return DynamicLibrary.open(bundleLibPath);
+      }
+      final sameDirPath = p.join(exeDir, 'libsqlite3.dylib');
+      if (File(sameDirPath).existsSync()) {
+        return DynamicLibrary.open(sameDirPath);
+      }
+      return DynamicLibrary.open('libsqlite3.dylib');
+    });
+  } else if (Platform.isLinux) {
+    open.overrideFor(OperatingSystem.linux, () {
+      final bundleLibPath = p.normalize(
+        p.join(exeDir, '..', 'lib', 'libsqlite3.so'),
+      );
+      if (File(bundleLibPath).existsSync()) {
+        return DynamicLibrary.open(bundleLibPath);
+      }
+      final sameDirPath = p.join(exeDir, 'libsqlite3.so');
+      if (File(sameDirPath).existsSync()) {
+        return DynamicLibrary.open(sameDirPath);
+      }
+      return DynamicLibrary.open('libsqlite3.so');
+    });
   }
 }
