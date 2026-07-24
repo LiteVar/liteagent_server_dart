@@ -120,6 +120,12 @@ class AgentManageServiceByDB extends AgentManageService {
       llmConfigList: agentDto.capability.llmConfigList,
       enableThinking: agentDto.capability.enableThinking,
       toolReturnPackMinLength: agentDto.capability.toolReturnPackMinLength,
+      maxLlmRequests: agentDto.capability.maxLlmRequests,
+      maxToolRounds: agentDto.capability.maxToolRounds,
+      maxToolCalls: agentDto.capability.maxToolCalls,
+      maxConsecutiveIdenticalToolRounds:
+          agentDto.capability.maxConsecutiveIdenticalToolRounds,
+      maxTaskDurationSeconds: agentDto.capability.maxTaskDurationSeconds,
     );
     AgentDto newAgentDto = AgentDto(
       name: agentDto.name,

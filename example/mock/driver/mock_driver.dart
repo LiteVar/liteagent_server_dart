@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:liteagent_core_dart/liteagent_core.dart';
 import 'package:opentool_dart/opentool_client.dart';
 
@@ -5,57 +7,105 @@ import 'mock_util.dart';
 
 class MockDriver extends OpenToolDriver {
   MockUtil mockUtil = MockUtil();
+  final Map<String, Completer<void>> _streamCancellations = {};
 
-  MockDriver(OpenTool opentool): super(opentool);
+  MockDriver(OpenTool opentool) : super(opentool);
 
   @override
-  Future<ToolReturn> call(FunctionCall functionCall) async{
+  Future<ToolReturn> call(FunctionCall functionCall) async {
     String functionName = functionCall.name;
-    if(functionName == "count") {
+    if (functionName == "count") {
       int count = mockUtil.count();
       return ToolReturn(id: functionCall.id, result: {"count": count});
-    } else if(functionName == "create") {
+    } else if (functionName == "create") {
       String text = functionCall.arguments["text"] as String;
       int id = mockUtil.create(text);
       return ToolReturn(id: functionCall.id, result: {"id": id});
-    } else if(functionName == "read") {
+    } else if (functionName == "read") {
       int id = functionCall.arguments["id"] as int;
       String text = mockUtil.read(id);
       return ToolReturn(id: functionCall.id, result: {"text": text});
-    } else if(functionName == "update") {
+    } else if (functionName == "update") {
       int id = functionCall.arguments["id"] as int;
       String text = functionCall.arguments["text"] as String;
       mockUtil.update(id, text);
-      return ToolReturn(id: functionCall.id, result: {"result": "Update successfully."});
-    } else if(functionName == "delete") {
+      return ToolReturn(
+        id: functionCall.id,
+        result: {"result": "Update successfully."},
+      );
+    } else if (functionName == "delete") {
       int id = functionCall.arguments["id"] as int;
       mockUtil.delete(id);
-      return ToolReturn(id: functionCall.id, result: {"result": "Delete successfully."});
-    } else if(functionName == "run") {
+      return ToolReturn(
+        id: functionCall.id,
+        result: {"result": "Delete successfully."},
+      );
+    } else if (functionName == "run") {
       try {
         mockUtil.run();
-      } catch(e) {
+      } catch (e) {
         throw ToolBreakException(e.toString());
       }
-      return ToolReturn(id: functionCall.id, result: {"result": "Delete successfully."});
+      return ToolReturn(
+        id: functionCall.id,
+        result: {"result": "Delete successfully."},
+      );
     } else {
-      return ToolReturn(id: functionCall.id, result: FunctionNotSupportedException(functionName: functionName).toJson());
+      return ToolReturn(
+        id: functionCall.id,
+        result: FunctionNotSupportedException(
+          functionName: functionName,
+        ).toJson(),
+      );
     }
   }
 
   @override
-  Future<void> streamCall(FunctionCall functionCall, void Function(String event, ToolReturn toolReturn) onStream) async {
+  Future<void> streamCall(
+    FunctionCall functionCall,
+    void Function(String event, ToolReturn toolReturn) onStream,
+  ) async {
     String functionName = functionCall.name;
-    if(functionName == "sequentiallyRead") {
-      await mockUtil.sequentiallyRead((String data) {
-        ToolReturn toolReturn = ToolReturn(id: functionCall.id, result: {"data": data});
-        onStream(EventType.DATA, toolReturn);
-      });
-      ToolReturn toolReturn = ToolReturn(id: functionCall.id, result: {});
-      onStream(EventType.DONE, toolReturn);
+    if (functionName == "sequentiallyRead") {
+      final cancellation = Completer<void>();
+      _streamCancellations[functionCall.id] = cancellation;
+      try {
+        await mockUtil.sequentiallyRead(
+          (String data) {
+            ToolReturn toolReturn = ToolReturn(
+              id: functionCall.id,
+              result: {"data": data},
+            );
+            onStream(EventType.DATA, toolReturn);
+          },
+          cancellation: cancellation.future,
+          isCancelled: () => cancellation.isCompleted,
+        );
+        if (!cancellation.isCompleted) {
+          ToolReturn toolReturn = ToolReturn(id: functionCall.id, result: {});
+          onStream(EventType.DONE, toolReturn);
+        }
+      } finally {
+        if (identical(_streamCancellations[functionCall.id], cancellation)) {
+          _streamCancellations.remove(functionCall.id);
+        }
+      }
     } else {
-      ToolReturn toolReturn = ToolReturn(id: functionCall.id, result: FunctionNotSupportedException(functionName: functionName).toJson());
+      ToolReturn toolReturn = ToolReturn(
+        id: functionCall.id,
+        result: FunctionNotSupportedException(
+          functionName: functionName,
+        ).toJson(),
+      );
       onStream(EventType.ERROR, toolReturn);
+    }
+  }
+
+  @override
+  Future<void> cancel(String functionCallId) async {
+    final cancellation = _streamCancellations[functionCallId];
+    if (cancellation != null && !cancellation.isCompleted) {
+      cancellation.complete();
     }
   }
 }

@@ -16,10 +16,18 @@ class MockUtil {
     return storage[id];
   }
 
-  Future<void> sequentiallyRead(void Function(String data) onData) async {
+  Future<void> sequentiallyRead(
+    void Function(String data) onData, {
+    required Future<void> cancellation,
+    required bool Function() isCancelled,
+  }) async {
     for (final data in storage) {
+      if (isCancelled()) return;
       onData(data);
-      await Future<void>.delayed(const Duration(milliseconds: 2000));
+      await Future.any<void>([
+        Future<void>.delayed(const Duration(milliseconds: 2000)),
+        cancellation,
+      ]);
     }
   }
 

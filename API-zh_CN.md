@@ -102,6 +102,11 @@ https://api.example.com/v1
 | `capability.auto`                                    | `boolean`| （可选）是否自动执行任务                                                                                                                     |
 | `capability.llmConfigList`                           | `array`  | （可选）备用模型配置列表，元素结构同`llmConfig`                                                                                                   |
 | `capability.enableThinking`                          | `boolean`| （可选）是否开启思考输出                                                                                                                       |
+| `capability.maxLlmRequests`                          | `number` | （可选）单个工具型任务允许的大模型请求次数上限，默认为 64；非正数使用默认值                                                                                      |
+| `capability.maxToolRounds`                           | `number` | （可选）单个任务允许的工具调用轮数上限，默认为 16；非正数使用默认值                                                                                          |
+| `capability.maxToolCalls`                            | `number` | （可选）单个任务允许的工具调用总数上限，默认为 64；非正数使用默认值                                                                                          |
+| `capability.maxConsecutiveIdenticalToolRounds`       | `number` | （可选）工具名称及规范化参数完全相同的连续调用轮数上限，默认为 3；非正数使用默认值                                                                                  |
+| `capability.maxTaskDurationSeconds`                  | `number` | （可选）单个工具型任务的最长执行时间，单位为秒，默认为 300；非正数使用默认值                                                                                     |
 
 #### 响应示例
 
@@ -228,6 +233,11 @@ GET /agent?agentId=671763aae989ec22357fea88
 | `capability.auto`                                    | `boolean`| （可选）是否自动执行任务                                                                                                                     |
 | `capability.llmConfigList`                           | `array`  | （可选）备用模型配置列表，元素结构同`llmConfig`                                                                                                   |
 | `capability.enableThinking`                          | `boolean`| （可选）是否开启思考输出                                                                                                                       |
+| `capability.maxLlmRequests`                          | `number` | （可选）单个工具型任务允许的大模型请求次数上限，默认为 64；非正数使用默认值                                                                                      |
+| `capability.maxToolRounds`                           | `number` | （可选）单个任务允许的工具调用轮数上限，默认为 16；非正数使用默认值                                                                                          |
+| `capability.maxToolCalls`                            | `number` | （可选）单个任务允许的工具调用总数上限，默认为 64；非正数使用默认值                                                                                          |
+| `capability.maxConsecutiveIdenticalToolRounds`       | `number` | （可选）工具名称及规范化参数完全相同的连续调用轮数上限，默认为 3；非正数使用默认值                                                                                  |
+| `capability.maxTaskDurationSeconds`                  | `number` | （可选）单个工具型任务的最长执行时间，单位为秒，默认为 300；非正数使用默认值                                                                                     |
 
 #### 响应示例
 
@@ -333,6 +343,11 @@ GET /agent?agentId=671763aae989ec22357fea88
 | `capability.auto`                                    | `boolean`| （可选）是否自动执行任务                                                                                                                     |
 | `capability.llmConfigList`                           | `array`  | （可选）备用模型配置列表，元素结构同`llmConfig`                                                                                                   |
 | `capability.enableThinking`                          | `boolean`| （可选）是否开启思考输出                                                                                                                       |
+| `capability.maxLlmRequests`                          | `number` | （可选）单个工具型任务允许的大模型请求次数上限，默认为 64；非正数使用默认值                                                                                      |
+| `capability.maxToolRounds`                           | `number` | （可选）单个任务允许的工具调用轮数上限，默认为 16；非正数使用默认值                                                                                          |
+| `capability.maxToolCalls`                            | `number` | （可选）单个任务允许的工具调用总数上限，默认为 64；非正数使用默认值                                                                                          |
+| `capability.maxConsecutiveIdenticalToolRounds`       | `number` | （可选）工具名称及规范化参数完全相同的连续调用轮数上限，默认为 3；非正数使用默认值                                                                                  |
+| `capability.maxTaskDurationSeconds`                  | `number` | （可选）单个工具型任务的最长执行时间，单位为秒，默认为 300；非正数使用默认值                                                                                     |
 
 #### 请求示例
 
@@ -466,6 +481,11 @@ GET /agent/update?agentId=671763aae989ec22357fea88
 | `capability.auto`                                    | `boolean`| （可选）是否自动执行任务                                                                                                                     |
 | `capability.llmConfigList`                           | `array`  | （可选）备用模型配置列表，元素结构同`llmConfig`                                                                                                   |
 | `capability.enableThinking`                          | `boolean`| （可选）是否开启思考输出                                                                                                                       |
+| `capability.maxLlmRequests`                          | `number` | （可选）单个工具型任务允许的大模型请求次数上限，默认为 64；非正数使用默认值                                                                                      |
+| `capability.maxToolRounds`                           | `number` | （可选）单个任务允许的工具调用轮数上限，默认为 16；非正数使用默认值                                                                                          |
+| `capability.maxToolCalls`                            | `number` | （可选）单个任务允许的工具调用总数上限，默认为 64；非正数使用默认值                                                                                          |
+| `capability.maxConsecutiveIdenticalToolRounds`       | `number` | （可选）工具名称及规范化参数完全相同的连续调用轮数上限，默认为 3；非正数使用默认值                                                                                  |
+| `capability.maxTaskDurationSeconds`                  | `number` | （可选）单个工具型任务的最长执行时间，单位为秒，默认为 300；非正数使用默认值                                                                                     |
 
 #### 请求示例
 
@@ -665,6 +685,8 @@ POST /initSession?agentId=671763aae989ec22357fea88
 当不传 `agentId` 时，请求体为 `CapabilityDto`，字段与创建Agent接口一致。
 
 其中 `skills` 字段遵循 [Agent Skills Specification](https://agentskills.io/specification)。实践上，每个 skill 应是一个包含 `SKILL.md` 的目录，`SKILL.md` 由 YAML frontmatter 和 Markdown 正文组成；其中 `name` 要求为小写加连字符格式，`description` 为必填且非空。
+
+执行限制字段适用于 `ToolAgent`、`MultiAgent` 和 `AutoMultiAgent`。超过大模型请求次数、工具轮数、工具调用总数或连续相同工具轮数限制时，任务以一个 `exception` 状态结束，状态描述中的 `code` 为 `tool_loop_limit_exceeded`；超过任务时长限制时，`code` 为 `task_execution_timeout`。
 
 #### 响应
 

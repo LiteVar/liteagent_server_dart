@@ -27,6 +27,11 @@ void main() {
           ],
           enableThinking: true,
           toolReturnPackMinLength: 1200,
+          maxLlmRequests: 32,
+          maxToolRounds: 8,
+          maxToolCalls: 24,
+          maxConsecutiveIdenticalToolRounds: 2,
+          maxTaskDurationSeconds: 180,
         ),
       );
 
@@ -40,6 +45,11 @@ void main() {
       expect(storedAgent.capability.auto, isTrue);
       expect(storedAgent.capability.enableThinking, isTrue);
       expect(storedAgent.capability.toolReturnPackMinLength, 1200);
+      expect(storedAgent.capability.maxLlmRequests, 32);
+      expect(storedAgent.capability.maxToolRounds, 8);
+      expect(storedAgent.capability.maxToolCalls, 24);
+      expect(storedAgent.capability.maxConsecutiveIdenticalToolRounds, 2);
+      expect(storedAgent.capability.maxTaskDurationSeconds, 180);
       expect(storedAgent.capability.llmConfigList?.length, 1);
       expect(storedAgent.capability.llmConfigList?.first.model, 'gpt-test-2');
     });
