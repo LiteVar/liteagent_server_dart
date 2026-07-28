@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:logging/logging.dart';
 import '../config.dart';
+import 'dir.dart';
 
 enum LogModule { http, ws, sse, db }
 
@@ -16,24 +17,48 @@ class AgentLogger {
   }
 
   Logger? _logger;
-  late IOSink _logSink;
+  IOSink? _logSink;
 
   AgentLogger._internal() {
     _logger = Logger('LiteAgentCoreServerLogger');
     Logger.root.level = _level;
-    final logDir =
-        Platform.environment['LOG_DIR'] ??
-        '${Directory.current.path}${Platform.pathSeparator}log';
-    final logFile = File('$logDir${Platform.pathSeparator}agent.log');
-    logFile.createSync(recursive: true);
-    _logSink = logFile.openWrite(mode: FileMode.append);
+    _initLogFile();
 
     Logger.root.onRecord.listen((record) {
       final message =
           '${record.level.name}: ${record.time}: PID $pid: ${record.message}';
       print(message);
-      _logSink.writeln(message);
+      _logSink?.writeln(message);
     });
+  }
+
+  void _initLogFile() {
+    final logDir = Dir.resolveLogDir();
+    try {
+      final logFile = File('$logDir${Platform.pathSeparator}agent.log');
+      logFile.createSync(recursive: true);
+      _logSink = logFile.openWrite(mode: FileMode.append);
+      return;
+    } catch (e) {
+      stderr.writeln(
+        '[AgentLogger] Failed to create log file in $logDir: $e, falling back to temp directory',
+      );
+    }
+
+    // Fall back to system temp directory
+    final fallbackDir =
+        '${Directory.systemTemp.path}${Platform.pathSeparator}agentos${Platform.pathSeparator}log${Platform.pathSeparator}agent_server';
+    try {
+      final logFile = File('$fallbackDir${Platform.pathSeparator}agent.log');
+      logFile.createSync(recursive: true);
+      _logSink = logFile.openWrite(mode: FileMode.append);
+      stderr.writeln('[AgentLogger] Fell back to temp directory: $fallbackDir');
+    } catch (e) {
+      stderr.writeln(
+        '[AgentLogger] Temp directory also unavailable: $e, logging to console only',
+      );
+      _logSink = null;
+    }
   }
 
   void log(

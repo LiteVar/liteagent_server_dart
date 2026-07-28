@@ -23,9 +23,9 @@ void main(List<String> args) async {
       stderr.writeln('[agent_server] DB path (from env): $dbFullPath');
     } else {
       String dbPath = config.server.dbPath ?? "agent.db";
-      String exeDir = Dir.executableDir();
-      dbFullPath = '$exeDir${Platform.pathSeparator}$dbPath';
-      stderr.writeln('[agent_server] DB path (from config): $dbFullPath');
+      String dataDir = Dir.userWritableDataDir();
+      dbFullPath = '$dataDir${Platform.pathSeparator}$dbPath';
+      stderr.writeln('[agent_server] DB path (user data dir): $dbFullPath');
     }
 
     final dbDir = File(dbFullPath).parent;
