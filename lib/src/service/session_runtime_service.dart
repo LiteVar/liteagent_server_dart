@@ -41,12 +41,32 @@ class SessionRuntimeService {
     required String sessionId,
     required CapabilityDto capability,
     String? agentId,
-  }) {
-    return sessionManageService.addSession(
-      sessionId: sessionId,
-      capability: capability,
-      agentId: agentId,
-    );
+  }) async {
+    final runtimeTree = agentService.getSessionTree(sessionId);
+    if (runtimeTree.isEmpty) {
+      await sessionManageService.addSession(
+        sessionId: sessionId,
+        capability: capability,
+        agentId: agentId,
+      );
+      return;
+    }
+
+    final pathBySessionId = _buildRuntimePaths(runtimeTree);
+    try {
+      for (final runtimeInfo in runtimeTree) {
+        await sessionManageService.addSession(
+          sessionId: runtimeInfo.sessionId,
+          capability: runtimeInfo.capability,
+          agentId: runtimeInfo.sessionId == sessionId ? agentId : null,
+          rootSessionId: sessionId,
+          inlinePath: pathBySessionId[runtimeInfo.sessionId],
+        );
+      }
+    } catch (_) {
+      await sessionManageService.deleteSessionTree(sessionId);
+      rethrow;
+    }
   }
 
   Future<void> resolveSession(String sessionId) {
@@ -78,17 +98,6 @@ class SessionRuntimeService {
       return;
     }
 
-    for (final child
-        in persistedSession.capability.sessionList ??
-            const <SessionNameDto>[]) {
-      if (child.sessionId == sessionId) {
-        throw FormatException(
-          'Session $sessionId cannot restore itself as a child session',
-        );
-      }
-      await resolveSession(child.sessionId);
-    }
-
     final contextMessages = await messageManageService
         .getCompletedContextMessages(sessionId);
     if (agentService.getSessionAgent(sessionId) != null) return;
@@ -100,6 +109,41 @@ class SessionRuntimeService {
         sessionId: sessionId,
         contextMessages: contextMessages,
       ),
+    );
+
+    final restoredRuntimeTree = agentService.getSessionTree(sessionId);
+    final restoredPathBySessionId = _buildRuntimePaths(restoredRuntimeTree);
+    final persistedTree = await sessionManageService.getSessionTree(
+      persistedSession.rootSessionId,
+    );
+    final persistedByPath = <String, PersistedSession>{
+      for (final item in persistedTree)
+        if (item.inlinePath != null) item.inlinePath!: item,
+    };
+
+    for (final runtimeInfo in restoredRuntimeTree) {
+      if (runtimeInfo.sessionId == sessionId) continue;
+      final path = restoredPathBySessionId[runtimeInfo.sessionId];
+      if (path == null) continue;
+      final oldSession = persistedByPath[path];
+      if (oldSession == null) continue;
+      final childAgent = agentService.getSessionAgent(runtimeInfo.sessionId);
+      if (childAgent == null) continue;
+      final childContext = await messageManageService
+          .getCompletedContextMessages(oldSession.sessionId);
+      childAgent.agentSession.restore(
+        SessionRestoreState(
+          sessionId: runtimeInfo.sessionId,
+          contextMessages: childContext,
+        ),
+      );
+    }
+
+    await _rotatePersistedInlineTree(
+      rootSessionId: sessionId,
+      runtimeTree: restoredRuntimeTree,
+      pathBySessionId: restoredPathBySessionId,
+      expiresAt: persistedSession.expiresAt,
     );
     await sessionManageService.touchSession(sessionId);
   }
@@ -321,21 +365,24 @@ class SessionRuntimeService {
   }
 
   Future<List<String>> _collectHistorySessionIds(String rootSessionId) async {
-    final visited = <String>{};
-    final pending = <String>[rootSessionId];
-    while (pending.isNotEmpty) {
-      final sessionId = pending.removeLast();
-      if (!visited.add(sessionId)) continue;
-      final session = await sessionManageService.getSession(sessionId);
-      if (session == null) continue;
-      for (final child
-          in session.capability.sessionList ?? const <SessionNameDto>[]) {
-        if (!visited.contains(child.sessionId)) {
-          pending.add(child.sessionId);
-        }
-      }
+    final persistedTree = await sessionManageService.getSessionTree(
+      rootSessionId,
+    );
+    if (persistedTree.isNotEmpty) {
+      return persistedTree
+          .map((session) => session.sessionId)
+          .toSet()
+          .toList(growable: false);
     }
-    return visited.toList(growable: false);
+
+    final runtimeTree = agentService.getSessionTree(rootSessionId);
+    if (runtimeTree.isNotEmpty) {
+      return runtimeTree
+          .map((session) => session.sessionId)
+          .toSet()
+          .toList(growable: false);
+    }
+    return [rootSessionId];
   }
 
   Future<List<SessionInfoDto>> getSessionsByAgentId(String agentId) =>
@@ -346,11 +393,60 @@ class SessionRuntimeService {
     if (persistedSession == null) {
       throw PersistedSessionNotFoundException(sessionId);
     }
-    if (agentService.getSessionAgent(sessionId) != null) {
-      await agentService.clearSession(sessionId);
+    final rootSessionId = persistedSession.rootSessionId;
+    if (agentService.getSessionAgent(rootSessionId) != null) {
+      await agentService.clearSession(rootSessionId);
     }
     await messageManageService.flush();
-    await sessionManageService.deleteSession(sessionId);
+    await sessionManageService.deleteSessionTree(rootSessionId);
+  }
+
+  Map<String, String> _buildRuntimePaths(
+    List<SessionAgentRuntimeInfo> runtimeTree,
+  ) {
+    final pathBySessionId = <String, String>{};
+    for (final runtimeInfo in runtimeTree) {
+      final parentSessionId = runtimeInfo.parentSessionId;
+      if (parentSessionId == null) {
+        pathBySessionId[runtimeInfo.sessionId] = '';
+        continue;
+      }
+
+      final parentPath = pathBySessionId[parentSessionId];
+      final name = runtimeInfo.name;
+      if (parentPath == null || name == null || name.isEmpty) {
+        throw FormatException(
+          'Invalid inline runtime tree at session ${runtimeInfo.sessionId}',
+        );
+      }
+      pathBySessionId[runtimeInfo.sessionId] = parentPath.isEmpty
+          ? name
+          : '$parentPath/$name';
+    }
+    return pathBySessionId;
+  }
+
+  Future<void> _rotatePersistedInlineTree({
+    required String rootSessionId,
+    required List<SessionAgentRuntimeInfo> runtimeTree,
+    required Map<String, String> pathBySessionId,
+    required DateTime? expiresAt,
+  }) async {
+    final inlineNodes = runtimeTree.where(
+      (runtimeInfo) => runtimeInfo.sessionId != rootSessionId,
+    );
+    if (inlineNodes.isEmpty) return;
+
+    await sessionManageService.markInlineSessionTreeHistoryOnly(rootSessionId);
+    for (final runtimeInfo in inlineNodes) {
+      await sessionManageService.addSession(
+        sessionId: runtimeInfo.sessionId,
+        capability: runtimeInfo.capability,
+        rootSessionId: rootSessionId,
+        inlinePath: pathBySessionId[runtimeInfo.sessionId],
+        expiresAt: expiresAt,
+      );
+    }
   }
 }
 

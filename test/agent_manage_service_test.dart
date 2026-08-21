@@ -54,6 +54,51 @@ void main() {
       expect(storedAgent.capability.llmConfigList?.first.model, 'gpt-test-2');
     });
 
+    test('preserves recursively nested subAgentList', () async {
+      final service = AgentManageServiceByDB(
+        AgentDatabaseFactory.getInstance(null),
+      );
+      final agentDto = AgentDto(
+        name: 'router_agent',
+        capability: CapabilityDto(
+          systemPrompt: 'Route requests to child agents.',
+          subAgentList: [
+            AgentDto(
+              name: 'worker',
+              capability: CapabilityDto(
+                systemPrompt: 'Handle worker tasks.',
+                subAgentList: [
+                  AgentDto(
+                    name: 'leaf',
+                    capability: CapabilityDto(
+                      systemPrompt: 'Handle leaf tasks.',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+
+      final agentId = await service.addAgent(agentDto);
+      final stored = await service.getAgent(agentId);
+
+      expect(stored!.capability.subAgentList, hasLength(1));
+      expect(stored.capability.subAgentList!.single.name, 'worker');
+      expect(
+        stored
+            .capability
+            .subAgentList!
+            .single
+            .capability
+            .subAgentList!
+            .single
+            .name,
+        'leaf',
+      );
+    });
+
     test('normalizes lite_oneapi aliases and preserves adapter', () async {
       final service = AgentManageServiceByDB(
         AgentDatabaseFactory.getInstance(null),

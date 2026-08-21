@@ -111,7 +111,7 @@ class AgentController {
               "model: ${capabilityDto.llmConfig?.model}, " +
               "systemMessageLength: ${capabilityDto.systemPrompt.length}," +
               "openSpecListLength: ${capabilityDto.openSpecList == null ? "null" : capabilityDto.openSpecList!.length}," +
-              "sessionListLength: ${capabilityDto.sessionList == null ? "null" : capabilityDto.sessionList!.length}",
+              "subAgentListLength: ${capabilityDto.subAgentList == null ? "null" : capabilityDto.subAgentList!.length}",
         );
       }
 
@@ -814,6 +814,9 @@ class AgentController {
     for (final llmConfig
         in capabilityDto.llmConfigList ?? const <LLMConfigDto>[]) {
       _normalizeAndValidateLLMConfig(llmConfig);
+    }
+    for (final subAgent in capabilityDto.subAgentList ?? const <AgentDto>[]) {
+      _normalizeAndValidateCapability(subAgent.capability);
     }
   }
 

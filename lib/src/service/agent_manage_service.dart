@@ -87,51 +87,54 @@ class AgentManageServiceByDB extends AgentManageService {
   }
 
   AgentDto _compressAgent(AgentDto agentDto) {
-    _applyServerProviderDefaults(agentDto.capability);
+    final newCapabilityDto = _compressCapability(agentDto.capability);
+    return AgentDto(name: agentDto.name, capability: newCapabilityDto);
+  }
+
+  CapabilityDto _compressCapability(CapabilityDto capability) {
+    _applyServerProviderDefaults(capability);
     List<OpenSpecDto>? openSpecList;
-    if (agentDto.capability.openSpecList != null) {
-      openSpecList = agentDto.capability.openSpecList!.map((openSpecDto) {
+    if (capability.openSpecList != null) {
+      openSpecList = capability.openSpecList!.map((openSpecDto) {
         String newOpenSpec = _compressJson(openSpecDto.openSpec);
         openSpecDto.openSpec = newOpenSpec;
         return openSpecDto;
       }).toList();
     }
 
-    CallbackOpenToolDto? callbackOpenToolDto =
-        agentDto.capability.callbackOpenTool;
+    CallbackOpenToolDto? callbackOpenToolDto = capability.callbackOpenTool;
     if (callbackOpenToolDto != null) {
       callbackOpenToolDto.opentool = _compressJson(
         callbackOpenToolDto.opentool,
       );
     }
 
-    CapabilityDto newCapabilityDto = CapabilityDto(
-      llmConfig: agentDto.capability.llmConfig,
-      systemPrompt: agentDto.capability.systemPrompt,
-      skills: agentDto.capability.skills,
+    final subAgentList = capability.subAgentList
+        ?.map(_compressAgent)
+        .toList(growable: false);
+
+    return CapabilityDto(
+      llmConfig: capability.llmConfig,
+      systemPrompt: capability.systemPrompt,
+      skills: capability.skills,
       openSpecList: openSpecList,
       callbackOpenTool: callbackOpenToolDto,
-      sessionList: agentDto.capability.sessionList,
-      reflectPromptList: agentDto.capability.reflectPromptList,
-      timeoutSeconds: agentDto.capability.timeoutSeconds,
-      taskPipelineStrategy: agentDto.capability.taskPipelineStrategy,
-      toolPipelineStrategy: agentDto.capability.toolPipelineStrategy,
-      auto: agentDto.capability.auto,
-      llmConfigList: agentDto.capability.llmConfigList,
-      enableThinking: agentDto.capability.enableThinking,
-      toolReturnPackMinLength: agentDto.capability.toolReturnPackMinLength,
-      maxLlmRequests: agentDto.capability.maxLlmRequests,
-      maxToolRounds: agentDto.capability.maxToolRounds,
-      maxToolCalls: agentDto.capability.maxToolCalls,
+      subAgentList: subAgentList,
+      reflectPromptList: capability.reflectPromptList,
+      timeoutSeconds: capability.timeoutSeconds,
+      taskPipelineStrategy: capability.taskPipelineStrategy,
+      toolPipelineStrategy: capability.toolPipelineStrategy,
+      auto: capability.auto,
+      llmConfigList: capability.llmConfigList,
+      enableThinking: capability.enableThinking,
+      toolReturnPackMinLength: capability.toolReturnPackMinLength,
+      maxLlmRequests: capability.maxLlmRequests,
+      maxToolRounds: capability.maxToolRounds,
+      maxToolCalls: capability.maxToolCalls,
       maxConsecutiveIdenticalToolRounds:
-          agentDto.capability.maxConsecutiveIdenticalToolRounds,
-      maxTaskDurationSeconds: agentDto.capability.maxTaskDurationSeconds,
+          capability.maxConsecutiveIdenticalToolRounds,
+      maxTaskDurationSeconds: capability.maxTaskDurationSeconds,
     );
-    AgentDto newAgentDto = AgentDto(
-      name: agentDto.name,
-      capability: newCapabilityDto,
-    );
-    return newAgentDto;
   }
 
   Future<AgentDao> _convertDao(
@@ -203,6 +206,9 @@ class AgentManageServiceByDB extends AgentManageService {
         in capabilityDto.llmConfigList ?? const <LLMConfigDto>[]) {
       _normalizeAndValidateLLMConfig(llmConfig);
     }
+    for (final subAgent in capabilityDto.subAgentList ?? const <AgentDto>[]) {
+      _normalizeAndValidateCapability(subAgent.capability);
+    }
   }
 
   void _normalizeAndValidateLLMConfig(LLMConfigDto? llmConfig) {
@@ -232,6 +238,9 @@ class AgentManageServiceByDB extends AgentManageService {
     for (final llmConfig
         in capabilityDto.llmConfigList ?? const <LLMConfigDto>[]) {
       _applyServerProviderDefaultToLLMConfig(llmConfig);
+    }
+    for (final subAgent in capabilityDto.subAgentList ?? const <AgentDto>[]) {
+      _applyServerProviderDefaults(subAgent.capability);
     }
   }
 

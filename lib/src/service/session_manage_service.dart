@@ -6,6 +6,8 @@ import '../db/agent_database.dart';
 
 class PersistedSession {
   final String sessionId;
+  final String rootSessionId;
+  final String? inlinePath;
   final String? agentId;
   final CapabilityDto capability;
   final String status;
@@ -16,6 +18,8 @@ class PersistedSession {
 
   const PersistedSession({
     required this.sessionId,
+    required this.rootSessionId,
+    required this.inlinePath,
     required this.agentId,
     required this.capability,
     required this.status,
@@ -45,12 +49,16 @@ class SessionManageServiceByDB {
     required String sessionId,
     required CapabilityDto capability,
     String? agentId,
+    String? rootSessionId,
+    String? inlinePath,
     DateTime? expiresAt,
   }) async {
     final now = DateTime.now();
     await agentDB.addSession(
       SessionDao(
         sessionId: sessionId,
+        rootSessionId: rootSessionId ?? sessionId,
+        inlinePath: inlinePath,
         agentId: agentId,
         capability: jsonEncode(capability.toJson()),
         status: SessionPersistenceStatus.active,
@@ -65,6 +73,11 @@ class SessionManageServiceByDB {
   Future<PersistedSession?> getSession(String sessionId) async {
     final row = await agentDB.getSessionById(sessionId);
     return row == null ? null : _convert(row);
+  }
+
+  Future<List<PersistedSession>> getSessionTree(String rootSessionId) async {
+    final rows = await agentDB.getSessionsByRootSessionId(rootSessionId);
+    return rows.map(_convert).toList(growable: false);
   }
 
   Future<List<SessionInfoDto>> getSessionsByAgentId(String agentId) async {
@@ -93,9 +106,17 @@ class SessionManageServiceByDB {
   Future<void> deleteSession(String sessionId) =>
       agentDB.deleteSessionAndMessages(sessionId);
 
+  Future<void> markInlineSessionTreeHistoryOnly(String rootSessionId) =>
+      agentDB.markInlineSessionTreeHistoryOnly(rootSessionId);
+
+  Future<void> deleteSessionTree(String rootSessionId) =>
+      agentDB.deleteSessionTreeAndMessages(rootSessionId);
+
   PersistedSession _convert(SessionDao row) {
     return PersistedSession(
       sessionId: row.sessionId,
+      rootSessionId: row.rootSessionId,
+      inlinePath: row.inlinePath,
       agentId: row.agentId,
       capability: CapabilityDto.fromJson(
         Map<String, dynamic>.from(jsonDecode(row.capability) as Map),

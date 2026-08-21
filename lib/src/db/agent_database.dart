@@ -17,6 +17,8 @@ class Agents extends Table {
 @DataClassName('SessionDao')
 class Sessions extends Table {
   TextColumn get sessionId => text().withLength(min: 1, max: 64)();
+  TextColumn get rootSessionId => text().withLength(min: 1, max: 64)();
+  TextColumn get inlinePath => text().nullable()();
   TextColumn get agentId => text().withLength(min: 1, max: 64).nullable()();
   TextColumn get capability => text()();
   TextColumn get status => text().withDefault(const Constant('active'))();
@@ -64,7 +66,7 @@ class AgentDatabase extends _$AgentDatabase {
   AgentDatabase(QueryExecutor e) : super(e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -82,6 +84,8 @@ class AgentDatabase extends _$AgentDatabase {
         await customStatement('''
               INSERT INTO sessions (
                 session_id,
+                root_session_id,
+                inline_path,
                 agent_id,
                 capability,
                 status,
@@ -92,6 +96,8 @@ class AgentDatabase extends _$AgentDatabase {
               )
               SELECT
                 origin_session_id,
+                origin_session_id,
+                NULL,
                 NULL,
                 '{"systemPrompt":""}',
                 'history_only',
@@ -133,8 +139,19 @@ class AgentDatabase extends _$AgentDatabase {
               FROM session_messages_legacy
             ''');
         await customStatement('DROP TABLE session_messages_legacy');
+      } else if (from < 4) {
+        await customStatement(
+          "ALTER TABLE sessions ADD COLUMN root_session_id TEXT NOT NULL DEFAULT ''",
+        );
+        await customStatement(
+          'ALTER TABLE sessions ADD COLUMN inline_path TEXT',
+        );
+        await customStatement(
+          'UPDATE sessions SET root_session_id = session_id '
+          "WHERE root_session_id = ''",
+        );
       }
-      if (from < 3) await _createIndexes();
+      if (from < 3 || from < 4) await _createIndexes();
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -147,6 +164,10 @@ class AgentDatabase extends _$AgentDatabase {
     await customStatement(
       'CREATE INDEX IF NOT EXISTS sessions_agent_id_idx '
       'ON sessions (agent_id, update_time)',
+    );
+    await customStatement(
+      'CREATE INDEX IF NOT EXISTS sessions_root_idx '
+      'ON sessions (root_session_id, inline_path, update_time)',
     );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS session_messages_origin_idx '
@@ -180,6 +201,16 @@ class AgentDatabase extends _$AgentDatabase {
     sessions,
   )..where((table) => table.sessionId.equals(sessionId))).getSingleOrNull();
 
+  Future<List<SessionDao>> getSessionsByRootSessionId(String rootSessionId) {
+    final query = select(sessions)
+      ..where((table) => table.rootSessionId.equals(rootSessionId))
+      ..orderBy([
+        (table) => OrderingTerm.asc(table.inlinePath),
+        (table) => OrderingTerm.asc(table.createTime),
+      ]);
+    return query.get();
+  }
+
   Future<List<SessionDao>> getSessionsByAgentId(String agentId) {
     final query = select(sessions)
       ..where((table) => table.agentId.equals(agentId))
@@ -201,6 +232,32 @@ class AgentDatabase extends _$AgentDatabase {
       await (delete(
         sessions,
       )..where((table) => table.sessionId.equals(sessionId))).go();
+    });
+  }
+
+  Future<void> markInlineSessionTreeHistoryOnly(String rootSessionId) async {
+    await transaction(() async {
+      final rows = await getSessionsByRootSessionId(rootSessionId);
+      for (final row in rows) {
+        if (row.sessionId == rootSessionId) continue;
+        await (update(sessions)
+              ..where((table) => table.sessionId.equals(row.sessionId)))
+            .write(const SessionsCompanion(status: Value('history_only')));
+      }
+    });
+  }
+
+  Future<void> deleteSessionTreeAndMessages(String rootSessionId) async {
+    await transaction(() async {
+      final rows = await getSessionsByRootSessionId(rootSessionId);
+      final sessionIds = rows.map((row) => row.sessionId).toList();
+      if (!sessionIds.contains(rootSessionId)) sessionIds.add(rootSessionId);
+      await (delete(
+        sessionMessages,
+      )..where((table) => table.originSessionId.isIn(sessionIds))).go();
+      await (delete(
+        sessions,
+      )..where((table) => table.sessionId.isIn(sessionIds))).go();
     });
   }
 

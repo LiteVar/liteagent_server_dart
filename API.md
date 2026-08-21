@@ -52,7 +52,7 @@ None
 
 **Status Code**: `200 OK`
 
-**Response Body**: `array` of objects with the following fields:
+**Response Body**: `array` of `AgentInfoDto` objects with the following fields:
 
 | Field        | Type     | Description                                                             |
 |--------------|----------|-------------------------------------------------------------------------|
@@ -103,7 +103,7 @@ GET /agent?agentId=671763aae989ec22357fea88
 
 **Status Code**: `200 OK`
 
-**Response Body**:
+**Response Body**: `AgentDto`.
 
 | Field        | Type     | Description                                                             |
 |--------------|----------|-------------------------------------------------------------------------|
@@ -135,6 +135,8 @@ GET /agent?agentId=671763aae989ec22357fea88
 **Description**: Create and persist an agent.
 
 #### Request Body
+
+`AgentDto`:
 
 | Field        | Type     | Description                                                             |
 |--------------|----------|-------------------------------------------------------------------------|
@@ -174,6 +176,8 @@ GET /agent?agentId=671763aae989ec22357fea88
 | `agentId` | `string` | Agent ID    |
 
 #### Request Body
+
+`AgentDto`:
 
 | Field        | Type     | Description                                                             |
 |--------------|----------|-------------------------------------------------------------------------|
@@ -318,7 +322,7 @@ None
 |-----------|----------|---------------------------------------------------------------------|
 | `agentId` | `string` | (Optional) Use a saved agent configuration for this session.        |
 
-#### Request Body (when `agentId` is not provided)
+#### Request Body: `CapabilityDto` (when `agentId` is not provided)
 
 | Field                                     | Type      | Description                                                                                                                                                                                                                                                      |
 |-------------------------------------------|-----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -345,10 +349,9 @@ None
 | `callbackOpenTool`                        | `object`  | (Optional) Client callback tool definition                                                                                                                                                                                                                       |
 | `callbackOpenTool.opentool`               | `string`  | OpenTool JSON definition                                                                                                                                                                                                                                         |
 | `callbackOpenTool.timeout`                | `number`  | (Optional) Callback timeout in seconds                                                                                                                                                                                                                           |
-| `sessionList`                             | `array`   | (Optional) List of sessions, each element being an `object`                                                                                                                                                                                                      |
-| `sessionList.sessionId`                   | `string`  | sessionId of a sub-agent                                                                                                                                                                                                                                         |
-| `sessionList.name`                        | `string`  | (Optional) Sub Agent custom name. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.                                                                                                                                         |
-| `sessionList.description`                 | `string`  | (Optional) Sub Agent description                                                                                                                                                                                                                                 |
+| `subAgentList`                             | `array`  | (Optional) Inline sub-agent definitions; each item is an `AgentDto` and may recursively contain `subAgentList`. |
+| `subAgentList.name`                        | `string` | Sub-agent name and function name. Must match `^[a-zA-Z0-9_-]{1,64}$`. |
+| `subAgentList.capability`                  | `object` | Complete Capability configuration for the sub-agent. No sessionId is required; runtime session IDs are generated by core. |
 | `reflectPromptList`                       | `array`   | (Optional) List of ReflectPrompt, where each element in the array is an `object`. **if `openSpecList` is null, reflect LLM text, else reflect Function Calling**                                                                                                 |
 | `reflectPromptList.llmConfig`             | `object`  | `ReflectAgent`'s `llmConfig`, used for requesting large models.                                                                                                                                                                                                  |
 | `reflectPromptList.prompt`                | `string`  | System Prompt of `ReflectAgent`, used to describe the evaluation criteria for reflection scores.                                                                                                                                                                 |
@@ -401,14 +404,18 @@ The execution limits apply to `ToolAgent`, `MultiAgent`, and `AutoMultiAgent` ta
       "protocol": "jsonrpcHttp"
     }
   ],
-  "sessionList": [
+  "subAgentList": [
     {
-      "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
-      "name": "someFunc1"
+      "name": "someFunc1",
+      "capability": {
+        "systemPrompt": "Responsibilities of the first sub-agent"
+      }
     },
     {
-      "sessionId": "a20245f2-e9f0-416c-9191-8ed3afeac46b",
-      "name": "some-func_2"
+      "name": "some-func_2",
+      "capability": {
+        "systemPrompt": "Responsibilities of the second sub-agent"
+      }
     }
   ],
   "timeoutSeconds": 7200

@@ -403,6 +403,32 @@ class $SessionsTable extends Sessions
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _rootSessionIdMeta = const VerificationMeta(
+    'rootSessionId',
+  );
+  @override
+  late final GeneratedColumn<String> rootSessionId = GeneratedColumn<String>(
+    'root_session_id',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 64,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _inlinePathMeta = const VerificationMeta(
+    'inlinePath',
+  );
+  @override
+  late final GeneratedColumn<String> inlinePath = GeneratedColumn<String>(
+    'inline_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _agentIdMeta = const VerificationMeta(
     'agentId',
   );
@@ -484,6 +510,8 @@ class $SessionsTable extends Sessions
   @override
   List<GeneratedColumn> get $columns => [
     sessionId,
+    rootSessionId,
+    inlinePath,
     agentId,
     capability,
     status,
@@ -511,6 +539,23 @@ class $SessionsTable extends Sessions
       );
     } else if (isInserting) {
       context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('root_session_id')) {
+      context.handle(
+        _rootSessionIdMeta,
+        rootSessionId.isAcceptableOrUnknown(
+          data['root_session_id']!,
+          _rootSessionIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_rootSessionIdMeta);
+    }
+    if (data.containsKey('inline_path')) {
+      context.handle(
+        _inlinePathMeta,
+        inlinePath.isAcceptableOrUnknown(data['inline_path']!, _inlinePathMeta),
+      );
     }
     if (data.containsKey('agent_id')) {
       context.handle(
@@ -573,6 +618,14 @@ class $SessionsTable extends Sessions
         DriftSqlType.string,
         data['${effectivePrefix}session_id'],
       )!,
+      rootSessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}root_session_id'],
+      )!,
+      inlinePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}inline_path'],
+      ),
       agentId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}agent_id'],
@@ -612,6 +665,8 @@ class $SessionsTable extends Sessions
 
 class SessionDao extends DataClass implements Insertable<SessionDao> {
   final String sessionId;
+  final String rootSessionId;
+  final String? inlinePath;
   final String? agentId;
   final String capability;
   final String status;
@@ -621,6 +676,8 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
   final DateTime? expiresAt;
   const SessionDao({
     required this.sessionId,
+    required this.rootSessionId,
+    this.inlinePath,
     this.agentId,
     required this.capability,
     required this.status,
@@ -633,6 +690,10 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['session_id'] = Variable<String>(sessionId);
+    map['root_session_id'] = Variable<String>(rootSessionId);
+    if (!nullToAbsent || inlinePath != null) {
+      map['inline_path'] = Variable<String>(inlinePath);
+    }
     if (!nullToAbsent || agentId != null) {
       map['agent_id'] = Variable<String>(agentId);
     }
@@ -652,6 +713,10 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
   SessionsCompanion toCompanion(bool nullToAbsent) {
     return SessionsCompanion(
       sessionId: Value(sessionId),
+      rootSessionId: Value(rootSessionId),
+      inlinePath: inlinePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(inlinePath),
       agentId: agentId == null && nullToAbsent
           ? const Value.absent()
           : Value(agentId),
@@ -675,6 +740,8 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SessionDao(
       sessionId: serializer.fromJson<String>(json['sessionId']),
+      rootSessionId: serializer.fromJson<String>(json['rootSessionId']),
+      inlinePath: serializer.fromJson<String?>(json['inlinePath']),
       agentId: serializer.fromJson<String?>(json['agentId']),
       capability: serializer.fromJson<String>(json['capability']),
       status: serializer.fromJson<String>(json['status']),
@@ -689,6 +756,8 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'sessionId': serializer.toJson<String>(sessionId),
+      'rootSessionId': serializer.toJson<String>(rootSessionId),
+      'inlinePath': serializer.toJson<String?>(inlinePath),
       'agentId': serializer.toJson<String?>(agentId),
       'capability': serializer.toJson<String>(capability),
       'status': serializer.toJson<String>(status),
@@ -701,6 +770,8 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
 
   SessionDao copyWith({
     String? sessionId,
+    String? rootSessionId,
+    Value<String?> inlinePath = const Value.absent(),
     Value<String?> agentId = const Value.absent(),
     String? capability,
     String? status,
@@ -710,6 +781,8 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
     Value<DateTime?> expiresAt = const Value.absent(),
   }) => SessionDao(
     sessionId: sessionId ?? this.sessionId,
+    rootSessionId: rootSessionId ?? this.rootSessionId,
+    inlinePath: inlinePath.present ? inlinePath.value : this.inlinePath,
     agentId: agentId.present ? agentId.value : this.agentId,
     capability: capability ?? this.capability,
     status: status ?? this.status,
@@ -721,6 +794,12 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
   SessionDao copyWithCompanion(SessionsCompanion data) {
     return SessionDao(
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      rootSessionId: data.rootSessionId.present
+          ? data.rootSessionId.value
+          : this.rootSessionId,
+      inlinePath: data.inlinePath.present
+          ? data.inlinePath.value
+          : this.inlinePath,
       agentId: data.agentId.present ? data.agentId.value : this.agentId,
       capability: data.capability.present
           ? data.capability.value
@@ -741,6 +820,8 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
   String toString() {
     return (StringBuffer('SessionDao(')
           ..write('sessionId: $sessionId, ')
+          ..write('rootSessionId: $rootSessionId, ')
+          ..write('inlinePath: $inlinePath, ')
           ..write('agentId: $agentId, ')
           ..write('capability: $capability, ')
           ..write('status: $status, ')
@@ -755,6 +836,8 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
   @override
   int get hashCode => Object.hash(
     sessionId,
+    rootSessionId,
+    inlinePath,
     agentId,
     capability,
     status,
@@ -768,6 +851,8 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
       identical(this, other) ||
       (other is SessionDao &&
           other.sessionId == this.sessionId &&
+          other.rootSessionId == this.rootSessionId &&
+          other.inlinePath == this.inlinePath &&
           other.agentId == this.agentId &&
           other.capability == this.capability &&
           other.status == this.status &&
@@ -779,6 +864,8 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
 
 class SessionsCompanion extends UpdateCompanion<SessionDao> {
   final Value<String> sessionId;
+  final Value<String> rootSessionId;
+  final Value<String?> inlinePath;
   final Value<String?> agentId;
   final Value<String> capability;
   final Value<String> status;
@@ -789,6 +876,8 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
   final Value<int> rowid;
   const SessionsCompanion({
     this.sessionId = const Value.absent(),
+    this.rootSessionId = const Value.absent(),
+    this.inlinePath = const Value.absent(),
     this.agentId = const Value.absent(),
     this.capability = const Value.absent(),
     this.status = const Value.absent(),
@@ -800,6 +889,8 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
   });
   SessionsCompanion.insert({
     required String sessionId,
+    required String rootSessionId,
+    this.inlinePath = const Value.absent(),
     this.agentId = const Value.absent(),
     required String capability,
     this.status = const Value.absent(),
@@ -809,11 +900,14 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
     this.expiresAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : sessionId = Value(sessionId),
+       rootSessionId = Value(rootSessionId),
        capability = Value(capability),
        createTime = Value(createTime),
        updateTime = Value(updateTime);
   static Insertable<SessionDao> custom({
     Expression<String>? sessionId,
+    Expression<String>? rootSessionId,
+    Expression<String>? inlinePath,
     Expression<String>? agentId,
     Expression<String>? capability,
     Expression<String>? status,
@@ -825,6 +919,8 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
   }) {
     return RawValuesInsertable({
       if (sessionId != null) 'session_id': sessionId,
+      if (rootSessionId != null) 'root_session_id': rootSessionId,
+      if (inlinePath != null) 'inline_path': inlinePath,
       if (agentId != null) 'agent_id': agentId,
       if (capability != null) 'capability': capability,
       if (status != null) 'status': status,
@@ -838,6 +934,8 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
 
   SessionsCompanion copyWith({
     Value<String>? sessionId,
+    Value<String>? rootSessionId,
+    Value<String?>? inlinePath,
     Value<String?>? agentId,
     Value<String>? capability,
     Value<String>? status,
@@ -849,6 +947,8 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
   }) {
     return SessionsCompanion(
       sessionId: sessionId ?? this.sessionId,
+      rootSessionId: rootSessionId ?? this.rootSessionId,
+      inlinePath: inlinePath ?? this.inlinePath,
       agentId: agentId ?? this.agentId,
       capability: capability ?? this.capability,
       status: status ?? this.status,
@@ -865,6 +965,12 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
     final map = <String, Expression>{};
     if (sessionId.present) {
       map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (rootSessionId.present) {
+      map['root_session_id'] = Variable<String>(rootSessionId.value);
+    }
+    if (inlinePath.present) {
+      map['inline_path'] = Variable<String>(inlinePath.value);
     }
     if (agentId.present) {
       map['agent_id'] = Variable<String>(agentId.value);
@@ -897,6 +1003,8 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
   String toString() {
     return (StringBuffer('SessionsCompanion(')
           ..write('sessionId: $sessionId, ')
+          ..write('rootSessionId: $rootSessionId, ')
+          ..write('inlinePath: $inlinePath, ')
           ..write('agentId: $agentId, ')
           ..write('capability: $capability, ')
           ..write('status: $status, ')
@@ -1928,6 +2036,8 @@ typedef $$AgentsTableProcessedTableManager =
 typedef $$SessionsTableCreateCompanionBuilder =
     SessionsCompanion Function({
       required String sessionId,
+      required String rootSessionId,
+      Value<String?> inlinePath,
       Value<String?> agentId,
       required String capability,
       Value<String> status,
@@ -1940,6 +2050,8 @@ typedef $$SessionsTableCreateCompanionBuilder =
 typedef $$SessionsTableUpdateCompanionBuilder =
     SessionsCompanion Function({
       Value<String> sessionId,
+      Value<String> rootSessionId,
+      Value<String?> inlinePath,
       Value<String?> agentId,
       Value<String> capability,
       Value<String> status,
@@ -1961,6 +2073,16 @@ class $$SessionsTableFilterComposer
   });
   ColumnFilters<String> get sessionId => $composableBuilder(
     column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rootSessionId => $composableBuilder(
+    column: $table.rootSessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get inlinePath => $composableBuilder(
+    column: $table.inlinePath,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2014,6 +2136,16 @@ class $$SessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get rootSessionId => $composableBuilder(
+    column: $table.rootSessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get inlinePath => $composableBuilder(
+    column: $table.inlinePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get agentId => $composableBuilder(
     column: $table.agentId,
     builder: (column) => ColumnOrderings(column),
@@ -2061,6 +2193,16 @@ class $$SessionsTableAnnotationComposer
   });
   GeneratedColumn<String> get sessionId =>
       $composableBuilder(column: $table.sessionId, builder: (column) => column);
+
+  GeneratedColumn<String> get rootSessionId => $composableBuilder(
+    column: $table.rootSessionId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get inlinePath => $composableBuilder(
+    column: $table.inlinePath,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get agentId =>
       $composableBuilder(column: $table.agentId, builder: (column) => column);
@@ -2122,6 +2264,8 @@ class $$SessionsTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> sessionId = const Value.absent(),
+                Value<String> rootSessionId = const Value.absent(),
+                Value<String?> inlinePath = const Value.absent(),
                 Value<String?> agentId = const Value.absent(),
                 Value<String> capability = const Value.absent(),
                 Value<String> status = const Value.absent(),
@@ -2132,6 +2276,8 @@ class $$SessionsTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion(
                 sessionId: sessionId,
+                rootSessionId: rootSessionId,
+                inlinePath: inlinePath,
                 agentId: agentId,
                 capability: capability,
                 status: status,
@@ -2144,6 +2290,8 @@ class $$SessionsTableTableManager
           createCompanionCallback:
               ({
                 required String sessionId,
+                required String rootSessionId,
+                Value<String?> inlinePath = const Value.absent(),
                 Value<String?> agentId = const Value.absent(),
                 required String capability,
                 Value<String> status = const Value.absent(),
@@ -2154,6 +2302,8 @@ class $$SessionsTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion.insert(
                 sessionId: sessionId,
+                rootSessionId: rootSessionId,
+                inlinePath: inlinePath,
                 agentId: agentId,
                 capability: capability,
                 status: status,

@@ -123,17 +123,114 @@ void main() {
     },
   );
 
+  test('persists and restores an inline Agent runtime tree', () async {
+    final capability = CapabilityDto(
+      systemPrompt: 'root system',
+      subAgentList: [
+        AgentDto(
+          name: 'worker',
+          capability: CapabilityDto(systemPrompt: 'child system'),
+        ),
+      ],
+    );
+    final agentService = AgentService(
+      messageManageServiceList: [messageManageService],
+    );
+    final runtimeService = SessionRuntimeService(
+      agentService: agentService,
+      sessionManageService: sessionManageService,
+      messageManageService: messageManageService,
+    );
+
+    final root = await agentService.initSession(capability);
+    await runtimeService.persistNewSession(
+      sessionId: root.sessionId,
+      capability: capability,
+    );
+    final initialTree = agentService.getSessionTree(root.sessionId);
+    expect(initialTree, hasLength(2));
+    final initialChildId = initialTree
+        .singleWhere((item) => item.isInlineChild)
+        .sessionId;
+
+    await _persistTurn(
+      messageManageService,
+      sessionId: initialChildId,
+      taskId: 'child-done',
+      userText: 'child context',
+      answerText: 'child answer',
+      done: true,
+    );
+
+    final restoredAgentService = AgentService(
+      messageManageServiceList: [messageManageService],
+    );
+    final restoredRuntimeService = SessionRuntimeService(
+      agentService: restoredAgentService,
+      sessionManageService: sessionManageService,
+      messageManageService: messageManageService,
+    );
+    await restoredRuntimeService.resolveSession(root.sessionId);
+
+    final restoredTree = restoredAgentService.getSessionTree(root.sessionId);
+    expect(restoredTree, hasLength(2));
+    final restoredChildId = restoredTree
+        .singleWhere((item) => item.isInlineChild)
+        .sessionId;
+    expect(restoredChildId, isNot(initialChildId));
+    expect(
+      restoredAgentService
+          .getSessionAgent(restoredChildId)!
+          .agentSession
+          .taskDoneAgentMessageList
+          .where((message) => message.content is List<Content>)
+          .expand(
+            (message) => (message.content as List<Content>).map(
+              (content) => content.message,
+            ),
+          ),
+      contains('child context'),
+    );
+
+    final history = await restoredRuntimeService.getHistory(root.sessionId);
+    expect(
+      history.expand<String>((message) sync* {
+        final content = message.content;
+        if (content is String) {
+          yield content;
+        } else if (content is List) {
+          for (final item in content) {
+            if (item is ContentDto) {
+              yield item.message;
+            } else if (item is Map && item['message'] is String) {
+              yield item['message'] as String;
+            }
+          }
+        }
+      }),
+      contains('child context'),
+    );
+
+    await restoredRuntimeService.clearSession(root.sessionId);
+    expect(await sessionManageService.getSessionTree(root.sessionId), isEmpty);
+  });
+
   test('history aggregates child sessions and paginates from newest', () async {
     await sessionManageService.addSession(
       sessionId: 'child-session',
       capability: CapabilityDto(systemPrompt: 'child'),
+      rootSessionId: 'root-session',
+      inlinePath: 'worker',
     );
     await sessionManageService.addSession(
       sessionId: 'root-session',
       capability: CapabilityDto(
         systemPrompt: 'root',
-        sessionList: [
-          SessionNameDto(sessionId: 'child-session', name: 'worker'),
+        subAgentList: [
+          AgentDto(
+            name: 'worker',
+            capability: CapabilityDto(systemPrompt: 'child'),
+          ),
         ],
       ),
     );
@@ -305,7 +402,7 @@ void main() {
     expect(history, hasLength(1));
     expect(history.single.agentMessageDto.originalTaskId, 'legacy-task');
     expect(history.single.agentMessageDto.content, 'legacy answer');
-    expect(migratedDatabase.schemaVersion, 3);
+    expect(migratedDatabase.schemaVersion, 4);
     final migratedSession = await migratedDatabase.getSessionById(
       'legacy-session',
     );

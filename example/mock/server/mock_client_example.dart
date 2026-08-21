@@ -31,20 +31,15 @@ Future<void> main() async {
       "You play the role of a tool caller. You can help me decide which tool to call to complete the task according to my requirements. You can only call one tool at a time. \n\nYou support the following tools:\n\n 1. Translation\n 2. Add, delete, modify and query tools";
   String prompt = "Find the text with ID 0 and translate it into Chinese.";
 
-  SessionDto? sessionDto1 = await _buildTextAgent(dio);
-  SessionDto? sessionDto2 = await _buildToolAgent(dio);
-
-  if (sessionDto1 == null || sessionDto2 == null) {
-    print("Init sub session failed.");
-    return;
-  }
-
   CapabilityDto capabilityDto = CapabilityDto(
     llmConfig: _buildLLMConfigDto(),
     systemPrompt: systemPrompt,
-    sessionList: [
-      SessionNameDto(sessionId: sessionDto1.sessionId),
-      SessionNameDto(sessionId: sessionDto2.sessionId),
+    subAgentList: [
+      AgentDto(name: "translator", capability: _buildTextAgentCapability()),
+      AgentDto(
+        name: "CRUDTools",
+        capability: await _buildToolAgentCapability(),
+      ),
     ],
   );
 
@@ -111,7 +106,7 @@ Future<void> setPresetOpenSpecList(Dio dio) async {
   }
 }
 
-Future<SessionDto?> _buildTextAgent(Dio dio) async {
+CapabilityDto _buildTextAgentCapability() {
   String systemPrompt =
       "Playing as a translator, knowing how to translate between languages.";
 
@@ -119,10 +114,10 @@ Future<SessionDto?> _buildTextAgent(Dio dio) async {
     llmConfig: _buildLLMConfigDto(),
     systemPrompt: systemPrompt,
   );
-  return await initChat(dio, capabilityDto);
+  return capabilityDto;
 }
 
-Future<SessionDto?> _buildToolAgent(Dio dio) async {
+Future<CapabilityDto> _buildToolAgentCapability() async {
   DotEnv env = DotEnv();
   env.load(['example/.env']);
   LLMConfigDto llmConfig = LLMConfigDto(
@@ -157,7 +152,7 @@ Future<SessionDto?> _buildToolAgent(Dio dio) async {
     openSpecList: openSpecDtoList,
   );
 
-  return await initChat(dio, capabilityDto);
+  return capabilityDto;
 }
 
 Future<void> sleep(int seconds) async {

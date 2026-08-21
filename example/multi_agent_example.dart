@@ -14,35 +14,33 @@ Config config = initConfig();
 /// 2. OneAPI JSON file, which is described the HTTP Server API.
 /// 3. Add LLM baseUrl and apiKey to `.env` file
 Future<void> main() async {
-  String baseUrl = "http://127.0.0.1:${config.server.port}${config.server.apiPathPrefix}";
+  String baseUrl =
+      "http://127.0.0.1:${config.server.port}${config.server.apiPathPrefix}";
 
-  Dio dio = Dio(BaseOptions(baseUrl: baseUrl,
-    // headers: {"Authorization": "Bearer <KEY>"}
-  ));
+  Dio dio = Dio(
+    BaseOptions(
+      baseUrl: baseUrl,
+      // headers: {"Authorization": "Bearer <KEY>"}
+    ),
+  );
 
   // Optional: set server-wide preset OpenSpec list.
   await setPresetOpenSpecList(dio);
 
-  String systemPrompt = "You play the role of a tool caller. You can help me decide which tool to call to complete the task according to my requirements. You can only call one tool at a time. \n\nYou support the following tools:\n\n 1. Translation\n 2. Add, delete, modify and query tools";
+  String systemPrompt =
+      "You play the role of a tool caller. You can help me decide which tool to call to complete the task according to my requirements. You can only call one tool at a time. \n\nYou support the following tools:\n\n 1. Translation\n 2. Add, delete, modify and query tools";
   String prompt = "Find the text with ID 0 and translate it into Chinese.";
-
-  SessionDto? sessionDto1 = await _buildTextAgent(dio);
-  print("session1: ${sessionDto1?.sessionId}");
-  SessionDto? sessionDto2 = await _buildToolAgent(dio);
-  print("session2: ${sessionDto2?.sessionId}");
-
-  if(sessionDto1 == null || sessionDto2 == null) {
-    print("Init sub session failed.");
-    return;
-  }
 
   CapabilityDto capabilityDto = CapabilityDto(
     llmConfig: _buildLLMConfigDto(),
     systemPrompt: systemPrompt,
-    sessionList: [
-      SessionNameDto(sessionId: sessionDto1.sessionId, name: "translator"),
-      SessionNameDto(sessionId: sessionDto2.sessionId, name: "CRUDTools")
-    ]
+    subAgentList: [
+      AgentDto(name: "translator", capability: _buildTextAgentCapability()),
+      AgentDto(
+        name: "CRUDTools",
+        capability: await _buildToolAgentCapability(),
+      ),
+    ],
   );
 
   SessionDto? sessionDto = await initChat(dio, capabilityDto);
@@ -50,17 +48,22 @@ Future<void> main() async {
   if (sessionDto != null) {
     print("[sessionDto] " + sessionDto.toJson().toString());
 
-    Stream<String> sseStream = await sendUserMessage(baseUrl, sessionDto.sessionId, prompt);
+    Stream<String> sseStream = await sendUserMessage(
+      baseUrl,
+      sessionDto.sessionId,
+      prompt,
+    );
 
-    sseStream.listen((sseString) {
-      _onData(sessionDto.sessionId, sseString);
-    },
+    sseStream.listen(
+      (sseString) {
+        _onData(sessionDto.sessionId, sseString);
+      },
       onDone: () {
         print("[sseDone]");
       },
       onError: (e) {
         print("[sseError] " + e.toString());
-      }
+      },
     );
 
     print("[prompt] " + prompt);
@@ -80,7 +83,11 @@ Future<void> main() async {
 LLMConfigDto _buildLLMConfigDto() {
   DotEnv env = DotEnv();
   env.load(['example/.env']);
-  return LLMConfigDto(baseUrl: env["baseUrl"]!, apiKey: env["apiKey"]!, model: "gpt-3.5-turbo");
+  return LLMConfigDto(
+    baseUrl: env["baseUrl"]!,
+    apiKey: env["apiKey"]!,
+    model: "gpt-3.5-turbo",
+  );
 }
 
 Future<void> setPresetOpenSpecList(Dio dio) async {
@@ -99,35 +106,49 @@ Future<void> setPresetOpenSpecList(Dio dio) async {
   }
 }
 
-Future<SessionDto?> _buildTextAgent(Dio dio) async {
-  String systemPrompt = "Playing as a translator, knowing how to translate between languages.";
-
-  CapabilityDto capabilityDto = CapabilityDto(llmConfig: _buildLLMConfigDto(), systemPrompt: systemPrompt);
-  return await initChat(dio, capabilityDto);
+CapabilityDto _buildTextAgentCapability() {
+  String systemPrompt =
+      "Playing as a translator, knowing how to translate between languages.";
+  return CapabilityDto(
+    llmConfig: _buildLLMConfigDto(),
+    systemPrompt: systemPrompt,
+  );
 }
 
-Future<SessionDto?> _buildToolAgent(Dio dio) async {
-  DotEnv env = DotEnv();env.load(['example/.env']);LLMConfigDto llmConfig = LLMConfigDto(baseUrl: env["baseUrl"]!, apiKey: env["apiKey"]!, model: "gpt-4o-mini");
+Future<CapabilityDto> _buildToolAgentCapability() async {
+  DotEnv env = DotEnv();
+  env.load(['example/.env']);
+  LLMConfigDto llmConfig = LLMConfigDto(
+    baseUrl: env["baseUrl"]!,
+    apiKey: env["apiKey"]!,
+    model: "gpt-4o-mini",
+  );
 
-  String openAPIFolder = "${io.Directory.current.path}${io.Platform.pathSeparator}example${io.Platform.pathSeparator}mock${io.Platform.pathSeparator}server";
-  List<String> openAPIFileNameList = [
-    "mock_openapi.json"
-  ];
+  String openAPIFolder =
+      "${io.Directory.current.path}${io.Platform.pathSeparator}example${io.Platform.pathSeparator}mock${io.Platform.pathSeparator}server";
+  List<String> openAPIFileNameList = ["mock_openapi.json"];
 
   List<OpenSpecDto> openSpecDtoList = [];
   for (String openAPIFileName in openAPIFileNameList) {
-    String jsonPath = "$openAPIFolder${io.Platform.pathSeparator}$openAPIFileName";
+    String jsonPath =
+        "$openAPIFolder${io.Platform.pathSeparator}$openAPIFileName";
     io.File file = io.File(jsonPath);
     String jsonString = await file.readAsString();
-    OpenSpecDto openSpecDto = OpenSpecDto(openSpec: jsonString, protocol: Protocol.OPENAPI);
+    OpenSpecDto openSpecDto = OpenSpecDto(
+      openSpec: jsonString,
+      protocol: Protocol.OPENAPI,
+    );
     openSpecDtoList.add(openSpecDto);
   }
 
-  String systemPrompt = "A storage management tool that knows how to add, delete, modify, and query my texts.";
+  String systemPrompt =
+      "A storage management tool that knows how to add, delete, modify, and query my texts.";
 
-  CapabilityDto capabilityDto = CapabilityDto(llmConfig: llmConfig, systemPrompt: systemPrompt, openSpecList: openSpecDtoList);
-
-  return await initChat(dio, capabilityDto);
+  return CapabilityDto(
+    llmConfig: llmConfig,
+    systemPrompt: systemPrompt,
+    openSpecList: openSpecDtoList,
+  );
 }
 
 Future<void> sleep(int seconds) async {
@@ -139,7 +160,10 @@ Future<void> sleep(int seconds) async {
 
 Future<SessionDto?> initChat(Dio dio, CapabilityDto capabilityDto) async {
   try {
-    Response response = await dio.post('/initSession', data: capabilityDto.toJson());
+    Response response = await dio.post(
+      '/initSession',
+      data: capabilityDto.toJson(),
+    );
     SessionDto sessionDto = SessionDto.fromJson(response.data);
     print("[initChat->RES] " + sessionDto.toJson().toString());
     return sessionDto;
@@ -149,7 +173,11 @@ Future<SessionDto?> initChat(Dio dio, CapabilityDto capabilityDto) async {
   return null;
 }
 
-Future<Stream<String>> chat(String baseUrl, String sessionId, UserTaskDto userTaskDto) async {
+Future<Stream<String>> chat(
+  String baseUrl,
+  String sessionId,
+  UserTaskDto userTaskDto,
+) async {
   Uri uri = Uri.parse('$baseUrl/chat?sessionId=$sessionId');
   io.HttpClient httpClient = io.HttpClient();
 
@@ -168,7 +196,11 @@ Future<Stream<String>> chat(String baseUrl, String sessionId, UserTaskDto userTa
   return stream;
 }
 
-Future<Stream<String>> sendUserMessage(String baseUrl, String sessionId, String prompt) async {
+Future<Stream<String>> sendUserMessage(
+  String baseUrl,
+  String sessionId,
+  String prompt,
+) async {
   ContentDto contentDto = ContentDto(type: ContentType.TEXT, message: prompt);
   UserTaskDto userTaskDto = UserTaskDto(content: [contentDto]);
   return await chat(baseUrl, sessionId, userTaskDto);
@@ -176,8 +208,10 @@ Future<Stream<String>> sendUserMessage(String baseUrl, String sessionId, String 
 
 Future<SessionDto?> stopChat(Dio dio, String sessionId) async {
   try {
-    Response response =
-    await dio.get('/stop', queryParameters: {"sessionId": sessionId});
+    Response response = await dio.get(
+      '/stop',
+      queryParameters: {"sessionId": sessionId},
+    );
     SessionDto sessionDto = SessionDto.fromJson(response.data);
     return sessionDto;
   } catch (e) {
@@ -188,8 +222,10 @@ Future<SessionDto?> stopChat(Dio dio, String sessionId) async {
 
 Future<SessionDto?> clearChat(Dio dio, String sessionId) async {
   try {
-    Response response =
-    await dio.get('/clear', queryParameters: {"sessionId": sessionId});
+    Response response = await dio.get(
+      '/clear',
+      queryParameters: {"sessionId": sessionId},
+    );
     SessionDto sessionDto = SessionDto.fromJson(response.data);
     return sessionDto;
   } catch (e) {
@@ -208,10 +244,14 @@ Future<void> _onData(String originalSessionId, String data) async {
     final eventData = match.group(2);
 
     if (eventName == SSEEventType.MESSAGE) {
-      AgentMessageDto agentMessageDto = AgentMessageDto.fromJson(jsonDecode(eventData!));
+      AgentMessageDto agentMessageDto = AgentMessageDto.fromJson(
+        jsonDecode(eventData!),
+      );
       listen(originalSessionId, agentMessageDto);
     } else if (eventName == SSEEventType.CHUNK) {
-      AgentMessageChunkDto agentMessageChunkDto = AgentMessageChunkDto.fromJson(jsonDecode(eventData!));
+      AgentMessageChunkDto agentMessageChunkDto = AgentMessageChunkDto.fromJson(
+        jsonDecode(eventData!),
+      );
       listenChunk(originalSessionId, agentMessageChunkDto);
     }
   }

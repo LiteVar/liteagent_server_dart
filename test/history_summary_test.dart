@@ -379,15 +379,22 @@ Future<void> _addRoot(
     await sessions.addSession(
       sessionId: child,
       capability: CapabilityDto(systemPrompt: 'child'),
+      rootSessionId: root,
+      inlinePath: 'worker',
     );
   }
   await sessions.addSession(
     sessionId: root,
     capability: CapabilityDto(
       systemPrompt: 'root',
-      sessionList: child == null
+      subAgentList: child == null
           ? null
-          : [SessionNameDto(sessionId: child, name: 'worker')],
+          : [
+              AgentDto(
+                name: 'worker',
+                capability: CapabilityDto(systemPrompt: 'child'),
+              ),
+            ],
     ),
   );
 }
