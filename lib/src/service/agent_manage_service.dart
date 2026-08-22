@@ -120,7 +120,6 @@ class AgentManageServiceByDB extends AgentManageService {
       openSpecList: openSpecList,
       callbackOpenTool: callbackOpenToolDto,
       subAgentList: subAgentList,
-      reflectPromptList: capability.reflectPromptList,
       timeoutSeconds: capability.timeoutSeconds,
       taskPipelineStrategy: capability.taskPipelineStrategy,
       toolPipelineStrategy: capability.toolPipelineStrategy,

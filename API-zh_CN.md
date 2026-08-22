@@ -87,15 +87,6 @@ https://api.example.com/v1
 | `capability.subAgentList`                            | `array`   | （可选）内嵌 Sub Agent 列表，每个元素为 `AgentDto`，并可继续递归包含 `subAgentList`。                                                                        |
 | `capability.subAgentList.name`                       | `string`  | 子 Agent 名称，同时作为 function name；必须匹配 `^[a-zA-Z0-9_-]{1,64}$`。                                                                          |
 | `capability.subAgentList.capability`                 | `object`  | 子 Agent 的完整 Capability 配置。无需提供 sessionId，运行时由 core 自动生成。                                                                             |
-| `capability.reflectPromptList`                       | `array`   | （可选）ReflectPrompt 列表，数组中每个元素为 `object`; **若`openSpecList`为空则反思LLM的text，否则反思LLM的Function Calling**                                    |
-| `capability.reflectPromptList.llmConfig`             | `object`  | `ReflectAgent` 的 `llmConfig`，用于请求大模型                                                                                                 |
-| `capability.reflectPromptList.llmConfig.baseUrl`     | `string`  | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                                                                                           |
-| `capability.reflectPromptList.llmConfig.apiKey`      | `string`  | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                                                                                                      |
-| `capability.reflectPromptList.llmConfig.model`       | `string`  | 大模型名称，例如：gpt-4o-mini                                                                                                                 |
-| `capability.reflectPromptList.llmConfig.temperature` | `number`  | （可选）温度值，默认为 0                                                                                                                        |
-| `capability.reflectPromptList.llmConfig.maxTokens`   | `number`  | （可选）最大 token 数，默认为 4096                                                                                                              |
-| `capability.reflectPromptList.llmConfig.topP`        | `number`  | （可选）概率抽样的 p 值，默认为 1                                                                                                                  |
-| `capability.reflectPromptList.prompt`                | `string`  | `ReflectAgent`的 System Prompt，用以描述reflection分数的判断标准。                                                                                 |
 | `capability.timeoutSeconds`                          | `number`  | （可选）超时时间，默认为3600，以秒为单位                                                                                                               |
 | `capability.taskPipelineStrategy`                    | `enum`    | （可选）同一会话下，新的任务指令，执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel`                                        |
 | `capability.toolPipelineStrategy`                    | `enum`    | （可选）同一任务下，若function calling返回为数组时，tool执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel`                   |
@@ -220,15 +211,6 @@ GET /agent?agentId=671763aae989ec22357fea88
 | `capability.subAgentList`                            | `array`   | （可选）内嵌 Sub Agent 列表，每个元素为 `AgentDto`，并可继续递归包含 `subAgentList`。                                                                        |
 | `capability.subAgentList.name`                       | `string`  | 子 Agent 名称，同时作为 function name；必须匹配 `^[a-zA-Z0-9_-]{1,64}$`。                                                                          |
 | `capability.subAgentList.capability`                 | `object`  | 子 Agent 的完整 Capability 配置。无需提供 sessionId，运行时由 core 自动生成。                                                                             |
-| `capability.reflectPromptList`                       | `array`  | （可选）ReflectPrompt 列表，数组中每个元素为 `object`; **若`openSpecList`为空则反思LLM的text，否则反思LLM的Function Calling**                  |
-| `capability.reflectPromptList.llmConfig`             | `object` | `ReflectAgent` 的 `llmConfig`，用于请求大模型                                                                               |
-| `capability.reflectPromptList.llmConfig.baseUrl`     | `string` | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                                                                         |
-| `capability.reflectPromptList.llmConfig.apiKey`      | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                                                                                    |
-| `capability.reflectPromptList.llmConfig.model`       | `string` | 大模型名称，例如：gpt-4o-mini                                                                                               |
-| `capability.reflectPromptList.llmConfig.temperature` | `number` | （可选）温度值，默认为 0                                                                                                      |
-| `capability.reflectPromptList.llmConfig.maxTokens`   | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
-| `capability.reflectPromptList.llmConfig.topP`        | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
-| `capability.reflectPromptList.prompt`                | `string` | `ReflectAgent`的 System Prompt，用以描述reflection分数的判断标准。                                                               |
 | `capability.timeoutSeconds`                          | `number` | （可选）超时时间，默认为3600，以秒为单位                                                                                             |
 | `capability.taskPipelineStrategy`                    | `enum`   | （可选）同一会话下，新的任务指令，执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel`                      |
 | `capability.toolPipelineStrategy`                    | `enum`   | （可选）同一任务下，若function calling返回为数组时，tool执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel` |
@@ -335,15 +317,6 @@ GET /agent?agentId=671763aae989ec22357fea88
 | `capability.subAgentList`                            | `array`   | （可选）内嵌 Sub Agent 列表，每个元素为 `AgentDto`，并可继续递归包含 `subAgentList`。                                                                        |
 | `capability.subAgentList.name`                       | `string`  | 子 Agent 名称，同时作为 function name；必须匹配 `^[a-zA-Z0-9_-]{1,64}$`。                                                                          |
 | `capability.subAgentList.capability`                 | `object`  | 子 Agent 的完整 Capability 配置。无需提供 sessionId，运行时由 core 自动生成。                                                                             |
-| `capability.reflectPromptList`                       | `array`  | （可选）ReflectPrompt 列表，数组中每个元素为 `object`; **若`openSpecList`为空则反思LLM的text，否则反思LLM的Function Calling**                  |
-| `capability.reflectPromptList.llmConfig`             | `object` | `ReflectAgent` 的 `llmConfig`，用于请求大模型                                                                               |
-| `capability.reflectPromptList.llmConfig.baseUrl`     | `string` | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                                                                         |
-| `capability.reflectPromptList.llmConfig.apiKey`      | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                                                                                    |
-| `capability.reflectPromptList.llmConfig.model`       | `string` | 大模型名称，例如：gpt-4o-mini                                                                                               |
-| `capability.reflectPromptList.llmConfig.temperature` | `number` | （可选）温度值，默认为 0                                                                                                      |
-| `capability.reflectPromptList.llmConfig.maxTokens`   | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
-| `capability.reflectPromptList.llmConfig.topP`        | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
-| `capability.reflectPromptList.prompt`                | `string` | `ReflectAgent`的 System Prompt，用以描述reflection分数的判断标准。                                                               |
 | `capability.timeoutSeconds`                          | `number` | （可选）超时时间，默认为3600，以秒为单位                                                                                             |
 | `capability.taskPipelineStrategy`                    | `enum`   | （可选）同一会话下，新的任务指令，执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel`                      |
 | `capability.toolPipelineStrategy`                    | `enum`   | （可选）同一任务下，若function calling返回为数组时，tool执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel` |
@@ -478,15 +451,6 @@ GET /agent/update?agentId=671763aae989ec22357fea88
 | `capability.subAgentList`                            | `array`   | （可选）内嵌 Sub Agent 列表，每个元素为 `AgentDto`，并可继续递归包含 `subAgentList`。                                                                        |
 | `capability.subAgentList.name`                       | `string`  | 子 Agent 名称，同时作为 function name；必须匹配 `^[a-zA-Z0-9_-]{1,64}$`。                                                                          |
 | `capability.subAgentList.capability`                 | `object`  | 子 Agent 的完整 Capability 配置。无需提供 sessionId，运行时由 core 自动生成。                                                                             |
-| `capability.reflectPromptList`                       | `array`  | （可选）ReflectPrompt 列表，数组中每个元素为 `object`; **若`openSpecList`为空则反思LLM的text，否则反思LLM的Function Calling**                  |
-| `capability.reflectPromptList.llmConfig`             | `object` | `ReflectAgent` 的 `llmConfig`，用于请求大模型                                                                               |
-| `capability.reflectPromptList.llmConfig.baseUrl`     | `string` | 大模型厂商的 API 入口，例如：https://api.openai.com/v1                                                                         |
-| `capability.reflectPromptList.llmConfig.apiKey`      | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                                                                                    |
-| `capability.reflectPromptList.llmConfig.model`       | `string` | 大模型名称，例如：gpt-4o-mini                                                                                               |
-| `capability.reflectPromptList.llmConfig.temperature` | `number` | （可选）温度值，默认为 0                                                                                                      |
-| `capability.reflectPromptList.llmConfig.maxTokens`   | `number` | （可选）最大 token 数，默认为 4096                                                                                            |
-| `capability.reflectPromptList.llmConfig.topP`        | `number` | （可选）概率抽样的 p 值，默认为 1                                                                                                |
-| `capability.reflectPromptList.prompt`                | `string` | `ReflectAgent`的 System Prompt，用以描述reflection分数的判断标准。                                                               |
 | `capability.timeoutSeconds`                          | `number` | （可选）超时时间，默认为3600，以秒为单位                                                                                             |
 | `capability.taskPipelineStrategy`                    | `enum`   | （可选）同一会话下，新的任务指令，执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel`                      |
 | `capability.toolPipelineStrategy`                    | `enum`   | （可选）同一任务下，若function calling返回为数组时，tool执行的策略，目前支持 `parallel`允许并行、`serial`排队执行、`reject`如有任务正在执行则拒绝新任务，默认为 `parallel` |
@@ -843,9 +807,9 @@ POST /chat?sessionId=1901883204734947328
 |--------------------------------------|-----------|---------------------------------------------------------------------------------------------------|
 | `sessionId`                          | `string`  | 会话id                                                                                              |
 | `taskId`                             | `string`  | 任务id                                                                                              |
-| `role`                               | `string`  | 角色，可选值包括： `developer`、`user`、`agent`、`assistant`、`reflection`、`tool`、`client`                     |
+| `role`                               | `string`  | 角色，可选值包括： `developer`、`user`、`agent`、`assistant`、`tool`、`client`                     |
 | `to`                                 | `string`  | 消息发送的目标，可选值包括与`role`一致                                                                            |
-| `type`                               | `string`  | 消息类型，可能包含的值有:`text`、`reasoning`、`imageUrl`、`contentList`、`toolCalls`、`reflection`、`toolReturn`、`functionCall` |
+| `type`                               | `string`  | 消息类型，可能包含的值有:`text`、`reasoning`、`imageUrl`、`contentList`、`toolCalls`、`toolReturn`、`functionCall` |
 | `content`                            | `dynamic` | 见以下示例定义，详情定义见 [`type`在不同类型下的`content`结构](#1-type在不同类型下的content结构)                                 |
 | `completions`                        | `object`  | （可选）大模型完成的详细信息，包含以下字段：                                                                            |
 | `completions.usage`                  | `object`  | token 使用信息                                                                                        |
@@ -917,36 +881,6 @@ POST /chat?sessionId=1901883204734947328
     "content":{ 
       "id":"functionCallId", 
       "result":{} 
-    },
-    "createTime": "2023-06-18T15:45:30.000+0800"
-  }
-  ```
-
-- 反思请求：`type`=`reflection`
-  ```json
-  {
-    "sessionId":"1901883204734947328",
-    "taskId":"1901883415867822080",
-    "role":"reflection",
-    "to":"agent",
-    "type": "reflection",
-    "content": {
-      "isPass":"",
-      "agentId": "xxx", 
-      "name": "MyAgent",
-      "messageScore": {
-        "content": [
-          { "type": "text", "message":"查询IP" }
-        ],
-        "messageType": "text",
-        "message": "查询IP的结果为192.168.31.123",
-        "reflectScoreList": [
-          {"score": 10, "description": "返回数据包含IP信息"}
-        ] 
-      },
-      "passScore":"8",
-      "count": "1", 
-      "maxCount": "10"
     },
     "createTime": "2023-06-18T15:45:30.000+0800"
   }
@@ -1159,9 +1093,9 @@ POST /chat/simple?sessionId=1901883204734947328
 |--------------------------------------|----------|---------------------------------------------------------------------------------------------------|
 | `sessionId`                          | `string` | 会话id                                                                                              |
 | `taskId`                             | `string` | 任务id                                                                                              |
-| `role`                               | `string` | 角色，可选值包括： `developer`、`user`、`agent`、`assistant`、`reflection`、`tool`、`client`                     |
+| `role`                               | `string` | 角色，可选值包括： `developer`、`user`、`agent`、`assistant`、`tool`、`client`                     |
 | `to`                                 | `string` | 消息发送的目标，可选值包括与`role`一致                                                                            |
-| `type`                               | `string` | 消息类型，可能包含的值有:`text`、`reasoning`、`imageUrl`、`contentList`、`toolCalls`、`reflection`、`toolReturn`、`functionCall` |
+| `type`                               | `string` | 消息类型，可能包含的值有:`text`、`reasoning`、`imageUrl`、`contentList`、`toolCalls`、`toolReturn`、`functionCall` |
 | `content`                            | `dynamic` | 消息内容                                                                                             |
 | `completions`                        | `object` | （可选）大模型完成的详细信息，包含以下字段：                                                                            |
 | `completions.usage`                  | `object` | token 使用信息                                                                                        |
@@ -1318,9 +1252,9 @@ GET /history?sessionId=1901883204734947328&page=1&pageSize=50
 | `originalTaskId`                     | `string` | 原始任务 ID，用于关联子任务和工具调用                                                                          |
 | `taskId`                             | `string` | 任务 ID，识别该任务                                                                                      |
 | `parentTaskId`                       | `string` | （可选）父任务 ID                                                                                         |
-| `role`                               | `string` | 消息来源，可能的值包括：`developer`、`user`、`agent`、`assistant`、`reflection`、`tool`、`client`                  |
+| `role`                               | `string` | 消息来源，可能的值包括：`developer`、`user`、`agent`、`assistant`、`tool`、`client`                  |
 | `to`                                 | `string` | 消息目标，可能的值与`role`一致                                                                               |
-| `type`                               | `string` | 消息类型，可能的值包括：`text`、`reasoning`、`imageUrl`、`contentList`、`toolCalls`、`reflection`、`toolReturn`、`functionCall` |
+| `type`                               | `string` | 消息类型，可能的值包括：`text`、`reasoning`、`imageUrl`、`contentList`、`toolCalls`、`toolReturn`、`functionCall` |
 | `content`                            | `any`    | 消息内容，具体类型需根据 `type` 字段解析                                                                         |
 | `reasoningContent`                   | `string` | （可选）模型推理内容                                                                                         |
 | `completions`                        | `object` | 大模型完成的详细信息，包含以下字段：                                                                               |
@@ -1645,24 +1579,6 @@ GET /session/list?agentId=671763aae989ec22357fea88
 |-----------|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `type`    | `string`    | 可选类型为`text`、`imageUrl`                                                                                                                                                          |
 | `message` | `string`    | 消息内容，例如："给我一个随机数"; <br/>如果消息类型为imageUrl，message的String可选为：<br/>1. 图片链接："https://example.com/path/to/image.png" ，且确保公网可访问<br/>2. base64格式："data:image/jpeg;base64,{图片的base64编码}" |
-
-- `type`为`reflection`，类型为`object`，元素结构为：
-
-| `type`                                      | content数据类型 | 说明                                                                                                                                                                              |
-|---------------------------------------------|-------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `isPass`                                    | `boolean`   | 反思是否通过                                                                                                                                                                          |
-| `messageScore`                              | `object`    | 当次反思的原文及分数                                                                                                                                                                      |
-| `messageScore.contentList`                  | `array`     | 记录用户的原始消息                                                                                                                                                                       |
-| `messageScore.contentList.type`             | `string`    | 可选类型为`text`、`imageUrl`                                                                                                                                                          |
-| `messageScore.contentList.message`          | `string`    | 消息内容，例如："给我一个随机数"; <br/>如果消息类型为imageUrl，message的String可选为：<br/>1. 图片链接："https://example.com/path/to/image.png" ，且确保公网可访问<br/>2. base64格式："data:image/jpeg;base64,{图片的base64编码}" |
-| `messageScore.messageType`                  | `string`    | 可选类型为`text`、`functionCalling`                                                                                                                                                   |
-| `messageScore.message`                      | `string`    | 根据messageType不同而不同                                                                                                                                                              |
-| `messageScore.reflectScoreList`             | `array`     | 不同反思agent得到的分数的数组，元素类型为`object`                                                                                                                                                 |
-| `messageScore.reflectScoreList.score`       | `int`       | 分数                                                                                                                                                                              |
-| `messageScore.reflectScoreList.description` | `string`    | （可选）得分描述                                                                                                                                                                        |
-| `passScore`                                 | `int`       | 合格的分数，默认为8                                                                                                                                                                      |
-| `count`                                     | `int`       | 当前反思的迭代次数                                                                                                                                                                       |
-| `maxCount`                                  | `int`       | 最大允许的反思迭代次数，默认为10                                                                                                                                                               |
 
 - `type`为`taskStatus`，类型为`object`，元素结构为：
 

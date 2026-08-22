@@ -21,7 +21,6 @@ void listen(String sessionId, AgentMessageDto agentMessageDto) {
   String llm = "💡ASSIST";
   String tool = "🔧TOOL  ";
   String client = "🔗CLIENT";
-  String reflection = "🎯REFLEC";
 
   String message = "";
   if (agentMessageDto.type == ToolMessageType.TEXT)
@@ -51,9 +50,6 @@ void listen(String sessionId, AgentMessageDto agentMessageDto) {
   if (agentMessageDto.type == AgentMessageType.TASK_STATUS) {
     message = jsonEncode(agentMessageDto.content);
   }
-  if (agentMessageDto.type == TextMessageType.REFLECTION) {
-    message = jsonEncode(agentMessageDto.content);
-  }
   if (agentMessageDto.type == ToolMessageType.FUNCTION_CALL) {
     message = jsonEncode(agentMessageDto.content);
   }
@@ -69,7 +65,6 @@ void listen(String sessionId, AgentMessageDto agentMessageDto) {
   if (agentMessageDto.role == ToolRoleType.ASSISTANT) role = llm;
   if (agentMessageDto.role == ToolRoleType.TOOL) role = tool;
   if (agentMessageDto.role == ToolRoleType.CLIENT) role = client;
-  if (agentMessageDto.role == ToolRoleType.REFLECTION) role = reflection;
 
   String to = "";
   if (agentMessageDto.to == ToolRoleType.DEVELOPER) to = system;
@@ -79,7 +74,6 @@ void listen(String sessionId, AgentMessageDto agentMessageDto) {
   if (agentMessageDto.to == ToolRoleType.ASSISTANT) to = llm;
   if (agentMessageDto.to == ToolRoleType.TOOL) to = tool;
   if (agentMessageDto.to == ToolRoleType.CLIENT) to = client;
-  if (agentMessageDto.to == ToolRoleType.REFLECTION) to = reflection;
 
   if (agentMessageDto.reasoningContent != null) {
     print(
