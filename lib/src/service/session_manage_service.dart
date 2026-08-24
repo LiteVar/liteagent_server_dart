@@ -8,7 +8,6 @@ class PersistedSession {
   final String sessionId;
   final String rootSessionId;
   final String? inlinePath;
-  final String? agentId;
   final CapabilityDto capability;
   final String status;
   final String? topic;
@@ -20,7 +19,6 @@ class PersistedSession {
     required this.sessionId,
     required this.rootSessionId,
     required this.inlinePath,
-    required this.agentId,
     required this.capability,
     required this.status,
     required this.topic,
@@ -48,7 +46,6 @@ class SessionManageServiceByDB {
   Future<void> addSession({
     required String sessionId,
     required CapabilityDto capability,
-    String? agentId,
     String? rootSessionId,
     String? inlinePath,
     DateTime? expiresAt,
@@ -59,7 +56,6 @@ class SessionManageServiceByDB {
         sessionId: sessionId,
         rootSessionId: rootSessionId ?? sessionId,
         inlinePath: inlinePath,
-        agentId: agentId,
         capability: jsonEncode(capability.toJson()),
         status: SessionPersistenceStatus.active,
         topic: null,
@@ -80,26 +76,6 @@ class SessionManageServiceByDB {
     return rows.map(_convert).toList(growable: false);
   }
 
-  Future<List<SessionInfoDto>> getSessionsByAgentId(String agentId) async {
-    final rows = await agentDB.getSessionsByAgentId(agentId);
-    final now = DateTime.now();
-    return rows
-        .where(
-          (row) =>
-              row.status == SessionPersistenceStatus.active &&
-              (row.expiresAt == null || now.isBefore(row.expiresAt!)),
-        )
-        .map(
-          (row) => SessionInfoDto(
-            sessionId: row.sessionId,
-            agentId: row.agentId,
-            createTime: row.createTime,
-            topic: row.topic,
-          ),
-        )
-        .toList(growable: false);
-  }
-
   Future<void> touchSession(String sessionId) =>
       agentDB.touchSession(sessionId, DateTime.now());
 
@@ -117,7 +93,6 @@ class SessionManageServiceByDB {
       sessionId: row.sessionId,
       rootSessionId: row.rootSessionId,
       inlinePath: row.inlinePath,
-      agentId: row.agentId,
       capability: CapabilityDto.fromJson(
         Map<String, dynamic>.from(jsonDecode(row.capability) as Map),
       ),

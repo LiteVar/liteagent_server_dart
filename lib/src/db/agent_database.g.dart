@@ -429,21 +429,6 @@ class $SessionsTable extends Sessions
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _agentIdMeta = const VerificationMeta(
-    'agentId',
-  );
-  @override
-  late final GeneratedColumn<String> agentId = GeneratedColumn<String>(
-    'agent_id',
-    aliasedName,
-    true,
-    additionalChecks: GeneratedColumn.checkTextLength(
-      minTextLength: 1,
-      maxTextLength: 64,
-    ),
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
   static const VerificationMeta _capabilityMeta = const VerificationMeta(
     'capability',
   );
@@ -512,7 +497,6 @@ class $SessionsTable extends Sessions
     sessionId,
     rootSessionId,
     inlinePath,
-    agentId,
     capability,
     status,
     topic,
@@ -555,12 +539,6 @@ class $SessionsTable extends Sessions
       context.handle(
         _inlinePathMeta,
         inlinePath.isAcceptableOrUnknown(data['inline_path']!, _inlinePathMeta),
-      );
-    }
-    if (data.containsKey('agent_id')) {
-      context.handle(
-        _agentIdMeta,
-        agentId.isAcceptableOrUnknown(data['agent_id']!, _agentIdMeta),
       );
     }
     if (data.containsKey('capability')) {
@@ -626,10 +604,6 @@ class $SessionsTable extends Sessions
         DriftSqlType.string,
         data['${effectivePrefix}inline_path'],
       ),
-      agentId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}agent_id'],
-      ),
       capability: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}capability'],
@@ -667,7 +641,6 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
   final String sessionId;
   final String rootSessionId;
   final String? inlinePath;
-  final String? agentId;
   final String capability;
   final String status;
   final String? topic;
@@ -678,7 +651,6 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
     required this.sessionId,
     required this.rootSessionId,
     this.inlinePath,
-    this.agentId,
     required this.capability,
     required this.status,
     this.topic,
@@ -693,9 +665,6 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
     map['root_session_id'] = Variable<String>(rootSessionId);
     if (!nullToAbsent || inlinePath != null) {
       map['inline_path'] = Variable<String>(inlinePath);
-    }
-    if (!nullToAbsent || agentId != null) {
-      map['agent_id'] = Variable<String>(agentId);
     }
     map['capability'] = Variable<String>(capability);
     map['status'] = Variable<String>(status);
@@ -717,9 +686,6 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
       inlinePath: inlinePath == null && nullToAbsent
           ? const Value.absent()
           : Value(inlinePath),
-      agentId: agentId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(agentId),
       capability: Value(capability),
       status: Value(status),
       topic: topic == null && nullToAbsent
@@ -742,7 +708,6 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
       sessionId: serializer.fromJson<String>(json['sessionId']),
       rootSessionId: serializer.fromJson<String>(json['rootSessionId']),
       inlinePath: serializer.fromJson<String?>(json['inlinePath']),
-      agentId: serializer.fromJson<String?>(json['agentId']),
       capability: serializer.fromJson<String>(json['capability']),
       status: serializer.fromJson<String>(json['status']),
       topic: serializer.fromJson<String?>(json['topic']),
@@ -758,7 +723,6 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
       'sessionId': serializer.toJson<String>(sessionId),
       'rootSessionId': serializer.toJson<String>(rootSessionId),
       'inlinePath': serializer.toJson<String?>(inlinePath),
-      'agentId': serializer.toJson<String?>(agentId),
       'capability': serializer.toJson<String>(capability),
       'status': serializer.toJson<String>(status),
       'topic': serializer.toJson<String?>(topic),
@@ -772,7 +736,6 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
     String? sessionId,
     String? rootSessionId,
     Value<String?> inlinePath = const Value.absent(),
-    Value<String?> agentId = const Value.absent(),
     String? capability,
     String? status,
     Value<String?> topic = const Value.absent(),
@@ -783,7 +746,6 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
     sessionId: sessionId ?? this.sessionId,
     rootSessionId: rootSessionId ?? this.rootSessionId,
     inlinePath: inlinePath.present ? inlinePath.value : this.inlinePath,
-    agentId: agentId.present ? agentId.value : this.agentId,
     capability: capability ?? this.capability,
     status: status ?? this.status,
     topic: topic.present ? topic.value : this.topic,
@@ -800,7 +762,6 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
       inlinePath: data.inlinePath.present
           ? data.inlinePath.value
           : this.inlinePath,
-      agentId: data.agentId.present ? data.agentId.value : this.agentId,
       capability: data.capability.present
           ? data.capability.value
           : this.capability,
@@ -822,7 +783,6 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
           ..write('sessionId: $sessionId, ')
           ..write('rootSessionId: $rootSessionId, ')
           ..write('inlinePath: $inlinePath, ')
-          ..write('agentId: $agentId, ')
           ..write('capability: $capability, ')
           ..write('status: $status, ')
           ..write('topic: $topic, ')
@@ -838,7 +798,6 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
     sessionId,
     rootSessionId,
     inlinePath,
-    agentId,
     capability,
     status,
     topic,
@@ -853,7 +812,6 @@ class SessionDao extends DataClass implements Insertable<SessionDao> {
           other.sessionId == this.sessionId &&
           other.rootSessionId == this.rootSessionId &&
           other.inlinePath == this.inlinePath &&
-          other.agentId == this.agentId &&
           other.capability == this.capability &&
           other.status == this.status &&
           other.topic == this.topic &&
@@ -866,7 +824,6 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
   final Value<String> sessionId;
   final Value<String> rootSessionId;
   final Value<String?> inlinePath;
-  final Value<String?> agentId;
   final Value<String> capability;
   final Value<String> status;
   final Value<String?> topic;
@@ -878,7 +835,6 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
     this.sessionId = const Value.absent(),
     this.rootSessionId = const Value.absent(),
     this.inlinePath = const Value.absent(),
-    this.agentId = const Value.absent(),
     this.capability = const Value.absent(),
     this.status = const Value.absent(),
     this.topic = const Value.absent(),
@@ -891,7 +847,6 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
     required String sessionId,
     required String rootSessionId,
     this.inlinePath = const Value.absent(),
-    this.agentId = const Value.absent(),
     required String capability,
     this.status = const Value.absent(),
     this.topic = const Value.absent(),
@@ -908,7 +863,6 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
     Expression<String>? sessionId,
     Expression<String>? rootSessionId,
     Expression<String>? inlinePath,
-    Expression<String>? agentId,
     Expression<String>? capability,
     Expression<String>? status,
     Expression<String>? topic,
@@ -921,7 +875,6 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
       if (sessionId != null) 'session_id': sessionId,
       if (rootSessionId != null) 'root_session_id': rootSessionId,
       if (inlinePath != null) 'inline_path': inlinePath,
-      if (agentId != null) 'agent_id': agentId,
       if (capability != null) 'capability': capability,
       if (status != null) 'status': status,
       if (topic != null) 'topic': topic,
@@ -936,7 +889,6 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
     Value<String>? sessionId,
     Value<String>? rootSessionId,
     Value<String?>? inlinePath,
-    Value<String?>? agentId,
     Value<String>? capability,
     Value<String>? status,
     Value<String?>? topic,
@@ -949,7 +901,6 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
       sessionId: sessionId ?? this.sessionId,
       rootSessionId: rootSessionId ?? this.rootSessionId,
       inlinePath: inlinePath ?? this.inlinePath,
-      agentId: agentId ?? this.agentId,
       capability: capability ?? this.capability,
       status: status ?? this.status,
       topic: topic ?? this.topic,
@@ -971,9 +922,6 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
     }
     if (inlinePath.present) {
       map['inline_path'] = Variable<String>(inlinePath.value);
-    }
-    if (agentId.present) {
-      map['agent_id'] = Variable<String>(agentId.value);
     }
     if (capability.present) {
       map['capability'] = Variable<String>(capability.value);
@@ -1005,7 +953,6 @@ class SessionsCompanion extends UpdateCompanion<SessionDao> {
           ..write('sessionId: $sessionId, ')
           ..write('rootSessionId: $rootSessionId, ')
           ..write('inlinePath: $inlinePath, ')
-          ..write('agentId: $agentId, ')
           ..write('capability: $capability, ')
           ..write('status: $status, ')
           ..write('topic: $topic, ')
@@ -2038,7 +1985,6 @@ typedef $$SessionsTableCreateCompanionBuilder =
       required String sessionId,
       required String rootSessionId,
       Value<String?> inlinePath,
-      Value<String?> agentId,
       required String capability,
       Value<String> status,
       Value<String?> topic,
@@ -2052,7 +1998,6 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<String> sessionId,
       Value<String> rootSessionId,
       Value<String?> inlinePath,
-      Value<String?> agentId,
       Value<String> capability,
       Value<String> status,
       Value<String?> topic,
@@ -2083,11 +2028,6 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<String> get inlinePath => $composableBuilder(
     column: $table.inlinePath,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get agentId => $composableBuilder(
-    column: $table.agentId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2146,11 +2086,6 @@ class $$SessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get agentId => $composableBuilder(
-    column: $table.agentId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<String> get capability => $composableBuilder(
     column: $table.capability,
     builder: (column) => ColumnOrderings(column),
@@ -2203,9 +2138,6 @@ class $$SessionsTableAnnotationComposer
     column: $table.inlinePath,
     builder: (column) => column,
   );
-
-  GeneratedColumn<String> get agentId =>
-      $composableBuilder(column: $table.agentId, builder: (column) => column);
 
   GeneratedColumn<String> get capability => $composableBuilder(
     column: $table.capability,
@@ -2266,7 +2198,6 @@ class $$SessionsTableTableManager
                 Value<String> sessionId = const Value.absent(),
                 Value<String> rootSessionId = const Value.absent(),
                 Value<String?> inlinePath = const Value.absent(),
-                Value<String?> agentId = const Value.absent(),
                 Value<String> capability = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<String?> topic = const Value.absent(),
@@ -2278,7 +2209,6 @@ class $$SessionsTableTableManager
                 sessionId: sessionId,
                 rootSessionId: rootSessionId,
                 inlinePath: inlinePath,
-                agentId: agentId,
                 capability: capability,
                 status: status,
                 topic: topic,
@@ -2292,7 +2222,6 @@ class $$SessionsTableTableManager
                 required String sessionId,
                 required String rootSessionId,
                 Value<String?> inlinePath = const Value.absent(),
-                Value<String?> agentId = const Value.absent(),
                 required String capability,
                 Value<String> status = const Value.absent(),
                 Value<String?> topic = const Value.absent(),
@@ -2304,7 +2233,6 @@ class $$SessionsTableTableManager
                 sessionId: sessionId,
                 rootSessionId: rootSessionId,
                 inlinePath: inlinePath,
-                agentId: agentId,
                 capability: capability,
                 status: status,
                 topic: topic,

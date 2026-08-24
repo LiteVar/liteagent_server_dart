@@ -14,7 +14,6 @@ import 'agent_message_listener.dart';
 
 class AgentController {
   final AgentService agentService;
-  final AgentManageService agentManageService;
   final SessionRuntimeService sessionRuntimeService;
   final AgentMessageListener agentMessageListener = AgentMessageListener();
   final Map<String, String> jsonHeaders = {
@@ -29,11 +28,7 @@ class AgentController {
     'Cache-Control': 'no-store',
   };
 
-  AgentController(
-    this.agentService,
-    this.agentManageService,
-    this.sessionRuntimeService,
-  );
+  AgentController(this.agentService, this.sessionRuntimeService);
 
   Future<Response> getVersion(Request request) async {
     logger.log(LogModule.http, "Request getVersion");
@@ -83,47 +78,38 @@ class AgentController {
   }
 
   Future<Response> initSession(Request request) async {
-    Map<String, String> queryParameters = request.url.queryParameters;
     final payload = await request.readAsString();
-    String? agentId = queryParameters['agentId'];
     CapabilityDto capabilityDto;
     try {
-      if (agentId != null) {
-        AgentDto? agentDto = await agentManageService.getAgent(agentId);
-        if (agentDto == null) return Response.notFound("Agent not found");
-        _normalizeAndValidateCapability(agentDto.capability);
-        capabilityDto = agentDto.capability;
-      } else {
-        final data = jsonDecode(payload);
-        capabilityDto = CapabilityDto.fromJson(data);
-        _normalizeAndValidateCapability(capabilityDto);
-        logger.log(
-          LogModule.http,
-          "Request initSession",
-          detail: payload,
-          level: Level.FINEST,
-        );
-        logger.log(
-          LogModule.http,
-          "Request initSession",
-          detail:
-              "baseUrl: ${capabilityDto.llmConfig?.baseUrl}, " +
-              "model: ${capabilityDto.llmConfig?.model}, " +
-              "systemMessageLength: ${capabilityDto.systemPrompt.length}," +
-              "openSpecListLength: ${capabilityDto.openSpecList == null ? "null" : capabilityDto.openSpecList!.length}," +
-              "subAgentListLength: ${capabilityDto.subAgentList == null ? "null" : capabilityDto.subAgentList!.length}",
-        );
+      if (request.url.queryParameters.containsKey('agentId')) {
+        return Response.badRequest(body: "agentId is no longer supported");
       }
 
-      SessionDto sessionDto = await agentService.initSession(
-        capabilityDto,
-        agentId: agentId,
+      final data = jsonDecode(payload);
+      capabilityDto = CapabilityDto.fromJson(data);
+      _normalizeAndValidateCapability(capabilityDto);
+      logger.log(
+        LogModule.http,
+        "Request initSession",
+        detail: payload,
+        level: Level.FINEST,
       );
+      logger.log(
+        LogModule.http,
+        "Request initSession",
+        detail:
+            "baseUrl: ${capabilityDto.llmConfig?.baseUrl}, " +
+            "model: ${capabilityDto.llmConfig?.model}, " +
+            "systemMessageLength: ${capabilityDto.systemPrompt.length}," +
+            "openSpecListLength: ${capabilityDto.openSpecList == null ? "null" : capabilityDto.openSpecList!.length}," +
+            "subAgentListLength: ${capabilityDto.subAgentList == null ? "null" : capabilityDto.subAgentList!.length}",
+      );
+
+      SessionDto sessionDto = await agentService.initSession(capabilityDto);
       try {
         await sessionRuntimeService.persistNewSession(
           sessionId: sessionDto.sessionId,
           capability: capabilityDto,
-          agentId: agentId,
         );
       } catch (_) {
         await agentService.clearSession(sessionDto.sessionId);
@@ -691,51 +677,6 @@ class AgentController {
         LogModule.http,
         "Response streamCallback Exception: ${e}",
         detail: payload,
-        level: Level.WARNING,
-      );
-      return Response.internalServerError(body: e.toString());
-    }
-  }
-
-  Future<Response> listSessions(Request request) async {
-    final queryParameters = request.url.queryParameters;
-    final agentId = queryParameters['agentId'];
-
-    logger.log(
-      LogModule.http,
-      "Request listSessions",
-      detail: "agentId: $agentId",
-    );
-
-    if (agentId == null || agentId.isEmpty) {
-      logger.log(
-        LogModule.http,
-        "Response listSessions BadRequest: agentId is required",
-        level: Level.WARNING,
-      );
-      return Response.badRequest(body: "agentId is required");
-    }
-
-    try {
-      List<SessionInfoDto> sessionList = await sessionRuntimeService
-          .getSessionsByAgentId(agentId);
-
-      logger.log(
-        LogModule.http,
-        "Response listSessions",
-        detail: "agentId: $agentId, sessionCount: ${sessionList.length}",
-      );
-
-      List<Map<String, dynamic>> sessionListJson = sessionList
-          .map((sessionInfoDto) => sessionInfoDto.toJson())
-          .toList();
-
-      return Response.ok(jsonEncode(sessionListJson), headers: jsonHeaders);
-    } catch (e) {
-      logger.log(
-        LogModule.http,
-        "Response listSessions Exception: ${e}",
-        detail: "agentId: $agentId",
         level: Level.WARNING,
       );
       return Response.internalServerError(body: e.toString());

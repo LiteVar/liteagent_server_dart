@@ -67,15 +67,15 @@ WebSocket connection closed
 
 ## Persistence
 
-- This server uses SQLite (via Drift) to persist agent definitions, session metadata, capability snapshots, and complete message history.
+- This server uses SQLite (via Drift) to persist session metadata, capability snapshots, and complete message history.
 - Core's `timeoutSeconds` only evicts the in-memory runtime session; it does not delete the persisted conversation. A later `/chat` or `/session/subscribe` request with the same session ID lazily restores completed-task context.
 - Incomplete tasks, partial tool calls, and stream chunks are not injected into restored context, although persisted events remain available as history.
-- `/history` and `/session/list` read directly from SQLite and do not depend on an in-memory core session.
+- `/history` reads directly from SQLite and does not depend on an in-memory core session.
 - `/clear` removes both runtime state and the persisted session/messages.
 - The database path uses `DB_PATH` when set; otherwise it uses `bin/config.json` → `server.dbPath`, resolved under the executable directory:
   - Running from source: `${PROJECT_ROOT}/bin/<dbPath>`
   - Running compiled binary: `<binary_dir>/<dbPath>`
-- Database schema v2 automatically migrates existing agent and legacy message tables.
+- Database schema v5 automatically migrates existing session and legacy message tables, including removing the old session `agent_id` field.
 
 Use the persistence example to verify conversation continuity across a server restart:
 

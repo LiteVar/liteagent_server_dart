@@ -40,7 +40,6 @@ void main(List<String> args) async {
     final agentService = AgentService(
       messageManageServiceList: [messageManageService],
     );
-    final agentManageService = AgentManageServiceByDB(database);
     final sessionRuntimeService = SessionRuntimeService(
       agentService: agentService,
       sessionManageService: sessionManageService,
@@ -49,12 +48,10 @@ void main(List<String> args) async {
 
     final agentController = AgentController(
       agentService,
-      agentManageService,
       sessionRuntimeService,
     );
-    final agentManageController = AgentManageController(agentManageService);
 
-    apiRoutes(agentController, agentManageController);
+    apiRoutes(agentController);
 
     final Router mainRouter = Router();
     mainRouter.mount(config.server.apiPathPrefix, apiRouter);

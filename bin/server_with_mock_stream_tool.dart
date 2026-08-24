@@ -31,21 +31,15 @@ Future<void> main(List<String> args) async {
     globalToolDriverList: toolDrivers,
     messageManageServiceList: [messageManageService],
   );
-  final agentManageService = AgentManageServiceByDB(database);
   final sessionRuntimeService = SessionRuntimeService(
     agentService: agentService,
     sessionManageService: sessionManageService,
     messageManageService: messageManageService,
   );
 
-  final agentController = AgentController(
-    agentService,
-    agentManageService,
-    sessionRuntimeService,
-  );
-  final agentManageController = AgentManageController(agentManageService);
+  final agentController = AgentController(agentService, sessionRuntimeService);
 
-  apiRoutes(agentController, agentManageController);
+  apiRoutes(agentController);
 
   final mainRouter = Router();
   mainRouter.mount(config.server.apiPathPrefix, apiRouter);

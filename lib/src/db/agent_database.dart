@@ -19,7 +19,6 @@ class Sessions extends Table {
   TextColumn get sessionId => text().withLength(min: 1, max: 64)();
   TextColumn get rootSessionId => text().withLength(min: 1, max: 64)();
   TextColumn get inlinePath => text().nullable()();
-  TextColumn get agentId => text().withLength(min: 1, max: 64).nullable()();
   TextColumn get capability => text()();
   TextColumn get status => text().withDefault(const Constant('active'))();
   TextColumn get topic => text().nullable()();
@@ -66,7 +65,7 @@ class AgentDatabase extends _$AgentDatabase {
   AgentDatabase(QueryExecutor e) : super(e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -86,7 +85,6 @@ class AgentDatabase extends _$AgentDatabase {
                 session_id,
                 root_session_id,
                 inline_path,
-                agent_id,
                 capability,
                 status,
                 topic,
@@ -97,7 +95,6 @@ class AgentDatabase extends _$AgentDatabase {
               SELECT
                 origin_session_id,
                 origin_session_id,
-                NULL,
                 NULL,
                 '{"systemPrompt":""}',
                 'history_only',
@@ -151,7 +148,11 @@ class AgentDatabase extends _$AgentDatabase {
           "WHERE root_session_id = ''",
         );
       }
-      if (from < 3 || from < 4) await _createIndexes();
+      if (from >= 2 && from < 5) {
+        await customStatement('DROP INDEX IF EXISTS sessions_agent_id_idx');
+        await customStatement('ALTER TABLE sessions DROP COLUMN agent_id');
+      }
+      if (from < 5) await _createIndexes();
     },
     beforeOpen: (_) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -161,10 +162,6 @@ class AgentDatabase extends _$AgentDatabase {
   );
 
   Future<void> _createIndexes() async {
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS sessions_agent_id_idx '
-      'ON sessions (agent_id, update_time)',
-    );
     await customStatement(
       'CREATE INDEX IF NOT EXISTS sessions_root_idx '
       'ON sessions (root_session_id, inline_path, update_time)',
@@ -208,13 +205,6 @@ class AgentDatabase extends _$AgentDatabase {
         (table) => OrderingTerm.asc(table.inlinePath),
         (table) => OrderingTerm.asc(table.createTime),
       ]);
-    return query.get();
-  }
-
-  Future<List<SessionDao>> getSessionsByAgentId(String agentId) {
-    final query = select(sessions)
-      ..where((table) => table.agentId.equals(agentId))
-      ..orderBy([(table) => OrderingTerm.desc(table.updateTime)]);
     return query.get();
   }
 

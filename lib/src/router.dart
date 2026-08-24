@@ -1,20 +1,10 @@
 import 'package:shelf_router/shelf_router.dart';
 import 'controller/agent_controller.dart';
-import 'controller/agent_manage_controller.dart';
 
 final Router apiRouter = Router();
 
-void apiRoutes(
-  AgentController agentController,
-  AgentManageController agentManageController,
-) {
+void apiRoutes(AgentController agentController) {
   apiRouter.get('/version', agentController.getVersion);
-
-  apiRouter.get('/agent/list', agentManageController.listAgent);
-  apiRouter.get('/agent', agentManageController.getAgent);
-  apiRouter.post('/agent/create', agentManageController.createAgent);
-  apiRouter.post('/agent/update', agentManageController.updateAgent);
-  apiRouter.get('/agent/delete', agentManageController.deleteAgent);
 
   apiRouter.post('/presetOpenSpecList', agentController.setPresetOpenSpecList);
   apiRouter.post('/initSession', agentController.initSession);
@@ -29,6 +19,5 @@ void apiRoutes(
   apiRouter.post('/callback', agentController.callback);
   apiRouter.post('/streamCallback', agentController.streamCallback);
 
-  apiRouter.get('/session/list', agentController.listSessions);
   apiRouter.get('/session/subscribe', agentController.subscribeSession);
 }

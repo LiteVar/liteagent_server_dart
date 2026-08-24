@@ -40,14 +40,12 @@ class SessionRuntimeService {
   Future<void> persistNewSession({
     required String sessionId,
     required CapabilityDto capability,
-    String? agentId,
   }) async {
     final runtimeTree = agentService.getSessionTree(sessionId);
     if (runtimeTree.isEmpty) {
       await sessionManageService.addSession(
         sessionId: sessionId,
         capability: capability,
-        agentId: agentId,
       );
       return;
     }
@@ -58,7 +56,6 @@ class SessionRuntimeService {
         await sessionManageService.addSession(
           sessionId: runtimeInfo.sessionId,
           capability: runtimeInfo.capability,
-          agentId: runtimeInfo.sessionId == sessionId ? agentId : null,
           rootSessionId: sessionId,
           inlinePath: pathBySessionId[runtimeInfo.sessionId],
         );
@@ -104,7 +101,6 @@ class SessionRuntimeService {
 
     await agentService.initSession(
       persistedSession.capability,
-      agentId: persistedSession.agentId,
       restoreState: SessionRestoreState(
         sessionId: sessionId,
         contextMessages: contextMessages,
@@ -384,9 +380,6 @@ class SessionRuntimeService {
     }
     return [rootSessionId];
   }
-
-  Future<List<SessionInfoDto>> getSessionsByAgentId(String agentId) =>
-      sessionManageService.getSessionsByAgentId(agentId);
 
   Future<void> clearSession(String sessionId) async {
     final persistedSession = await sessionManageService.getSession(sessionId);

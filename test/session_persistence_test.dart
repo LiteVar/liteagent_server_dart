@@ -29,7 +29,6 @@ void main() {
     final capability = CapabilityDto(systemPrompt: 'persistent system');
     await sessionManageService.addSession(
       sessionId: 'session-1',
-      agentId: 'agent-1',
       capability: capability,
     );
 
@@ -84,10 +83,9 @@ void main() {
       isTrue,
     );
 
-    final sessions = await runtimeService.getSessionsByAgentId('agent-1');
-    expect(sessions, hasLength(1));
-    expect(sessions.single.sessionId, 'session-1');
-    expect(sessions.single.topic, 'remember this');
+    final persisted = await sessionManageService.getSession('session-1');
+    expect(persisted, isNotNull);
+    expect(persisted!.topic, 'remember this');
   });
 
   test(
@@ -402,7 +400,7 @@ void main() {
     expect(history, hasLength(1));
     expect(history.single.agentMessageDto.originalTaskId, 'legacy-task');
     expect(history.single.agentMessageDto.content, 'legacy answer');
-    expect(migratedDatabase.schemaVersion, 4);
+    expect(migratedDatabase.schemaVersion, 5);
     final migratedSession = await migratedDatabase.getSessionById(
       'legacy-session',
     );
@@ -418,6 +416,96 @@ void main() {
       migratedRuntime.resolveSession('legacy-session'),
       throwsA(isA<PersistedSessionExpiredException>()),
     );
+
+    await migratedDatabase.close();
+    await tempDirectory.delete(recursive: true);
+    database = AgentDatabase(NativeDatabase.memory());
+  });
+
+  test('migrates schema v4 sessions without agentId', () async {
+    await database.close();
+    final tempDirectory = await Directory.systemTemp.createTemp(
+      'liteagent-server-agent-id-migration-',
+    );
+    final databaseFile = File('${tempDirectory.path}/agent.db');
+    final legacy = sqlite.sqlite3.open(databaseFile.path);
+    legacy.execute('''
+      CREATE TABLE agents (
+        agent_id TEXT NOT NULL PRIMARY KEY,
+        name TEXT NOT NULL,
+        capability TEXT NOT NULL,
+        create_time INTEGER NOT NULL,
+        update_time INTEGER NOT NULL
+      )
+    ''');
+    legacy.execute('''
+      CREATE TABLE sessions (
+        session_id TEXT NOT NULL PRIMARY KEY,
+        root_session_id TEXT NOT NULL,
+        inline_path TEXT NULL,
+        agent_id TEXT NULL,
+        capability TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        topic TEXT NULL,
+        create_time INTEGER NOT NULL,
+        update_time INTEGER NOT NULL,
+        expires_at INTEGER NULL
+      )
+    ''');
+    legacy.execute('''
+      CREATE TABLE session_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        origin_session_id TEXT NOT NULL,
+        session_id TEXT NOT NULL,
+        original_task_id TEXT NOT NULL,
+        task_id TEXT NOT NULL,
+        parent_task_id TEXT NULL,
+        role TEXT NOT NULL,
+        "to" TEXT NOT NULL,
+        type TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        reasoning_content TEXT NULL,
+        completions TEXT NULL,
+        create_time INTEGER NOT NULL
+      )
+    ''');
+    legacy.execute(
+      'CREATE INDEX sessions_agent_id_idx ON sessions (agent_id, update_time)',
+    );
+    legacy.execute(
+      'INSERT INTO sessions '
+      '(session_id, root_session_id, inline_path, agent_id, capability, '
+      'status, topic, create_time, update_time, expires_at) '
+      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        'legacy-session',
+        'legacy-session',
+        null,
+        'legacy-agent',
+        '{"systemPrompt":"legacy"}',
+        SessionPersistenceStatus.active,
+        null,
+        DateTime.now().millisecondsSinceEpoch,
+        DateTime.now().millisecondsSinceEpoch,
+        null,
+      ],
+    );
+    legacy.execute('PRAGMA user_version = 4');
+    legacy.dispose();
+
+    final migratedDatabase = AgentDatabase(NativeDatabase(databaseFile));
+    final columns = await migratedDatabase
+        .customSelect('PRAGMA table_info(sessions)')
+        .get();
+    expect(
+      columns.map((row) => row.read<String>('name')),
+      isNot(contains('agent_id')),
+    );
+    final migratedSession = await migratedDatabase.getSessionById(
+      'legacy-session',
+    );
+    expect(migratedSession, isNotNull);
+    expect(migratedSession!.capability, '{"systemPrompt":"legacy"}');
 
     await migratedDatabase.close();
     await tempDirectory.delete(recursive: true);

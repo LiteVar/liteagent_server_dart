@@ -4,26 +4,20 @@
 
 ## Contents
 - HTTP API
-    - [/agent/list](#1-list-agents): List saved agents.
-    - [/agent](#2-get-agent): Retrieve a saved agent by agentId.
-    - [/agent/create](#3-create-agent): Create and persist an agent.
-    - [/agent/update](#4-update-agent): Update an existing agent.
-    - [/agent/delete](#5-delete-agent): Delete an agent.
-    - [/version](#6-get-version): Retrieve the current version.
-    - [/presetOpenSpecList](#7-set-preset-openspec-list): Set the preset OpenSpec list.
-    - [/initSession](#8-initialize-sessionagent-session): Initialize a SessionAgent session and return a sessionId.
-    - [/initSimple](#9-initialize-simpleagent-session): Initialize a SimpleAgent session.
-    - [/chat](#10-start-session-stream): Start a task and stream SSE events.
-    - [/chat/simple](#11-get-simpleagent-one-time-response): One-time response without SSE.
-    - [/callback](#12-tool-callback): Return tool results for function calls.
-    - [/streamCallback](#13-tool-stream-callback): Stream tool results for function calls.
-    - [/history](#14-retrieve-message-history): Retrieve the history of messages for a session.
-    - [/history/summary](#141-retrieve-history-turn-summaries): Retrieve one lightweight summary per task turn.
-    - [/history/process](#142-retrieve-history-turn-process): Lazily retrieve process messages for one task turn.
-    - [/stop](#15-stop-session): Stop a session or task.
-    - [/clear](#16-clear-session-data): Clear session data for a session.
-    - [/session/list](#17-list-sessions): List sessions for an agent.
-    - [/session/subscribe](#18-subscribe-session-events): Subscribe to session events via SSE.
+    - [/version](#1-get-version): Retrieve the current version.
+    - [/presetOpenSpecList](#2-set-preset-openspec-list): Set the preset OpenSpec list.
+    - [/initSession](#3-initialize-sessionagent-session): Initialize a SessionAgent session and return a sessionId.
+    - [/initSimple](#4-initialize-simpleagent-session): Initialize a SimpleAgent session.
+    - [/chat](#5-start-session-stream): Start a task and stream SSE events.
+    - [/chat/simple](#6-get-simpleagent-one-time-response): One-time response without SSE.
+    - [/callback](#7-tool-callback): Return tool results for function calls.
+    - [/streamCallback](#8-tool-stream-callback): Stream tool results for function calls.
+    - [/history](#9-retrieve-message-history): Retrieve the history of messages for a session.
+    - [/history/summary](#91-retrieve-history-turn-summaries): Retrieve one lightweight summary per task turn.
+    - [/history/process](#92-retrieve-history-turn-process): Lazily retrieve process messages for one task turn.
+    - [/stop](#10-stop-session): Stop a session or task.
+    - [/clear](#11-clear-session-data): Clear session data for a session.
+    - [/session/subscribe](#12-subscribe-session-events): Subscribe to session events via SSE.
 - AgentMessage Explanation
     - [Message Structure Based on `type`](#1-type-fields-content-structure-in-different-types)
     - [Message Status Strings when `to` is `client`](#2-status-strings-in-content-when-to-is-client)
@@ -36,205 +30,7 @@
 https://api.example.com/v1
 ```
 
-### 1. List Agents
-
-**Request Method**: `GET`
-
-**Path**: `/agent/list`
-
-**Description**: List saved agents.
-
-#### Request Parameters
-
-None
-
-#### Response
-
-**Status Code**: `200 OK`
-
-**Response Body**: `array` of `AgentInfoDto` objects with the following fields:
-
-| Field        | Type     | Description                                                             |
-|--------------|----------|-------------------------------------------------------------------------|
-| `agentId`    | `string` | Agent ID                                                                 |
-| `name`       | `string` | Agent name                                                               |
-| `capability` | `object` | Agent capability, same schema as the `/initSession` request body fields. |
-
-#### Response Example
-
-```json
-[
-  {
-    "agentId": "671763aae989ec22357fea88",
-    "name": "Agent Example",
-    "capability": {
-      "llmConfig": {
-        "baseUrl": "https://api.openai.com/v1",
-        "apiKey": "sk-xxxxxxxxxx",
-        "model": "gpt-4o-mini"
-      },
-      "systemPrompt": "Roleplay as someone with specific abilities"
-    }
-  }
-]
-```
-
-### 2. Get Agent
-
-**Request Method**: `GET`
-
-**Path**: `/agent`
-
-**Description**: Retrieve a saved agent by agentId.
-
-#### Query Parameters
-
-| Field     | Type     | Description |
-|-----------|----------|-------------|
-| `agentId` | `string` | Agent ID    |
-
-#### Example Request
-
-```http request
-GET /agent?agentId=671763aae989ec22357fea88
-```
-
-#### Response
-
-**Status Code**: `200 OK`
-
-**Response Body**: `AgentDto`.
-
-| Field        | Type     | Description                                                             |
-|--------------|----------|-------------------------------------------------------------------------|
-| `name`       | `string` | Agent name                                                               |
-| `capability` | `object` | Agent capability, same schema as the `/initSession` request body fields. |
-
-#### Response Example
-
-```json
-{
-  "name": "Agent Example",
-  "capability": {
-    "llmConfig": {
-      "baseUrl": "https://api.openai.com/v1",
-      "apiKey": "sk-xxxxxxxxxx",
-      "model": "gpt-4o-mini"
-    },
-    "systemPrompt": "Roleplay as someone with specific abilities"
-  }
-}
-```
-
-### 3. Create Agent
-
-**Request Method**: `POST`
-
-**Path**: `/agent/create`
-
-**Description**: Create and persist an agent.
-
-#### Request Body
-
-`AgentDto`:
-
-| Field        | Type     | Description                                                             |
-|--------------|----------|-------------------------------------------------------------------------|
-| `name`       | `string` | Agent name                                                               |
-| `capability` | `object` | Agent capability, same schema as the `/initSession` request body fields. |
-
-#### Response
-
-**Status Code**: `200 OK`
-
-**Response Body**:
-
-| Field     | Type     | Description           |
-|-----------|----------|-----------------------|
-| `agentId` | `string` | Generated agent ID    |
-
-#### Response Example
-
-```json
-{
-  "agentId": "671763aae989ec22357fea88"
-}
-```
-
-### 4. Update Agent
-
-**Request Method**: `POST`
-
-**Path**: `/agent/update`
-
-**Description**: Update an existing agent.
-
-#### Query Parameters
-
-| Field     | Type     | Description |
-|-----------|----------|-------------|
-| `agentId` | `string` | Agent ID    |
-
-#### Request Body
-
-`AgentDto`:
-
-| Field        | Type     | Description                                                             |
-|--------------|----------|-------------------------------------------------------------------------|
-| `name`       | `string` | Agent name                                                               |
-| `capability` | `object` | Agent capability, same schema as the `/initSession` request body fields. |
-
-#### Response
-
-**Status Code**: `200 OK`
-
-**Response Body**:
-
-| Field     | Type     | Description           |
-|-----------|----------|-----------------------|
-| `agentId` | `string` | Updated agent ID      |
-
-#### Response Example
-
-```json
-{
-  "agentId": "671763aae989ec22357fea88"
-}
-```
-
-### 5. Delete Agent
-
-**Request Method**: `GET`
-
-**Path**: `/agent/delete`
-
-**Description**: Delete an agent.
-
-#### Query Parameters
-
-| Field     | Type     | Description |
-|-----------|----------|-------------|
-| `agentId` | `string` | Agent ID    |
-
-#### Response
-
-**Status Code**: `200 OK`
-
-**Response Body**:
-
-| Field     | Type     | Description        |
-|-----------|----------|--------------------|
-| `agentId` | `string` | Deleted agent ID   |
-
-#### Response Example
-
-```json
-{
-  "agentId": "671763aae989ec22357fea88"
-}
-```
-
-### 6. Get Version
+### 1. Get Version
 
 **Request Method**: `GET`
 
@@ -268,7 +64,7 @@ None
 }
 ```
 
-### 7. Set Preset OpenSpec List
+### 2. Set Preset OpenSpec List
 
 **Request Method**: `POST`
 
@@ -308,21 +104,15 @@ None
 
 **Response Body**: `{}`
 
-### 8. Initialize SessionAgent Session
+### 3. Initialize SessionAgent Session
 
 **Request Method**: `POST`
 
 **Path**: `/initSession`
 
-**Description**: Initialize a SessionAgent session and return a sessionId. Provide either `agentId` or a request body with `CapabilityDto`.
+**Description**: Initialize a SessionAgent session and return a sessionId.
 
-#### Query Parameters
-
-| Field     | Type     | Description                                                         |
-|-----------|----------|---------------------------------------------------------------------|
-| `agentId` | `string` | (Optional) Use a saved agent configuration for this session.        |
-
-#### Request Body: `CapabilityDto` (when `agentId` is not provided)
+#### Request Body: `CapabilityDto`
 
 | Field                                     | Type      | Description                                                                                                                                                                                                                                                      |
 |-------------------------------------------|-----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -437,13 +227,13 @@ The execution limits apply to `ToolAgent`, `MultiAgent`, and `AutoMultiAgent` ta
 }
 ```
 
-### 9. Initialize SimpleAgent Session
+### 4. Initialize SimpleAgent Session
 
 **Request Method**: `POST`
 
 **Path**: `/initSimple`
 
-**Description**: Initialize a SimpleAgent session. SimpleAgent does not require SSE streaming, and subsequent requests to [/chat/simple](#11-get-simpleagent-one-time-response) return a single response.
+**Description**: Initialize a SimpleAgent session. SimpleAgent does not require SSE streaming, and subsequent requests to [/chat/simple](#6-get-simpleagent-one-time-response) return a single response.
 
 #### Request Body
 
@@ -504,7 +294,7 @@ The execution limits apply to `ToolAgent`, `MultiAgent`, and `AutoMultiAgent` ta
 }
 ```
 
-### 10. Start Session Stream
+### 5. Start Session Stream
 
 **Request Method**: `POST`
 
@@ -551,7 +341,7 @@ The execution limits apply to `ToolAgent`, `MultiAgent`, and `AutoMultiAgent` ta
 - `chunk` events carry `AgentMessageChunkDto` JSON
 - See [AgentMessage Explanation](#agentmessage-explanation) for payload structures.
 
-### 11. Get SimpleAgent One-time Response
+### 6. Get SimpleAgent One-time Response
 
 **Request Method**: `POST`
 
@@ -650,7 +440,7 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 }
 ```
 
-### 12. Tool Callback
+### 7. Tool Callback
 
 **Request Method**: `POST`
 
@@ -689,7 +479,7 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 }
 ```
 
-### 13. Tool Stream Callback
+### 8. Tool Stream Callback
 
 **Request Method**: `POST`
 
@@ -728,7 +518,7 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 }
 ```
 
-### 14. Retrieve Message History
+### 9. Retrieve Message History
 
 **Request Method**: `GET`
 
@@ -816,7 +606,7 @@ GET /history?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30&page=1&pageSize=50
 ]
 ```
 
-### 14.1. Retrieve History Turn Summaries
+### 9.1. Retrieve History Turn Summaries
 
 **Request Method**: `GET`
 
@@ -873,7 +663,7 @@ The query `sessionId` is the authoritative root-session boundary. A root user me
 
 `userMessage` and `finalMessage` retain the original `AgentMessageDto` JSON shape. Usage comes from the root final answer when present, otherwise from the latest root message with completion usage. `processMessageCount` excludes the selected root user and final messages.
 
-### 14.2. Retrieve History Turn Process
+### 9.2. Retrieve History Turn Process
 
 **Request Method**: `GET`
 
@@ -902,7 +692,7 @@ GET /history/process?sessionId=root-session&originalTaskId=root-task-id&page=1&p
 ]
 ```
 
-### 15. Stop Session
+### 10. Stop Session
 
 **Request Method**: `GET`
 
@@ -942,7 +732,7 @@ GET /stop?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 }
 ```
 
-### 16. Clear Session Data
+### 11. Clear Session Data
 
 **Request Method**: `GET`
 
@@ -980,47 +770,7 @@ GET /clear?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 }
 ```
 
-### 17. List Sessions
-
-**Request Method**: `GET`
-
-**Path**: `/session/list`
-
-**Description**: List persisted sessions for an agent. Entries remain available after core idle eviction or a server restart.
-
-#### Query Parameters
-
-| Field     | Type     | Description                    |
-|-----------|----------|--------------------------------|
-| `agentId` | `string` | Agent ID to filter sessions    |
-
-#### Response
-
-**Status Code**: `200 OK`
-
-**Response Body**: An `array` of objects with the following fields:
-
-| Field        | Type     | Description                                   |
-|--------------|----------|-----------------------------------------------|
-| `sessionId`  | `string` | Session ID                                     |
-| `agentId`    | `string` | (Optional) Agent ID for the session            |
-| `createTime` | `string` | Session create time in ISO 8601 format         |
-| `topic`      | `string` | (Optional) Session topic                       |
-
-#### Response Example
-
-```json
-[
-  {
-    "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
-    "agentId": "671763aae989ec22357fea88",
-    "createTime": "2024-06-24T06:48:05.862057Z",
-    "topic": "storage assistant"
-  }
-]
-```
-
-### 18. Subscribe Session Events
+### 12. Subscribe Session Events
 
 **Request Method**: `GET`
 
