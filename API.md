@@ -317,6 +317,17 @@ The execution limits apply to `ToolAgent`, `MultiAgent`, and `AutoMultiAgent` ta
 | `content.message` | `string`  | Message content, e.g., "Give me a random number"; <br/>If the message type is imageUrl, the message string can be:<br/>1. Image link (publicly accessible)<br/>2. Base64 format: "data:image/jpeg;base64,{base64 encoded image}" |
 | `isChunk`         | `boolean` | (Optional) When true, the server emits `chunk` events for streamed assistant output.                                                                                                                        |
 | `extraSystemPrompt` | `string` | (Optional) Extra system prompt appended to the agent's base system prompt for this session/task.                                                                                                           |
+| `llmConfig`       | `object`  | (Optional) LLM configuration for this request. When provided, it overrides the session's default LLM configuration for this request only and does not update the session. The fields are the same as `/initSession`'s `llmConfig`; pass the complete configuration rather than a partial update. |
+| `llmConfig.provider` | `string` | (Optional) LLM provider, currently `openai` or `lite_oneapi`. |
+| `llmConfig.baseUrl` | `string` | LLM provider API endpoint. |
+| `llmConfig.apiKey` | `string` | LLM provider API key. |
+| `llmConfig.model` | `string` | Name of the model to use for this request, e.g., `gpt-4o-mini`. |
+| `llmConfig.adapter` | `string` | (Optional) Upstream protocol/provider adapter used with `provider=lite_oneapi`. |
+| `llmConfig.temperature` | `number` | (Optional) Sampling temperature, default is 0. |
+| `llmConfig.maxTokens` | `number` | (Optional) Maximum token count, default is 4096. |
+| `llmConfig.topP` | `number` | (Optional) Top-p sampling value, default is 1. |
+| `llmConfig.supportsToolCall` | `boolean` | (Optional) Whether the model supports tool calling, default is true. |
+| `llmConfig.supportsReasoning` | `boolean` | (Optional) Whether the model supports reasoning, default is false. |
 
 #### Request Example
 
@@ -329,7 +340,14 @@ The execution limits apply to `ToolAgent`, `MultiAgent`, and `AutoMultiAgent` ta
     }
   ],
   "isChunk": true,
-  "extraSystemPrompt": "Respond with a single integer only."
+  "extraSystemPrompt": "Respond with a single integer only.",
+  "llmConfig": {
+    "provider": "lite_oneapi",
+    "baseUrl": "https://your-oneapi-server/v1",
+    "apiKey": "sk-xxxxxxxxxx",
+    "model": "qwen-plus",
+    "adapter": "qwen"
+  }
 }
 ```
 
@@ -370,6 +388,17 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 | `content.message` | `string`  | Message content, e.g., "Give me a random number"; <br/>If the message type is imageUrl, the message string can be:<br/>1. Image link (publicly accessible)<br/>2. Base64 format: "data:image/jpeg;base64,{base64 encoded image}" |
 | `isChunk`         | `boolean` | (Optional) When true, the server emits `chunk` events for streamed assistant output.                                                                                                                                                                                      |
 | `extraSystemPrompt` | `string` | (Optional) Extra system prompt appended to the agent's base system prompt for this session/task.                                                                                                                                                                           |
+| `llmConfig`       | `object`  | (Optional) LLM configuration for this request. When provided, it overrides the session's default LLM configuration for this request only and does not update the session. The fields are the same as `/initSimple`'s `llmConfig`; pass the complete configuration rather than a partial update. |
+| `llmConfig.provider` | `string` | (Optional) LLM provider, currently `openai` or `lite_oneapi`. |
+| `llmConfig.baseUrl` | `string` | LLM provider API endpoint. |
+| `llmConfig.apiKey` | `string` | LLM provider API key. |
+| `llmConfig.model` | `string` | Name of the model to use for this request, e.g., `gpt-4o-mini`. |
+| `llmConfig.adapter` | `string` | (Optional) Upstream protocol/provider adapter used with `provider=lite_oneapi`. |
+| `llmConfig.temperature` | `number` | (Optional) Sampling temperature, default is 0. |
+| `llmConfig.maxTokens` | `number` | (Optional) Maximum token count, default is 4096. |
+| `llmConfig.topP` | `number` | (Optional) Top-p sampling value, default is 1. |
+| `llmConfig.supportsToolCall` | `boolean` | (Optional) Whether the model supports tool calling, default is true. |
+| `llmConfig.supportsReasoning` | `boolean` | (Optional) Whether the model supports reasoning, default is false. |
 
 #### Request Example
 
@@ -381,7 +410,14 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
       "message": "Give me a random number"
     }
   ],
-  "extraSystemPrompt": "Respond with a single integer only."
+  "extraSystemPrompt": "Respond with a single integer only.",
+  "llmConfig": {
+    "provider": "lite_oneapi",
+    "baseUrl": "https://your-oneapi-server/v1",
+    "apiKey": "sk-xxxxxxxxxx",
+    "model": "qwen-plus",
+    "adapter": "qwen"
+  }
 }
 ```
 

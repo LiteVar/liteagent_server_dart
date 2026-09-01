@@ -232,6 +232,17 @@ POST /chat?sessionId=1901883204734947328
 | `content.message` | `string`  | 消息内容，例如："给我一个随机数"; <br/>如果消息类型为imageUrl，message的String可选为：<br/>1. 图片链接："https://example.com/path/to/image.png" ，且确保公网可访问<br/>2. base64格式："data:image/jpeg;base64,{图片的base64编码}" |
 | `isChunk`         | `boolean` | （可选）是否启用分片输出，默认为`false`                                                                                                                                                           |
 | `extraSystemPrompt` | `string` | （可选）追加到 Agent 基础 system prompt 的额外系统提示词（当前会话/任务生效）。                                                                                                             |
+| `llmConfig`       | `object`  | （可选）本次请求使用的大模型配置。传入后仅覆盖本次请求，不会修改当前 session 的默认大模型配置。字段与 `/initSession` 的 `llmConfig` 相同，请传入完整配置，而不是只传需要修改的字段。 |
+| `llmConfig.provider` | `string` | （可选）大模型 provider，目前支持 `openai` 和 `lite_oneapi`。 |
+| `llmConfig.baseUrl` | `string` | 大模型厂商的 API 入口。 |
+| `llmConfig.apiKey` | `string` | 大模型厂商的 API Key。 |
+| `llmConfig.model` | `string` | 本次请求使用的大模型名称，例如：`gpt-4o-mini`。 |
+| `llmConfig.adapter` | `string` | （可选）当 `provider=lite_oneapi` 时使用的上游协议/厂商适配器。 |
+| `llmConfig.temperature` | `number` | （可选）温度值，默认为 0。 |
+| `llmConfig.maxTokens` | `number` | （可选）最大 token 数，默认为 4096。 |
+| `llmConfig.topP` | `number` | （可选）概率抽样的 p 值，默认为 1。 |
+| `llmConfig.supportsToolCall` | `boolean` | （可选）模型是否支持工具调用，默认为 true。 |
+| `llmConfig.supportsReasoning` | `boolean` | （可选）模型是否支持深度思考，默认为 false。 |
 
 #### 请求示例
 
@@ -241,7 +252,14 @@ POST /chat?sessionId=1901883204734947328
     { "type": "text", "message":"你是谁？" }
   ],
   "isChunk": true,
-  "extraSystemPrompt": "只回复一个整数即可。"
+  "extraSystemPrompt": "只回复一个整数即可。",
+  "llmConfig": {
+    "provider": "lite_oneapi",
+    "baseUrl": "https://your-oneapi-server/v1",
+    "apiKey": "sk-xxxxxxxxxx",
+    "model": "qwen-plus",
+    "adapter": "qwen"
+  }
 }
 ```
 
@@ -521,6 +539,17 @@ POST /chat/simple?sessionId=1901883204734947328
 | `content.message` | `string`  | 消息内容，例如："给我一个随机数"; <br/>如果消息类型为imageUrl，message的String可选为：<br/>1. 图片链接且确保公网可访问<br/>2. base64格式："data:image/jpeg;base64,{图片的base64编码}" |
 | `isChunk`         | `boolean` | （可选）是否启用分片返回（对SimpleAgent一般不使用）                                                                                                                                                |
 | `extraSystemPrompt` | `string` | （可选）追加到 Agent 基础 system prompt 的额外系统提示词（当前会话/任务生效）。                                                                                                             |
+| `llmConfig`       | `object`  | （可选）本次请求使用的大模型配置。传入后仅覆盖本次请求，不会修改当前 session 的默认大模型配置。字段与 `/initSimple` 的 `llmConfig` 相同，请传入完整配置，而不是只传需要修改的字段。 |
+| `llmConfig.provider` | `string` | （可选）大模型 provider，目前支持 `openai` 和 `lite_oneapi`。 |
+| `llmConfig.baseUrl` | `string` | 大模型厂商的 API 入口。 |
+| `llmConfig.apiKey` | `string` | 大模型厂商的 API Key。 |
+| `llmConfig.model` | `string` | 本次请求使用的大模型名称，例如：`gpt-4o-mini`。 |
+| `llmConfig.adapter` | `string` | （可选）当 `provider=lite_oneapi` 时使用的上游协议/厂商适配器。 |
+| `llmConfig.temperature` | `number` | （可选）温度值，默认为 0。 |
+| `llmConfig.maxTokens` | `number` | （可选）最大 token 数，默认为 4096。 |
+| `llmConfig.topP` | `number` | （可选）概率抽样的 p 值，默认为 1。 |
+| `llmConfig.supportsToolCall` | `boolean` | （可选）模型是否支持工具调用，默认为 true。 |
+| `llmConfig.supportsReasoning` | `boolean` | （可选）模型是否支持深度思考，默认为 false。 |
 
 #### 请求示例
 
@@ -529,7 +558,14 @@ POST /chat/simple?sessionId=1901883204734947328
   "content": [
     { "type": "text", "message":"你是谁？" }
   ],
-  "extraSystemPrompt": "只回复一个整数即可。"
+  "extraSystemPrompt": "只回复一个整数即可。",
+  "llmConfig": {
+    "provider": "lite_oneapi",
+    "baseUrl": "https://your-oneapi-server/v1",
+    "apiKey": "sk-xxxxxxxxxx",
+    "model": "qwen-plus",
+    "adapter": "qwen"
+  }
 }
 ```
 
