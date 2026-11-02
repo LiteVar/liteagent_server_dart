@@ -1,3 +1,8 @@
+## 1.0.1
+
+- Use hosted `liteagent_core` 3.0.0.
+- Update JSON serialization generator compatibility.
+
 ## 1.0.0
 
 - add parentTaskId in messages

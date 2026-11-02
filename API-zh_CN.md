@@ -2,7 +2,7 @@
 
 [English](API.md) · 中文
 
-版本：`1.0.0`
+版本：`1.0.1`
 
 ## 目录
 - HTTP API
@@ -58,7 +58,7 @@ https://api.example.com/v1
 
 ```json
   {
-      "version": "0.0.0"
+      "version": "1.0.1"
   }
 ```
 

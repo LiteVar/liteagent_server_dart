@@ -1,6 +1,6 @@
 name: liteagent_server_dart
 description: HTTP Server using `LiteAgent core for Dart`
-version: 1.0.0
+version: 1.0.1
 repository: https://github.com/LiteVar/liteagent_server_dart
 publish_to: none
 
