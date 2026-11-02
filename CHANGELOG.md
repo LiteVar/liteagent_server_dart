@@ -1,3 +1,8 @@
+## 1.0.2
+
+- Align English and Chinese guides with the HTTP/SSE API and current persistence paths.
+- Remove obsolete local dependency build contexts from the Dockerfile.
+
 ## 1.0.1
 
 - Use hosted `liteagent_core` 3.0.0.

@@ -1,8 +1,8 @@
-# API for LiteAgent core Dart Server
+# API for LiteAgent Server for Dart
 
 [English](API.md) · 中文
 
-版本：`1.0.1`
+版本：`1.0.2`
 
 ## 目录
 - HTTP API
@@ -29,8 +29,10 @@
 ### Base URL
 
 ```http request
-https://api.example.com/v1
+http://127.0.0.1:9527/api/v1
 ```
+
+这是默认本地地址。API 前缀可通过 `bin/config.json` 中的 `server.apiPathPrefix` 修改。
 
 ### 1. 获取版本
 
@@ -58,7 +60,7 @@ https://api.example.com/v1
 
 ```json
   {
-      "version": "1.0.1"
+      "version": "1.0.2"
   }
 ```
 
@@ -108,15 +110,59 @@ https://api.example.com/v1
 
 **路径**: `/initSession`
 
-**功能说明**: 初始化SessionAgent会话，返回SessionId。
+**功能说明**: 初始化SessionAgent会话，返回SessionId。不要再传已移除的 `agentId` 查询参数；传入时 Server 会返回 `400 Bad Request`。
 
 #### 请求参数
 
-请求体为 `CapabilityDto`。
+请求体为 `CapabilityDto`，字段如下：
+
+| 字段名 | 类型 | 说明 |
+|---|---|---|
+| `llmConfig` | `object` | 大模型配置。 |
+| `llmConfig.provider` | `string` | （可选）仅支持 `openai`、`lite_oneapi`；未传时 Server 使用 `lite_oneapi`。 |
+| `llmConfig.baseUrl` | `string` | 大模型 API 地址。 |
+| `llmConfig.apiKey` | `string` | 大模型 API Key。 |
+| `llmConfig.model` | `string` | 大模型名称。 |
+| `llmConfig.adapter` | `string` | （可选）`lite_oneapi` 使用的上游适配器：`openai`、`deepseek`、`glm`、`kimi`、`mimo`、`minimax`、`qwen`；默认 `openai`。 |
+| `llmConfig.headers` | `object` | （可选）附加请求头，键和值均为字符串。 |
+| `llmConfig.providerOptions` | `object` | core DTO 保留字段；当前 Server 不支持非空值，传非空对象会返回 `400`。 |
+| `llmConfig.temperature` | `number` | （可选）温度值，默认 `0`。 |
+| `llmConfig.maxTokens` | `number` | （可选）最大输出 token 数，默认 `4096`。 |
+| `llmConfig.contextWindowSize` | `number` | （可选）模型上下文窗口大小，用于上下文占用信息和上下文限制处理。 |
+| `llmConfig.topP` | `number` | （可选）概率抽样参数，默认 `1`。 |
+| `llmConfig.supportsToolCall` | `boolean` | （可选）模型是否支持工具调用，默认 `true`。 |
+| `llmConfig.supportsReasoning` | `boolean` | （可选）模型是否支持推理输出，默认 `false`。 |
+| `systemPrompt` | `string` | 系统提示词。 |
+| `skills` | `array<string>` | （可选）遵循 Agent Skills 规范的 skill 文档列表。 |
+| `openSpecList` | `array<object>` | （可选）工具规范列表。 |
+| `openSpecList.openSpec` | `string` | OpenSpec JSON 描述。 |
+| `openSpecList.protocol` | `string` | 协议：`openapi`、`jsonrpcHttp`、`opentool`、`mcpStdio`、`mcpHttp`。 |
+| `openSpecList.serverUrl` | `string` | （可选）覆盖 OpenSpec 中的服务地址。 |
+| `openSpecList.apiKey` | `object` | （可选）第三方服务鉴权配置。 |
+| `openSpecList.apiKey.type` | `string` | `basic`、`bearer` 或 `original`。 |
+| `openSpecList.apiKey.apiKey` | `string` | API Key 值。 |
+| `callbackOpenTool` | `object` | （可选）客户端回调工具定义。 |
+| `callbackOpenTool.opentool` | `string` | OpenTool JSON 定义。 |
+| `callbackOpenTool.timeout` | `number` | （可选）客户端回调超时时间，单位秒。 |
+| `subAgentList` | `array<object>` | （可选）inline 子 Agent 列表，可递归定义。 |
+| `subAgentList.name` | `string` | 子 Agent 名称及函数名，匹配 `^[a-zA-Z0-9_-]{1,64}$`。 |
+| `subAgentList.capability` | `object` | 子 Agent 的完整 Capability 配置；无需传 sessionId，运行时由 core 生成。 |
+| `timeoutSeconds` | `number` | （可选）运行态 Session 超时秒数，默认 `3600`。 |
+| `taskPipelineStrategy` | `string` | （可选）新任务策略：`parallel`、`serial` 或 `reject`；默认 `parallel`。 |
+| `toolPipelineStrategy` | `string` | （可选）并发工具调用策略：`parallel`、`serial` 或 `reject`。 |
+| `auto` | `boolean` | （可选）是否自动运行任务。 |
+| `llmConfigList` | `array<object>` | （可选）大模型配置列表。 |
+| `enableThinking` | `boolean` | （可选）启用推理输出。 |
+| `toolReturnPackMinLength` | `number` | （可选）工具结果自动打包的最小字符数，默认 `800`；小于等于 `0` 时关闭自动打包。 |
+| `maxLlmRequests` | `number` | （可选）每个工具任务最大大模型请求数，默认 `64`；非正数使用默认值。 |
+| `maxToolRounds` | `number` | （可选）每个任务最大工具调用轮数，默认 `16`；非正数使用默认值。 |
+| `maxToolCalls` | `number` | （可选）每个任务最大工具调用总数，默认 `64`；非正数使用默认值。 |
+| `maxConsecutiveIdenticalToolRounds` | `number` | （可选）相同工具名和规范化参数的连续调用轮数上限，默认 `3`；非正数使用默认值。 |
+| `maxTaskDurationSeconds` | `number` | （可选）工具任务最长执行秒数，默认 `300`；非正数使用默认值。 |
 
 其中 `skills` 字段遵循 [Agent Skills Specification](https://agentskills.io/specification)。实践上，每个 skill 应是一个包含 `SKILL.md` 的目录，`SKILL.md` 由 YAML frontmatter 和 Markdown 正文组成；其中 `name` 要求为小写加连字符格式，`description` 为必填且非空。
 
-执行限制字段适用于 `ToolAgent`、`MultiAgent` 和 `AutoMultiAgent`。超过大模型请求次数、工具轮数、工具调用总数或连续相同工具轮数限制时，任务以一个 `exception` 状态结束，状态描述中的 `code` 为 `tool_loop_limit_exceeded`；超过任务时长限制时，`code` 为 `task_execution_timeout`。
+`toolReturnPackMinLength` 用于控制工具结果何时自动打包。执行限制字段适用于 `ToolAgent`、`MultiAgent` 和 `AutoMultiAgent`。超过大模型请求次数、工具轮数、工具调用总数或连续相同工具轮数限制时，任务以一个 `exception` 状态结束，状态描述中的 `code` 为 `tool_loop_limit_exceeded`；超过任务时长限制时，`code` 为 `task_execution_timeout`。
 
 #### 响应
 
@@ -154,6 +200,9 @@ https://api.example.com/v1
 | `llmConfig.apiKey`               | `string` | 大模型厂商的 API Key，例如：sk-xxxxxxxxxx                               |
 | `llmConfig.model`                | `string` | 大模型名称，例如：gpt-4o-mini                                          |
 | `llmConfig.adapter`              | `string` | （可选）当 `provider=lite_oneapi` 时，用于指定请求应走哪一种上游协议/厂商适配器。可选值为 `openai`、`deepseek`、`glm`、`kimi`、`mimo`、`minimax`、`qwen`；不传时默认值为 `openai`。 |
+| `llmConfig.headers` | `object` | （可选）附加请求头，键和值均为字符串。 |
+| `llmConfig.contextWindowSize` | `number` | （可选）模型上下文窗口大小，用于上下文占用信息和上下文限制处理。 |
+| `llmConfig.providerOptions` | `object` | core DTO 保留字段；当前 Server 不支持非空值，传非空对象会返回 `400`，可省略或传空对象。 |
 | `llmConfig.temperature`          | `number` | （可选）温度值，默认为 0                                               |
 | `llmConfig.maxTokens`            | `number` | （可选）最大 token 数，默认为 4096                                     |
 | `llmConfig.topP`                 | `number` | （可选）概率抽样的 p 值，默认为 1                                         |
@@ -215,7 +264,7 @@ https://api.example.com/v1
 
 | 字段名         | 类型       | 说明                        |
 |-------------|----------|---------------------------|
-| `sessionId` | `string` | 通过`initSession`接口获取到的临时会话 |
+| `sessionId` | `string` | 通过`initSession`接口获取到的会话 ID（可持久化并在 Server 重启后恢复） |
 
 #### 路径示例
 
@@ -238,6 +287,9 @@ POST /chat?sessionId=1901883204734947328
 | `llmConfig.apiKey` | `string` | 大模型厂商的 API Key。 |
 | `llmConfig.model` | `string` | 本次请求使用的大模型名称，例如：`gpt-4o-mini`。 |
 | `llmConfig.adapter` | `string` | （可选）当 `provider=lite_oneapi` 时使用的上游协议/厂商适配器。 |
+| `llmConfig.headers` | `object` | （可选）附加请求头，键和值均为字符串。 |
+| `llmConfig.contextWindowSize` | `number` | （可选）模型上下文窗口大小，用于上下文占用信息和上下文限制处理。 |
+| `llmConfig.providerOptions` | `object` | core DTO 保留字段；当前 Server 不支持非空值，传非空对象会返回 `400`，可省略或传空对象。 |
 | `llmConfig.temperature` | `number` | （可选）温度值，默认为 0。 |
 | `llmConfig.maxTokens` | `number` | （可选）最大 token 数，默认为 4096。 |
 | `llmConfig.topP` | `number` | （可选）概率抽样的 p 值，默认为 1。 |
@@ -275,7 +327,7 @@ POST /chat?sessionId=1901883204734947328
 |--------------------------------------|-----------|---------------------------------------------------------------------------------------------------|
 | `sessionId`                          | `string`  | 会话id                                                                                              |
 | `taskId`                             | `string`  | 任务id                                                                                              |
-| `role`                               | `string`  | 角色，可选值包括： `developer`、`user`、`agent`、`assistant`、`tool`、`client`                     |
+| `role`                               | `string`  | 角色，可选值包括： `developer`、`user`、`agent`、`subAgent`、`assistant`、`tool`、`client`                     |
 | `to`                                 | `string`  | 消息发送的目标，可选值包括与`role`一致                                                                            |
 | `type`                               | `string`  | 消息类型，可能包含的值有:`text`、`reasoning`、`imageUrl`、`contentList`、`toolCalls`、`toolReturn`、`functionCall` |
 | `content`                            | `dynamic` | 见以下示例定义，详情定义见 [`type`在不同类型下的`content`结构](#1-type在不同类型下的content结构)                                 |
@@ -545,6 +597,9 @@ POST /chat/simple?sessionId=1901883204734947328
 | `llmConfig.apiKey` | `string` | 大模型厂商的 API Key。 |
 | `llmConfig.model` | `string` | 本次请求使用的大模型名称，例如：`gpt-4o-mini`。 |
 | `llmConfig.adapter` | `string` | （可选）当 `provider=lite_oneapi` 时使用的上游协议/厂商适配器。 |
+| `llmConfig.headers` | `object` | （可选）附加请求头，键和值均为字符串。 |
+| `llmConfig.contextWindowSize` | `number` | （可选）模型上下文窗口大小，用于上下文占用信息和上下文限制处理。 |
+| `llmConfig.providerOptions` | `object` | core DTO 保留字段；当前 Server 不支持非空值，传非空对象会返回 `400`，可省略或传空对象。 |
 | `llmConfig.temperature` | `number` | （可选）温度值，默认为 0。 |
 | `llmConfig.maxTokens` | `number` | （可选）最大 token 数，默认为 4096。 |
 | `llmConfig.topP` | `number` | （可选）概率抽样的 p 值，默认为 1。 |
@@ -579,7 +634,7 @@ POST /chat/simple?sessionId=1901883204734947328
 |--------------------------------------|----------|---------------------------------------------------------------------------------------------------|
 | `sessionId`                          | `string` | 会话id                                                                                              |
 | `taskId`                             | `string` | 任务id                                                                                              |
-| `role`                               | `string` | 角色，可选值包括： `developer`、`user`、`agent`、`assistant`、`tool`、`client`                     |
+| `role`                               | `string` | 角色，可选值包括： `developer`、`user`、`agent`、`subAgent`、`assistant`、`tool`、`client`                     |
 | `to`                                 | `string` | 消息发送的目标，可选值包括与`role`一致                                                                            |
 | `type`                               | `string` | 消息类型，可能包含的值有:`text`、`reasoning`、`imageUrl`、`contentList`、`toolCalls`、`toolReturn`、`functionCall` |
 | `content`                            | `dynamic` | 消息内容                                                                                             |
@@ -738,9 +793,9 @@ GET /history?sessionId=1901883204734947328&page=1&pageSize=50
 | `originalTaskId`                     | `string` | 原始任务 ID，用于关联子任务和工具调用                                                                          |
 | `taskId`                             | `string` | 任务 ID，识别该任务                                                                                      |
 | `parentTaskId`                       | `string` | （可选）父任务 ID                                                                                         |
-| `role`                               | `string` | 消息来源，可能的值包括：`developer`、`user`、`agent`、`assistant`、`tool`、`client`                  |
+| `role`                               | `string` | 消息来源，可能的值包括：`developer`、`user`、`agent`、`subAgent`、`assistant`、`tool`、`client`                  |
 | `to`                                 | `string` | 消息目标，可能的值与`role`一致                                                                               |
-| `type`                               | `string` | 消息类型，可能的值包括：`text`、`reasoning`、`imageUrl`、`contentList`、`toolCalls`、`toolReturn`、`functionCall` |
+| `type`                               | `string` | 消息类型，可能的值包括：`text`、`reasoning`、`imageUrl`、`contentList`、`toolCalls`、`toolReturn`、`functionCall`、`taskStatus` |
 | `content`                            | `any`    | 消息内容，具体类型需根据 `type` 字段解析                                                                         |
 | `reasoningContent`                   | `string` | （可选）模型推理内容                                                                                         |
 | `completions`                        | `object` | 大模型完成的详细信息，包含以下字段：                                                                               |
@@ -925,7 +980,7 @@ GET /stop?sessionId=1901883204734947328&taskId=1901883415867822080
 
 **路径**: `/clear`
 
-**功能说明**: 清除 core 运行态会话、持久化 Session 和对应消息，返回 sessionId，不支持 SimpleAgent。清除后该 sessionId 无法再恢复。
+**功能说明**: 清除该 session 所属根会话树（含 inline 子会话）的运行态、持久化配置和消息，不支持 SimpleAgent。清除后该会话树无法再恢复。
 
 #### 路径参数
 
@@ -1025,7 +1080,8 @@ GET /clear?sessionId=1901883204734947328
 | `type`        | content数据类型                | 说明                                                              |
 |---------------|----------------------------|-----------------------------------------------------------------|
 | `status`      | `string`                   | 可选类型为`start`、`stop`、`done`、`toolsStart`、`toolsDone`、`exception` |
-| `description` | Map\[`string`, `dynamic`\] | 消息的描述，一般为functionCall时、`exception`时有值                           |
+| `taskId`     | `string`                   | 当前任务 ID。 |
+| `description` | Map\[`string`, `dynamic`\] | 消息的描述，一般为 functionCall 或 `exception` 时有值。 |
 
 ### 2. `to`为`client`时，content的几个状态字符串
 

@@ -1,5 +1,5 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "server": {
     "ip": "0.0.0.0",
     "apiPathPrefix": "/api/v1",

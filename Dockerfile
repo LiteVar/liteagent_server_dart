@@ -4,10 +4,6 @@ FROM ghcr.io/cirruslabs/flutter:stable AS build
 USER root
 WORKDIR /workspace
 
-# These named contexts preserve the local path dependency layout expected by
-# pubspec.yaml and liteagent_core_dart/pubspec.yaml.
-COPY --from=liteagent_core_dart . /workspace/liteagent_core_dart
-COPY --from=llamadart_openai . /workspace/llamadart_openai
 COPY . /workspace/liteagent_server_dart
 
 WORKDIR /workspace/liteagent_server_dart

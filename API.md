@@ -1,4 +1,4 @@
-# API for LiteAgent core Dart Server
+# API for LiteAgent Server for Dart
 
 [中文](API-zh_CN.md) · English
 
@@ -27,8 +27,10 @@
 ### Base URL
 
 ```http request
-https://api.example.com/v1
+http://127.0.0.1:9527/api/v1
 ```
+
+This is the default local base URL. The API prefix is configurable with `server.apiPathPrefix` in `bin/config.json`.
 
 ### 1. Get Version
 
@@ -60,7 +62,7 @@ None
 
 ```json
 {
-    "version": "1.0.1"
+    "version": "1.0.2"
 }
 ```
 
@@ -110,7 +112,7 @@ None
 
 **Path**: `/initSession`
 
-**Description**: Initialize a SessionAgent session and return a sessionId.
+**Description**: Initialize a SessionAgent session and return a sessionId. Do not pass the removed `agentId` query parameter; if present, the server returns `400 Bad Request`.
 
 #### Request Body: `CapabilityDto`
 
@@ -122,6 +124,9 @@ None
 | `llmConfig.apiKey`                        | `string`  | API Key of the language model provider, e.g., sk-xxxxxxxxxx                                                                                                                                                                                                      |
 | `llmConfig.model`                         | `string`  | Name of the language model, e.g., gpt-3.5-turbo                                                                                                                                                                                                                  |
 | `llmConfig.adapter`                       | `string`  | (Optional) Adapter name used when `provider=lite_oneapi` to choose which upstream protocol/provider adapter handles the request. Supported values are `openai`, `deepseek`, `glm`, `kimi`, `mimo`, `minimax`, and `qwen`. If omitted, the default is `openai`. |
+| `llmConfig.headers` | `object` | (Optional) Additional request headers, as a string-to-string map. |
+| `llmConfig.contextWindowSize` | `number` | (Optional) Model context window size, used for context usage reporting and context-limit handling. |
+| `llmConfig.providerOptions` | `object` | Reserved by the core DTO. The server rejects a non-empty value with `400`; omit it or pass an empty object. |
 | `llmConfig.temperature`                   | `number`  | (Optional) Temperature value, default is 0                                                                                                                                                                                                                       |
 | `llmConfig.maxTokens`                     | `number`  | (Optional) Maximum token count, default is 4096                                                                                                                                                                                                                  |
 | `llmConfig.topP`                          | `number`  | (Optional) Top-p value for sampling, default is 1                                                                                                                                                                                                                |
@@ -134,7 +139,7 @@ None
 | `openSpecList.protocol`                   | `string`  | Supports `openapi`, `jsonrpcHttp`, `opentool`, `mcpStdio`, `mcpHttp`                                                                                                                                                                                              |
 | `openSpecList.serverUrl`                  | `string`  | (Optional) Override server URL for the spec                                                                                                                                                                                                                      |
 | `openSpecList.apiKey`                     | `object`  | (Optional) API Key for third-party services                                                                                                                                                                                                                      |
-| `openSpecList.apiKey.type`                | `string`  | Either `basic` or `bearer`                                                                                                                                                                                                                                       |
+| `openSpecList.apiKey.type`                | `string`  | One of `basic`, `bearer`, or `original`                                                                                                                                                                                                                                       |
 | `openSpecList.apiKey.apiKey`              | `string`  | API Key value                                                                                                                                                                                                                                                    |
 | `callbackOpenTool`                        | `object`  | (Optional) Client callback tool definition                                                                                                                                                                                                                       |
 | `callbackOpenTool.opentool`               | `string`  | OpenTool JSON definition                                                                                                                                                                                                                                         |
@@ -148,6 +153,7 @@ None
 | `auto`                                    | `boolean` | (Optional) Whether to auto-run tasks                                                                                                                                                                                                                             |
 | `llmConfigList`                           | `array`   | (Optional) List of `llmConfig` objects                                                                                                                                                                                                                            |
 | `enableThinking`                          | `boolean` | (Optional) Enable reasoning output                                                                                                                                                                                                                                |
+| `toolReturnPackMinLength`                   | `number`  | (Optional) Minimum character count before tool output is automatically packed. Defaults to `800`; values `<= 0` disable packing. |
 | `maxLlmRequests`                          | `number`  | (Optional) Maximum LLM requests per tool-enabled task. Defaults to 64. Non-positive values use the default.                                                                                                                                                       |
 | `maxToolRounds`                           | `number`  | (Optional) Maximum function-calling rounds per task. Defaults to 16. Non-positive values use the default.                                                                                                                                                         |
 | `maxToolCalls`                            | `number`  | (Optional) Maximum total tool calls per task. Defaults to 64. Non-positive values use the default.                                                                                                                                                                |
@@ -156,7 +162,7 @@ None
 
 `skills` follow the [Agent Skills Specification](https://agentskills.io/specification). In practice, each referenced skill should be a skill directory with a `SKILL.md` file containing YAML frontmatter plus Markdown instructions. The spec requires a lowercase-hyphenated `name` and a non-empty `description`.
 
-The execution limits apply to `ToolAgent`, `MultiAgent`, and `AutoMultiAgent` tasks. A limit violation terminates the task with one `exception` task status. The status description contains `code: "tool_loop_limit_exceeded"` for request, round, call, or duplicate-round limits, and `code: "task_execution_timeout"` for the duration limit.
+The `toolReturnPackMinLength` option applies to tool-enabled agents. The execution limits apply to `ToolAgent`, `MultiAgent`, and `AutoMultiAgent` tasks. A limit violation terminates the task with one `exception` task status. The status description contains `code: "tool_loop_limit_exceeded"` for request, round, call, or duplicate-round limits, and `code: "task_execution_timeout"` for the duration limit.
 
 #### Request Example
 
@@ -245,6 +251,9 @@ The execution limits apply to `ToolAgent`, `MultiAgent`, and `AutoMultiAgent` ta
 | `llmConfig.apiKey`                | `string`  | API Key of the language model provider, e.g., sk-xxxxxxxxxx                                |
 | `llmConfig.model`                 | `string`  | Name of the language model, e.g., gpt-3.5-turbo                                            |
 | `llmConfig.adapter`               | `string`  | (Optional) Adapter name used when `provider=lite_oneapi` to choose which upstream protocol/provider adapter handles the request. Supported values are `openai`, `deepseek`, `glm`, `kimi`, `mimo`, `minimax`, and `qwen`. If omitted, the default is `openai`. |
+| `llmConfig.headers` | `object` | (Optional) Additional request headers, as a string-to-string map. |
+| `llmConfig.contextWindowSize` | `number` | (Optional) Model context window size, used for context usage reporting and context-limit handling. |
+| `llmConfig.providerOptions` | `object` | Reserved by the core DTO. The server rejects a non-empty value with `400`; omit it or pass an empty object. |
 | `llmConfig.temperature`           | `number`  | (Optional) Temperature value, default is 0                                                 |
 | `llmConfig.maxTokens`             | `number`  | (Optional) Maximum token count, default is 4096                                            |
 | `llmConfig.topP`                  | `number`  | (Optional) Top-p value for sampling, default is 1                                          |
@@ -323,6 +332,9 @@ The execution limits apply to `ToolAgent`, `MultiAgent`, and `AutoMultiAgent` ta
 | `llmConfig.apiKey` | `string` | LLM provider API key. |
 | `llmConfig.model` | `string` | Name of the model to use for this request, e.g., `gpt-4o-mini`. |
 | `llmConfig.adapter` | `string` | (Optional) Upstream protocol/provider adapter used with `provider=lite_oneapi`. |
+| `llmConfig.headers` | `object` | (Optional) Additional request headers, as a string-to-string map. |
+| `llmConfig.contextWindowSize` | `number` | (Optional) Model context window size, used for context usage reporting and context-limit handling. |
+| `llmConfig.providerOptions` | `object` | Reserved by the core DTO. The server rejects a non-empty value with `400`; omit it or pass an empty object. |
 | `llmConfig.temperature` | `number` | (Optional) Sampling temperature, default is 0. |
 | `llmConfig.maxTokens` | `number` | (Optional) Maximum token count, default is 4096. |
 | `llmConfig.topP` | `number` | (Optional) Top-p sampling value, default is 1. |
@@ -394,6 +406,9 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 | `llmConfig.apiKey` | `string` | LLM provider API key. |
 | `llmConfig.model` | `string` | Name of the model to use for this request, e.g., `gpt-4o-mini`. |
 | `llmConfig.adapter` | `string` | (Optional) Upstream protocol/provider adapter used with `provider=lite_oneapi`. |
+| `llmConfig.headers` | `object` | (Optional) Additional request headers, as a string-to-string map. |
+| `llmConfig.contextWindowSize` | `number` | (Optional) Model context window size, used for context usage reporting and context-limit handling. |
+| `llmConfig.providerOptions` | `object` | Reserved by the core DTO. The server rejects a non-empty value with `400`; omit it or pass an empty object. |
 | `llmConfig.temperature` | `number` | (Optional) Sampling temperature, default is 0. |
 | `llmConfig.maxTokens` | `number` | (Optional) Maximum token count, default is 4096. |
 | `llmConfig.topP` | `number` | (Optional) Top-p sampling value, default is 1. |
@@ -454,7 +469,7 @@ POST /chat/simple?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 {
   "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
   "taskId": "0b127f1d-4667-4a52-bbcb-0b636f9a471a",
-  "role": "llm",
+  "role": "assistant",
   "to": "agent",
   "type": "text",
   "content": "message info",
@@ -594,8 +609,8 @@ GET /history?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30&page=1&pageSize=50
 | `originalTaskId`                          | string | Original task ID used to associate child tasks and tool calls                                          |
 | `taskId`                                  | string | Task ID identifying the task                                                                          |
 | `parentTaskId`                            | string | (Optional) parent task ID                                                                              |
-| `role`                                    | string | Message source, possible values: `system`, `user`, `agent`, `llm`, `tool`                             |
-| `to`                                      | string | Message target, possible values: `user`, `agent`, `llm`, `tool`, `client`                             |
+| `role`                                    | string | Message source. Values used by core include `developer`, `user`, `agent`, `subAgent`, `assistant`, `tool`, and `client`. |
+| `to`                                      | string | Message target; values use the same role names supported by core. |
 | `type`                                    | string | Message type, possible values: `text`, `reasoning`, `imageUrl`, `contentList`, `functionCall`, `toolCalls`, `toolReturn`, `taskStatus` |
 | `content`                                 | any    | Message content, its type depends on the `type` field                                                 |
 | `reasoningContent`                        | string | (Optional) model reasoning content                                                                     |
@@ -619,7 +634,7 @@ GET /history?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30&page=1&pageSize=50
   {
     "sessionId": "b2ac9280-70d6-4651-bd3a-45eb81cd8c30",
     "taskId": "0b127f1d-4667-4a52-bbcb-0b636f9a471a",
-    "role": "system",
+    "role": "developer",
     "to": "user",
     "type": "text",
     "content": "This is an example message",
@@ -851,7 +866,7 @@ GET /clear?sessionId=b2ac9280-70d6-4651-bd3a-45eb81cd8c30
 | `contentList.type`                                     | `string`                                | Possible types are `text`, `imageUrl`.                                                                                                                                                                                                                                                            |
 | `contentList.message`                                  | `string`                                | Message content, e.g., "Give me a random number"; <br/> If the message type is `imageUrl`, the message's String can be: <br/> 1. Image URL: "https://example.com/path/to/image.png", and ensure it's publicly accessible <br/> 2. Base64 format: "data:image/jpeg;base64,{Base64 encoded image}". |
 | 8. `taskStatus`                                        | `object`                                | Task status payload.                                                                                                                                                                                                                                                                              |
-| `taskStatus.status`                                    | `string`                                | Possible types: `start`, `stop`, `done`, `exception`.                                                                                                                                                                                                                                             |
+| `taskStatus.status`                                    | `string`                                | Values include `start`, `stop`, `done`, `exception`, `toolsStart`, and `toolsDone`.                                                                                                                                                                                                                                             |
 | `taskStatus.taskId`                                    | `string`                                | Current Task ID                                                                                                                                                                                                                                                                                   |
 | `taskStatus.description`                               | Map\[`string`, `dynamic`\]              | Description of the message, generally provided when the status is `exception`.                                                                                                                                                                                                                    |
 
