@@ -1,6 +1,6 @@
 import 'dart:ffi';
 import 'dart:io';
-import 'package:liteagent_core_dart/liteagent_service.dart';
+import 'package:liteagent_core/liteagent_service.dart';
 import 'package:liteagent_server_dart/liteagent_server_dart.dart';
 import 'package:path/path.dart' as p;
 import 'package:shelf/shelf.dart';

@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:drift/native.dart';
-import 'package:liteagent_core_dart/liteagent_core.dart';
-import 'package:liteagent_core_dart/liteagent_service.dart';
+import 'package:liteagent_core/liteagent_core.dart';
+import 'package:liteagent_core/liteagent_service.dart';
 import 'package:liteagent_server_dart/src/db/agent_database.dart';
 import 'package:liteagent_server_dart/src/service/session_manage_service.dart';
 import 'package:liteagent_server_dart/src/service/session_message_manage_service.dart';

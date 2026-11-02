@@ -16,15 +16,14 @@ dependencies:
   web_socket_channel: ^3.0.1
   logging: ^1.2.0
   json_annotation: ^4.9.0
-  liteagent_core_dart:
-    path: ../liteagent_core_dart
+  liteagent_core: ^3.0.0
   drift: ^2.25.1
   sqlite3: ^2.7.4
   sse: ^4.1.7
 
 dev_dependencies:
   build_runner: ^2.5.4
-  json_serializable: 6.9.5
+  json_serializable: ^6.15.2
   drift_dev: ^2.25.2
   http: ^1.1.0
   lints: ^3.0.0

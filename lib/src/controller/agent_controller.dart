@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:liteagent_core_dart/liteagent_core.dart';
-import 'package:liteagent_core_dart/liteagent_service.dart';
+import 'package:liteagent_core/liteagent_core.dart';
+import 'package:liteagent_core/liteagent_service.dart';
 import 'package:logging/logging.dart';
 import 'package:opentool_dart/opentool_client.dart' show ToolReturn;
 import 'package:shelf/shelf.dart';

@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
-import 'package:liteagent_core_dart/liteagent_core.dart';
-import 'package:liteagent_core_dart/liteagent_service.dart';
+import 'package:liteagent_core/liteagent_core.dart';
+import 'package:liteagent_core/liteagent_service.dart';
 import 'package:logging/logging.dart';
 
 import '../db/agent_database.dart';

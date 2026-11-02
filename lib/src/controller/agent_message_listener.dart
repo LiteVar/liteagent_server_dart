@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:liteagent_core_dart/liteagent_core.dart';
-import 'package:liteagent_core_dart/liteagent_service.dart';
+import 'package:liteagent_core/liteagent_core.dart';
+import 'package:liteagent_core/liteagent_service.dart';
 import 'package:liteagent_server_dart/liteagent_server_dart.dart';
 import 'package:logging/logging.dart';
 

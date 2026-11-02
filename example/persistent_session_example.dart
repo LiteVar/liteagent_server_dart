@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:dotenv/dotenv.dart';
-import 'package:liteagent_core_dart/liteagent_core.dart';
-import 'package:liteagent_core_dart/liteagent_service.dart';
+import 'package:liteagent_core/liteagent_core.dart';
+import 'package:liteagent_core/liteagent_service.dart';
 
 const _defaultBaseUrl = 'http://127.0.0.1:9527/api/v1';
 const _defaultStatePath = 'example/.persistent_session.json';

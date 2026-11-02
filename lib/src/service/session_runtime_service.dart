@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:liteagent_core_dart/liteagent_core.dart';
-import 'package:liteagent_core_dart/liteagent_service.dart';
+import 'package:liteagent_core/liteagent_core.dart';
+import 'package:liteagent_core/liteagent_service.dart';
 
 import '../history_dto.dart';
 import 'session_manage_service.dart';

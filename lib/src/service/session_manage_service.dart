@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:liteagent_core_dart/liteagent_service.dart';
+import 'package:liteagent_core/liteagent_service.dart';
 
 import '../db/agent_database.dart';
 
